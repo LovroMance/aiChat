@@ -1,0 +1,20 @@
+/* 全局基础样式重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  min-height: 0;
+}
+*::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  height: 100%;
+}
+
+.el-container {
+  height: 100%;
+  min-height: 0 !important;
+}
+
