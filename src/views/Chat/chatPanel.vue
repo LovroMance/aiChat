@@ -102,7 +102,7 @@ const messages = ref([
   width: 100%;
   height: 100%;
   /* 只保留左右内边距，去掉上下 */
-  padding: 0 24px;
+  padding: 16px 24px 0px;
   background: linear-gradient(120deg, #f3fbfe 0%, #eafaf6 100%);
   box-sizing: border-box;
 }
