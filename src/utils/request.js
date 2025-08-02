@@ -1,7 +1,7 @@
 import axios from 'axios'
-// import { useUserStore } from '@/stores'
+import { useUserStore } from '@/stores'
 
-const baseURL = 'http://localhost:8080'
+const baseURL = 'http://localhost:10086'
 
 const instance = axios.create({
   baseURL,
@@ -11,10 +11,10 @@ const instance = axios.create({
 // 请求拦截器
 instance.interceptors.request.use(
   (config) => {
-    // const userStore = useUserStore()
-    // if ( userStore.token ) {
-    //   config.headers.Authorization = userStore.token
-    // }
+    const userStore = useUserStore()
+    if ( userStore.token ) {
+      config.headers.Authorization = userStore.token
+    }
     return config
   },
   (err) => Promise.reject(err)
@@ -34,3 +34,4 @@ instance.interceptors.response.use(
 )
 
 export default instance
+export { baseURL }

@@ -1,5 +1,3 @@
-
-
 <script setup>
 import { ref } from 'vue'
 
@@ -8,7 +6,7 @@ const messages = ref([
   {
     id: 1,
     avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
-    username: '小明',
+    username: '林左臣',
     content: '你好，请问你在吗？',
     time: '2025-07-28 14:21',
     self: false

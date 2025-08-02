@@ -1,10 +1,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useFileUpload } from '@/api/chat'
+import { baseURL } from '@/utils/request'
 
-// 模拟用户数据，实际应该从API获取
+// import { useUserStore } from '@/stores/User'
+// const userStore = useUserStore()
+
+// const userInfo = ref(userStore.getUserInfo())
 const userInfo = ref({
   username: '用户名',
-  nickname: '昵称',
   avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
   signature: '这个人很懒，什么都没有留下...',
   email: 'user@example.com',
@@ -14,14 +18,22 @@ const userInfo = ref({
   level: 'Lv.5',
   posts: 128,
   followers: 256,
-  following: 64
+  following: 64,
 })
 
+const selectedFile = ref(null)  // 保存选择的文件对象
 const isEditing = ref(false)
+// 选择头像响应
+const handleAvatarChange = (uploadFile) => {
+  console.log('选择的文件:', uploadFile)
+  selectedFile.value = uploadFile.raw  // 保存文件对象
+  userInfo.value.avatar = URL.createObjectURL(uploadFile.raw)  // 本地预览头像url
+}
+
 const editForm = ref({
   nickname: userInfo.value.nickname,
   signature: userInfo.value.signature,
-  email: userInfo.value.email
+  email: userInfo.value.email,
 })
 
 const handleEdit = () => {
@@ -29,20 +41,30 @@ const handleEdit = () => {
   editForm.value = {
     nickname: userInfo.value.nickname,
     signature: userInfo.value.signature,
-    email: userInfo.value.email
+    email: userInfo.value.email,
   }
 }
 
-const handleSave = () => {
-  // 这里应该调用API保存用户信息
-  userInfo.value.nickname = editForm.value.nickname
-  userInfo.value.signature = editForm.value.signature
-  userInfo.value.email = editForm.value.email
-  isEditing.value = false
+// 保存
+const handleSave = async () => {
+  console.log('保存')
+  // 立即上传文件
+  try {
+    const res = await useFileUpload(selectedFile.value)
+    console.log('头像上传结果:', res)
+    userInfo.value.avatar = baseURL + '/' + res.data.data
+  } catch (error) {
+    console.error('头像上传失败:', error)
+  } 
+    // 保存其他用户信息
+    userInfo.value.signature = editForm.value.signature
+    userInfo.value.email = editForm.value.email
+    isEditing.value = false
 }
 
 const handleCancel = () => {
   isEditing.value = false
+  selectedFile.value = null // 清除选择的文件
 }
 
 onMounted(() => {
@@ -55,15 +77,33 @@ onMounted(() => {
   <div class="user-info-container">
     <!-- 背景装饰 -->
     <div class="background-decoration"></div>
-    
+
     <!-- 主要内容 -->
     <div class="main-content">
       <!-- 用户头像和基本信息卡片 -->
       <div class="profile-card">
         <div class="avatar-section">
           <div class="avatar-container">
-            <img :src="userInfo.avatar" alt="用户头像" class="avatar" />
-            <div class="status-indicator" :class="userInfo.status === '在线' ? 'online' : 'offline'"></div>
+            <img :src="userInfo.avatar" alt="用户头像" class="avatar" v-if="!isEditing" />
+
+            <el-upload
+              v-if="isEditing"
+              class="avatar-upload-wrapper"
+              :auto-upload="false"
+              :show-file-list="false"
+              accept=".png,.jpg,.jpeg"
+              :on-change="handleAvatarChange"
+            >
+              <img v-if="userInfo.avatar" :src="userInfo.avatar" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid #f0f8ff; box-shadow: 0 4px 16px rgba(70, 130, 180, 0.15);" />
+              <el-icon v-else class="avatar-uploader-icon">
+                <Plus />
+              </el-icon>
+            </el-upload>
+
+            <div
+              class="status-indicator"
+              :class="userInfo.status === '在线' ? 'online' : 'offline'"
+            ></div>
           </div>
           <div class="user-basic-info">
             <h1 class="username">{{ userInfo.username }}</h1>
@@ -71,7 +111,7 @@ onMounted(() => {
             <div class="user-status">{{ userInfo.status }}</div>
           </div>
         </div>
-        
+
         <div class="action-buttons">
           <button class="edit-btn" @click="handleEdit" v-if="!isEditing">
             <i class="edit-icon">✏️</i>
@@ -87,15 +127,8 @@ onMounted(() => {
       <!-- 详细信息卡片 -->
       <div class="details-card">
         <h2 class="section-title">个人信息</h2>
-        
-        <div class="info-grid">
-          <!-- 昵称 -->
-          <div class="info-item">
-            <label class="info-label">昵称</label>
-            <div class="info-value" v-if="!isEditing">{{ userInfo.nickname }}</div>
-            <input v-else v-model="editForm.nickname" class="edit-input" type="text" />
-          </div>
 
+        <div class="info-grid">
           <!-- 个性签名 -->
           <div class="info-item full-width">
             <label class="info-label">个性签名</label>
@@ -104,7 +137,7 @@ onMounted(() => {
           </div>
 
           <!-- 邮箱 -->
-          <div class="info-item">
+          <div class="info-item full-width">
             <label class="info-label">邮箱</label>
             <div class="info-value" v-if="!isEditing">{{ userInfo.email }}</div>
             <input v-else v-model="editForm.email" class="edit-input" type="email" />
@@ -127,7 +160,7 @@ onMounted(() => {
       <!-- 统计数据卡片 -->
       <div class="stats-card">
         <h2 class="section-title">数据统计</h2>
-        
+
         <div class="stats-grid">
           <div class="stat-item">
             <div class="stat-number">{{ userInfo.posts }}</div>
@@ -216,6 +249,71 @@ onMounted(() => {
   box-shadow: 0 4px 16px rgba(70, 130, 180, 0.15);
 }
 
+.avatar-upload-wrapper {
+  display: inline-block;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 4px solid #f0f8ff;
+  box-shadow: 0 4px 16px rgba(70, 130, 180, 0.15);
+  position: relative;
+}
+
+.avatar-upload-wrapper :deep(.el-upload) {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: none !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+}
+
+.avatar-upload-wrapper :deep(.el-upload img) {
+  width: 100px !important;
+  height: 100px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  border: 4px solid #f0f8ff !important;
+  box-shadow: 0 4px 16px rgba(70, 130, 180, 0.15) !important;
+  max-width: none !important;
+  max-height: none !important;
+  min-width: 100px !important;
+  min-height: 100px !important;
+}
+
+/* 确保 el-upload 的所有子元素都保持圆形 */
+.avatar-upload-wrapper :deep(.el-upload *) {
+  border-radius: 50% !important;
+}
+
+/* 强制覆盖任何可能的样式 */
+.avatar-upload-wrapper :deep(.el-upload) img {
+  width: 100px !important;
+  height: 100px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  border: 4px solid #f0f8ff !important;
+  box-shadow: 0 4px 16px rgba(70, 130, 180, 0.15) !important;
+  max-width: 100px !important;
+  max-height: 100px !important;
+  min-width: 100px !important;
+  min-height: 100px !important;
+  flex-shrink: 0 !important;
+}
+
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 100px;
+  height: 100px;
+  text-align: center;
+  line-height: 100px;
+}
+
 .status-indicator {
   position: absolute;
   bottom: 8px;
@@ -224,6 +322,8 @@ onMounted(() => {
   height: 20px;
   border-radius: 50%;
   border: 3px solid white;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .status-indicator.online {
@@ -270,7 +370,9 @@ onMounted(() => {
   gap: 12px;
 }
 
-.edit-btn, .save-btn, .cancel-btn {
+.edit-btn,
+.save-btn,
+.cancel-btn {
   padding: 12px 24px;
   border: none;
   border-radius: 12px;
@@ -378,7 +480,8 @@ onMounted(() => {
   border: 1px solid #e8f4fd;
 }
 
-.edit-input, .edit-textarea {
+.edit-input,
+.edit-textarea {
   padding: 12px 16px;
   border: 2px solid #e8f4fd;
   border-radius: 8px;
@@ -388,7 +491,8 @@ onMounted(() => {
   transition: border-color 0.3s ease;
 }
 
-.edit-input:focus, .edit-textarea:focus {
+.edit-input:focus,
+.edit-textarea:focus {
   outline: none;
   border-color: #6b7b8a;
 }
@@ -444,41 +548,41 @@ onMounted(() => {
   .main-content {
     padding: 15px 10px;
   }
-  
+
   .profile-card {
     padding: 20px 15px;
     flex-direction: column;
     text-align: center;
   }
-  
+
   .avatar-section {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .username {
     font-size: 1.8rem;
   }
-  
+
   .avatar {
     width: 80px;
     height: 80px;
   }
-  
+
   .info-grid {
     grid-template-columns: 1fr;
     gap: 15px;
   }
-  
+
   .stats-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
   }
-  
+
   .stat-item {
     padding: 15px;
   }
-  
+
   .stat-number {
     font-size: 1.8rem;
   }
@@ -488,28 +592,45 @@ onMounted(() => {
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .action-buttons {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .save-cancel-buttons {
     flex-direction: column;
     width: 100%;
   }
-  
-  .edit-btn, .save-btn, .cancel-btn {
+
+  .edit-btn,
+  .save-btn,
+  .cancel-btn {
     width: 100%;
     justify-content: center;
   }
-  
+
   .main-content {
     padding: 10px 5px;
   }
-  
-  .profile-card, .details-card, .stats-card {
+
+  .profile-card,
+  .details-card,
+  .stats-card {
     padding: 15px 10px;
   }
+}
+
+.avatar-uploader .el-upload {
+  border: 1px dashed var(--el-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
+}
+
+.avatar-uploader .el-upload:hover {
+  border-color: var(--el-color-primary);
 }
 </style>
