@@ -6,7 +6,7 @@ const router = useRouter()
 // 获取用户仓库，存储用户信息
 import { useUserStore } from '@/stores/index'
 const userStore = useUserStore()
-import { setUserStorage } from '@/utils/localstorage'
+import { USER_LOGIN_INFO, setStorage } from '@/utils/localstorage'
 
 const username = ref('')
 const password = ref('')
@@ -31,13 +31,12 @@ const userLogin = async () => {
       password: password.value,
       uid: data.uid,
       token: data.token,
-      avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
     }
-    userStore.setInfo(userInfo)
+    userStore.setLoginInfo(userInfo)
     // 把用户token存到本地存储
-    setUserStorage(userInfo)
+    setStorage(USER_LOGIN_INFO, userInfo)
     alert('登录成功')
-    router.push('/HomePage')
+    router.push('/userChat')
 }
 </script>
 

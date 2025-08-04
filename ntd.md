@@ -5,3 +5,6 @@
 
 end :
 1. 关闭页面要清空内存缓存 --> localStorage / IndexedDB
+
+
+-- 登录成功后，获取用户信息，然后保存到store中

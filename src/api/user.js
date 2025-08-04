@@ -16,3 +16,12 @@ export const useUserLogin = (data) => {
     password: data.password,
   })
 }
+
+// 获取用户信息
+export const getUserInfo = (data) => {
+  return instance.get('/user/get_user', {
+    params: {
+      uid: data
+    }
+  })
+}

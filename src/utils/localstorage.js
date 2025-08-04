@@ -1,4 +1,5 @@
-const USER_INFO = 'user-info'
+export const USER_LOGIN_INFO = 'user-login-info'  // 用户登录信息
+export const USER_INFO_DATA = 'user-info-data'  // 用户详细信息
 
 // localstorage 接口
 export const setStorage = (key, value) => {
@@ -6,14 +7,6 @@ export const setStorage = (key, value) => {
         value = JSON.stringify(value)
     }
     localStorage.setItem(key, value)
-}
-
-    // 将用户信息存储到本地
-export const setUserStorage = (userInfo) => {
-    if (typeof value === 'object') {
-        userInfo = JSON.stringify(userInfo)
-    }
-    setStorage(USER_INFO, userInfo)
 }
 
 // 获取本地存储数据

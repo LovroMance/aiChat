@@ -20,11 +20,10 @@ export const useUserStore = defineStore('user', () => {
   const posts = ref('')  // 帖子数量
   const followers = ref('')  // 粉丝数量
   const following = ref('')  // 关注数量
-  const setInfo = (newInfo) => {
+  const setLoginInfo = (newInfo) => {
     username.value = newInfo.username
     password.value = newInfo.password
     uid.value = newInfo.uid
-    avatar.value = newInfo.avatar
     token.value = newInfo.token
   }
 
@@ -43,6 +42,7 @@ export const useUserStore = defineStore('user', () => {
     following.value = newInfo.following
   }
 
+  // 获取用户信息
   const getUserInfo = () => {
     return {
       username: username.value,
@@ -75,8 +75,8 @@ export const useUserStore = defineStore('user', () => {
     posts,
     followers,
     following,
-    setInfo,
+    setLoginInfo,
     setUserInfo,
-    getUserInfo
+    getUserInfo,
   }
 })

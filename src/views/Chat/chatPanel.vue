@@ -1,98 +1,32 @@
 <script setup>
 import { ref } from 'vue'
+import { useMessageStore } from '@/stores'
+import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
+import { formatTime } from '@/utils/format'
 
-// 演示数据，包含自己和对方的消息
-const messages = ref([
-  {
-    id: 1,
-    avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
-    username: '林左臣',
-    content: '你好，请问你在吗？',
-    time: '2025-07-28 14:21',
-    self: false
-  },
-  {
-    id: 2,
-    avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
-    username: '我',
-    content: '在的，有什么可以帮你？',
-    time: '2025-07-28 14:22',
-    self: true
-  },
-  {
-    id: 3,
-    avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
-    username: '小明',
-    content: '能帮我看看这个 Vue 代码吗？',
-    time: '2025-07-28 14:23',
-    self: false
-  },
-  {
-    id: 3,
-    avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
-    username: '小明',
-    content: '能帮我看看这个 Vue 代码吗？',
-    time: '2025-07-28 14:23',
-    self: false
-  },
-  {
-    id: 3,
-    avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
-    username: '小明',
-    content: '能帮我看看这个 Vue 代码吗？',
-    time: '2025-07-28 14:23',
-    self: false
-  },
-  {
-    id: 3,
-    avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
-    username: '小明',
-    content: '能帮我看看这个 Vue 代码吗？',
-    time: '2025-07-28 14:23',
-    self: false
-  },
-  {
-    id: 3,
-    avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
-    username: '小明',
-    content: '能帮我看看这个 Vue 代码吗？',
-    time: '2025-07-28 14:23',
-    self: false
-  },
-  {
-    id: 3,
-    avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
-    username: '小明',
-    content: '能帮我看看这个 Vue 代码吗？',
-    time: '2025-07-28 14:23',
-    self: false
-  },
-  {
-    id: 3,
-    avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
-    username: '小明',
-    content: '能帮我看看这个 Vue 代码吗？',
-    time: '2025-07-28 14:23',
-    self: false
-  }
-])
+const messageStore = useMessageStore()
+const receiveMessages = ref(messageStore.receiveMessages)
+
+const userUid = getStorage(USER_LOGIN_INFO).uid
+
 </script>
 
 <template>
-  <el-scrollbar class="chat-panel" style="height: 100%;">
+<el-scrollbar class="chat-panel" style="height: 100%;">
     <div>
-      <div v-for="msg in messages" :key="msg.id" :class="['chat-message', msg.self ? 'self' : 'other']">
-        <img class="avatar" :src="msg.avatar" :alt="msg.username" />
+      <div v-for="msg in receiveMessages" :key="msg.message_id" :class="['chat-message', msg.sender_uid === userUid ? 'self' : 'other']">
+        <img class="avatar" :src="msg.sender_avatar" :alt="msg.sender_name" />
         <div class="message-content">
-          <div class="username-time" :class="msg.self ? 'self' : ''">
-            <span class="username">{{ msg.username }}</span>
-            <span class="time">{{ msg.time }}</span>
+          <div class="username-time" :class="msg.sender_uid === userUid ? 'self' : ''">
+            <span class="username">{{ msg.sender_name }}</span>
+            <span class="time">{{ formatTime(msg.create_time) }}</span>
           </div>
           <div class="content">{{ msg.content }}</div>
         </div>
       </div>
     </div>
   </el-scrollbar>
+
 </template>
 
 <style scoped>
@@ -133,10 +67,9 @@ const messages = ref([
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   position: relative;
   transition: background 0.3s;
-  min-width: 80px;
+  min-width: 180px;
 }
 .chat-message.self .message-content {
-  background: linear-gradient(135deg, #c6f7e2 0%, #b3e5fc 100%);
   border-radius: 22px 22px 6px 22px;
   box-shadow: 0 2px 12px rgba(44, 185, 176, 0.08);
 }
@@ -161,7 +94,7 @@ const messages = ref([
 }
 .time {
   font-size: 12px;
-  color: #b0b8c9;
+  color: #5d6371;
   margin-left: 8px;
   opacity: 0.7;
 }

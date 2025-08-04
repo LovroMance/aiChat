@@ -1,6 +1,29 @@
 <script setup>
 import { ref } from 'vue'
+import { sendMessage } from '@/utils/websocket.js'
+
 const input = ref('')
+
+const send = async () => {
+  if (!input.value.trim()) {
+    console.log('消息为空，不发送')
+    return
+  }
+  
+  // 构造消息对象
+  const messageObj = {
+    content: input.value.trim(),
+    attachment: null
+  }
+  
+  const success = await sendMessage(messageObj)
+  if (success) {
+    input.value = '' // 清空输入框
+    console.log('消息发送成功')
+  } else {
+    console.error('消息发送失败')
+  }
+}
 </script>
 
 <template>
@@ -25,7 +48,7 @@ const input = ref('')
             :rows="3"
             :autosize="{ minRows: 2, maxRows: 4 }"
           />
-          <el-button class="send-button" type="primary">发送</el-button>
+          <el-button class="send-button" type="primary" @click="send">发送</el-button>
         </div>
       </el-main>
     </el-container>
