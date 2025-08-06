@@ -20,21 +20,22 @@ export const useUserStore = defineStore('user', () => {
   const posts = ref('')  // 帖子数量
   const followers = ref('')  // 粉丝数量
   const following = ref('')  // 关注数量
+
+  // 设置登录信息
   const setLoginInfo = (newInfo) => {
-    username.value = newInfo.username
-    password.value = newInfo.password
     uid.value = newInfo.uid
     token.value = newInfo.token
   }
 
-  // 编辑资料
+  // 编辑更新个人资料
   const setUserInfo = (newInfo) => {
+    account.value = newInfo.account
     username.value = newInfo.username
     avatar.value = newInfo.avatar
     signature.value = newInfo.signature
     email.value = newInfo.email
-    createTime.value = newInfo.createTime
-    lastLoginTime.value = newInfo.lastLoginTime
+    createTime.value = newInfo.create_time
+    lastLoginTime.value = newInfo.last_login_time
     status.value = newInfo.status
     level.value = newInfo.level
     posts.value = newInfo.posts
@@ -45,6 +46,7 @@ export const useUserStore = defineStore('user', () => {
   // 获取用户信息
   const getUserInfo = () => {
     return {
+      account: account.value,
       username: username.value,
       avatar: avatar.value,
       signature: signature.value,

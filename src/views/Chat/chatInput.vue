@@ -20,10 +20,23 @@ const send = async () => {
   if (success) {
     input.value = '' // 清空输入框
     console.log('消息发送成功')
+    // 触发滚动到底部事件
+    emit('messageSent')
   } else {
     console.error('消息发送失败')
   }
 }
+
+// 处理回车键事件
+const handleKeydown = (event) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault() // 阻止默认的换行行为
+    send()
+  }
+}
+
+// 定义emit
+const emit = defineEmits(['messageSent'])
 </script>
 
 <template>
@@ -47,6 +60,7 @@ const send = async () => {
             type="textarea"
             :rows="3"
             :autosize="{ minRows: 2, maxRows: 4 }"
+            @keydown="handleKeydown"
           />
           <el-button class="send-button" type="primary" @click="send">发送</el-button>
         </div>

@@ -1,4 +1,4 @@
-// 格式化时间的函数
+// 格式化时间
 export const formatTime = (timeString) => {
   if (!timeString) return ''
   try {

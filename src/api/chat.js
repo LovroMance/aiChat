@@ -10,3 +10,19 @@ export const useFileUpload = (file) => {
     }
   })
 }
+
+export const getAllMessages = () => {
+  return instance.get('/user/get_all_records', {
+    params: {
+      num: 30
+    }
+  })
+}
+
+export const getPartMessages = (existing_id) => {
+  return instance.get('/user/get_records', {
+    params: {
+      existing_id: existing_id
+    }
+  })
+}

@@ -17,13 +17,23 @@ const routes = [
     component: () => import('@/views/User/userRegister.vue')
   },
   {
+    path: '/userHome',
+    name: 'userHome',
+    component: () => import('@/views/User/userHome.vue'),
+  },
+  {
+    path: '/userFriends',
+    name: 'userFriends',
+    component: () => import('@/views/User/userFriends.vue'),
+  },
+  {
     path: '/homePage',
     name: 'homePage',
     component: () => import('../views/Home/homePage.vue'),
     children: [
       {
-        path: '/setting',
-        name: 'setting',
+        path: '/userSetting',
+        name: 'userSetting',
         component: () => import('../views/User/userSetting.vue'),
       },
       {

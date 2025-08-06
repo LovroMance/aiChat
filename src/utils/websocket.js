@@ -1,6 +1,7 @@
 import { baseURL } from '@/utils/request'
 import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
 import { useMessageStore } from '@/stores'
+import { MESSAGES_STORE, initDB, addData, closeDB } from '@/utils/indexedDB'
 
 const messageStore = useMessageStore()
 
@@ -9,7 +10,7 @@ export const chatPath = '/ws/chatroom'
 let ws = null // websocket实例
 let isConnected = false
 
-export const createWebSocket = (path) => {
+export const createWebSocket = async (path) => {
   // 动态获取token，确保获取最新的token
   const userInfo = getStorage(USER_LOGIN_INFO)
   const token = userInfo.token
@@ -30,12 +31,13 @@ export const createWebSocket = (path) => {
   try {
     ws = new WebSocket(wsUrl)
     bindEvents()
+    await initDB()
   } catch (error) {
     console.error(path + '连接失败', error)
   }
 }
 
-const bindEvents = () => {
+const bindEvents = async () => {
   if (!ws) return
 
   // 设置连接成功钩子
@@ -51,7 +53,8 @@ const bindEvents = () => {
       try {
         const data = JSON.parse(event.data)
         console.log('收到消息:', data)
-        messageStore.addMessage(data)
+        messageStore.addMessage(data) // 将消息添加到本地内存store中
+        addData(MESSAGES_STORE, data) // 将消息添加到数据库中 
       } catch {
         // 如果不是 JSON 格式，直接输出原始消息
         console.log('收到消息:', event.data)
@@ -97,6 +100,7 @@ export const closeWebSocket = () => {
     ws = null
     console.log('WebSocket连接已关闭')
     isConnected = false
+    closeDB() // 关闭数据库连接
   }
 }
 

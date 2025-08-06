@@ -1,42 +1,74 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage, ElLoading } from 'element-plus'
 const router = useRouter()
 
 // 获取用户仓库，存储用户信息
 import { useUserStore } from '@/stores/index'
-const userStore = useUserStore()
 import { USER_LOGIN_INFO, setStorage } from '@/utils/localstorage'
+const userStore = useUserStore()
 
-const username = ref('')
+const account = ref('')
 const password = ref('')
 
 // 登录api调用
 import { useUserLogin } from '@/api/user'
 const userLogin = async () => {
+  if (!account.value || !password.value) {
+    ElMessage({
+      message: '请输入账号和密码',
+      type: 'warning',
+    })
+    return
+  }
+  const loadingInstance = ElLoading.service({
+    lock: true,
+    text: '登录中...',
+    background: 'rgba(0, 0, 0, 0.7)',
+  })
   const { data } = await useUserLogin({
-    username: username.value,
+    account: account.value,
     password: password.value,
   })
   console.log(data)
-  if (data.code !== 200) {
-    alert('账号或密码错误')
-    username.value = ''
+
+  if (data.code == 404) {
+    ElMessage({
+      message: '账号错误',
+      type: 'warning',
+    })
+    account.value = ''
     password.value = ''
     return
   }
-    // 登陆成功就把用户的信息存到UserStore里
-    const userInfo = {
-      username: username.value,
-      password: password.value,
-      uid: data.uid,
-      token: data.token,
-    }
-    userStore.setLoginInfo(userInfo)
-    // 把用户token存到本地存储
-    setStorage(USER_LOGIN_INFO, userInfo)
-    alert('登录成功')
-    router.push('/userChat')
+  if (data.code == 401) {
+    ElMessage({
+      message: '密码错误',
+      type: 'warning',
+    })
+    account.value = ''
+    password.value = ''
+    return
+  }
+  if (data.code == 200) {
+    ElMessage({
+      message: '登录成功',
+      type: 'success',
+    })
+    account.value = ''
+    password.value = ''
+  }
+  // 登陆成功就把用户的信息存到UserStore里
+  const userInfo = {
+    uid: data.uid,
+    token: data.token,
+  }
+  userStore.setLoginInfo(userInfo)
+  // 把用户token存到本地存储
+  setStorage(USER_LOGIN_INFO, userInfo)
+  router.push('/userHome')
+  loadingInstance.close()
 }
 </script>
 
@@ -45,7 +77,7 @@ const userLogin = async () => {
     <div class="login-container">
       <h2 class="login-title">登录</h2>
       <div class="login-form">
-        <input v-model="username" type="text" placeholder="请输入账号" class="login-input" />
+        <input v-model="account" type="text" placeholder="请输入账号" class="login-input" />
         <input v-model="password" type="password" placeholder="请输入密码" class="login-input" />
         <button class="login-btn" @click="userLogin">登录</button>
         <button class="register-btn" @click="router.push('/register')">注册账号</button>
@@ -109,8 +141,10 @@ const userLogin = async () => {
   font-weight: bold;
   cursor: pointer;
   margin-top: 10px;
-  transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.8s cubic-bezier(0.4, 0, 0.2, 1), color 0.8s cubic-bezier(0.4, 0, 0.2, 1); /* 新增 color 过渡 */
+  transition:
+    background 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.8s cubic-bezier(0.4, 0, 0.2, 1); /* 新增 color 过渡 */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 .login-btn:hover {
@@ -130,8 +164,11 @@ const userLogin = async () => {
   font-weight: bold;
   cursor: pointer;
   margin-top: 10px;
-  transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1), color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 0.8s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    background 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 .register-btn:hover {

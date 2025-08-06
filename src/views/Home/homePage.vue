@@ -6,45 +6,35 @@
     <!-- 侧边栏 -->
     <el-aside width="200px">
       <el-menu default-active="2" class="el-menu-vertical-demo" router>
-        <el-sub-menu index="1">
-          <template #title>
-            <el-icon>
-              <UserFilled />
-            </el-icon>
-            <span>好友</span>
-          </template>
-          <el-sub-menu index="1-1">
-            <template #title>
-              <span>分类1</span>
-            </template>
-            <el-menu-item index="1-1-1">好友1</el-menu-item>
-            <el-menu-item index="1-1-1">好友2</el-menu-item>
-          </el-sub-menu>
+        <el-menu-item index="1" route="/userHome">
+          <el-icon>
+            <Home />
+          </el-icon>
+          <template #title>首页</template>
+        </el-menu-item>
 
-          <el-sub-menu index="1-2">
-            <template #title>
-              <span>分类2</span>
-            </template>
-            <el-menu-item index="1-2-1">好友1</el-menu-item>
-            <el-menu-item index="1-2-1">好友2</el-menu-item>
-          </el-sub-menu>
-        </el-sub-menu>
+        <el-menu-item index="2" route="/userFriends">
+          <el-icon>
+            <UserFilled />
+          </el-icon>
+          <template #title>好友</template>
+        </el-menu-item>
 
-        <el-menu-item index="2" route="/userChat">
+        <el-menu-item index="3" route="/userChat">
           <el-icon>
             <ChatDotRound />
           </el-icon>
           <template #title>聊天室</template>
         </el-menu-item>
 
-        <el-menu-item index="3" route="/userInfo" >
+        <el-menu-item index="4" route="/userInfo" >
           <el-icon>
             <User />
           </el-icon>
           <template #title>个人资料</template>
         </el-menu-item>
 
-        <el-menu-item index="4" route="/setting" >
+        <el-menu-item index="5" route="/userSetting" >
           <el-icon>
             <Setting />
           </el-icon>
