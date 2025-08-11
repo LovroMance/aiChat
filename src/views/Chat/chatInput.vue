@@ -47,7 +47,7 @@ const emit = defineEmits(['messageSent'])
         <div class="icon-container">
           <el-icon class="header-icon"><Opportunity /></el-icon>
           <el-icon class="header-icon"><Folder /></el-icon>
-          <el-icon class="header-icon"><PictureFilled /></el-icon>
+          <el-icon class="header-icon"><Picture /></el-icon>
           <el-icon class="header-icon"><Location /></el-icon>
         </div>
       </el-header>

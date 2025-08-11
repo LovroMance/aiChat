@@ -7,14 +7,17 @@ import { onMounted, onUnmounted, ref, nextTick } from 'vue'
 import { chatPath, createWebSocket, closeWebSocket } from '@/utils/websocket.js'
 import { getUserInfo } from '@/api/user'
 import { USER_LOGIN_INFO, USER_INFO_DATA, setStorage, getStorage } from '@/utils/localstorage'
-import { getAllData, MESSAGES_STORE } from '@/utils/indexedDB'
+import { MESSAGES_STORE, initDB, getAllData, closeDB, getLastData, addBatchData } from '@/utils/indexedDB'
 import { useMessageStore } from '@/stores'
+import { getPartMessages } from '@/api/chat'
+
 
 const messageStore = useMessageStore()
 
 const username = ref('')
 const userUid = getStorage(USER_LOGIN_INFO).uid
 const beforeMessages = ref([])
+const offlineMessages = ref([])
 
 // 滚动到底部的函数
 const scrollToBottom = () => {
@@ -30,23 +33,42 @@ const scrollToBottom = () => {
 onMounted(async () => {
   // 1. 发送请求 获取用户基本数据
   const { data } = await getUserInfo(userUid)
-  console.log(data)
+  console.log('getUserInfo/api', data)
   // 2. 加载用户数据存储到本地
   setStorage(USER_INFO_DATA, data.data)
-  username.value = getStorage(USER_INFO_DATA).username
+  username.value = getStorage(USER_INFO_DATA).username  //TODO: 删除
   // 3. 创建websocket连接
-  await createWebSocket(chatPath)
-  // 4. 获取所有消息
+  createWebSocket(chatPath)
+  // 4. 初始化（打开）本地数据库
+  await initDB()
+  // 5. 获取本地数据库聊天历史
   const messages = await getAllData(MESSAGES_STORE)
   beforeMessages.value = messages
+
+  // 6. 获取离线聊天历史
+  // 6.1 获取最后一条本地聊天记录id
+  const { message_id } = await getLastData(MESSAGES_STORE)
+  console.log('getLastData/indexedDB --> message_id' , message_id)
+  // 6.2 获取离线聊天记录 （根据message_id获取聊天历史）
+  const res = await getPartMessages({
+    thread_id: 1,
+    existing_id: message_id
+  })
+  console.log('getPartMessages/api --> 离线消息' , res.data.data)
+  // 7. 将离线消息添加到本地数据库
+  await addBatchData(MESSAGES_STORE, res.data.data)
+  offlineMessages.value = res.data.data
+
   scrollToBottom()
 })
 
-onUnmounted(() => {
+onUnmounted(async () => {
   // 组件卸载时关闭WebSocket连接 (内有关闭数据库)
   closeWebSocket()
   // 清空store中的消息
   messageStore.clearMessage()
+  // 关闭数据库
+  await closeDB()
 })
 </script>
 
@@ -56,7 +78,7 @@ onUnmounted(() => {
     <el-header class="header-container" style="height: 10%">{{ username }}</el-header>
     <!-- 聊天内容 -->
     <el-main style="padding: 0; border-top: 1px solid rgba(70, 130, 180, 0.2)">
-      <chatPanel :messages="beforeMessages" />
+      <chatPanel :beforeMessages="beforeMessages" :offlineMessages="offlineMessages" />
     </el-main>
     <!-- 输入框 -->
     <el-footer style="

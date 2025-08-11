@@ -1,5 +1,6 @@
 import axios from 'axios'
-import { useUserStore } from '@/stores'
+import { useUserStore } from '@/stores/index'
+const userStore = useUserStore()
 
 const baseURL = 'http://localhost:10086'
 
@@ -11,9 +12,9 @@ const instance = axios.create({
 // 请求拦截器
 instance.interceptors.request.use(
   (config) => {
-    const userStore = useUserStore()
     if ( userStore.token ) {
-      config.headers.Authorization = userStore.token
+      console.log('userStore.token', userStore.token)
+      config.headers.Authorization = 'JWT ' + userStore.token
     }
     return config
   },

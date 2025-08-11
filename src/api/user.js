@@ -25,3 +25,21 @@ export const getUserInfo = (data) => {
     },
   })
 }
+
+// 更新个人资料
+export const updateUserInfo = (data) => {
+  return instance.post('/user/modify/info', {
+    account: data.account,
+    username: data.username,
+    avatar: data.avatar,
+    email: data.email,
+    signature: data.signature,
+    createTime: data.createTime,
+    lastLoginTime: data.lastLoginTime,
+    status: data.status,
+    level: data.level,
+    posts: data.posts,
+    followers: data.followers,
+    following: data.following,
+  })
+}

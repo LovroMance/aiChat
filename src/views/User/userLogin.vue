@@ -27,48 +27,35 @@ const userLogin = async () => {
     text: '登录中...',
     background: 'rgba(0, 0, 0, 0.7)',
   })
-  const { data } = await useUserLogin({
-    account: account.value,
-    password: password.value,
-  })
-  console.log(data)
-
-  if (data.code == 404) {
-    ElMessage({
-      message: '账号错误',
-      type: 'warning',
+  try {
+    const { data } = await useUserLogin({
+      account: account.value,
+      password: password.value,
     })
-    account.value = ''
-    password.value = ''
-    return
-  }
-  if (data.code == 401) {
-    ElMessage({
-      message: '密码错误',
-      type: 'warning',
-    })
-    account.value = ''
-    password.value = ''
-    return
-  }
-  if (data.code == 200) {
+    console.log('userLogin/api', data)
+    // 登陆成功就把用户的信息存到UserStore里
+    const userInfo = {
+      uid: data.uid,
+      token: data.token,
+    }
+    userStore.setLoginInfo(userInfo)
+    // 把用户token存到本地存储
+    setStorage(USER_LOGIN_INFO, userInfo)
     ElMessage({
       message: '登录成功',
       type: 'success',
     })
     account.value = ''
     password.value = ''
+    router.push('/userHome')
+  } catch (error) {
+    ElMessage({
+      message: error.response.data.message,
+      type: 'error',
+    })
+  } finally {
+    loadingInstance.close()
   }
-  // 登陆成功就把用户的信息存到UserStore里
-  const userInfo = {
-    uid: data.uid,
-    token: data.token,
-  }
-  userStore.setLoginInfo(userInfo)
-  // 把用户token存到本地存储
-  setStorage(USER_LOGIN_INFO, userInfo)
-  router.push('/userHome')
-  loadingInstance.close()
 }
 </script>
 

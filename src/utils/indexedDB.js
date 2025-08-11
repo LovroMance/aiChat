@@ -19,17 +19,25 @@ export const FILES_STORE = 'files'
  */
 export const initDB = () => {
   return new Promise((resolve, reject) => {
+    // 如果数据库已打开，则直接返回
+    if (db) {
+      console.log('数据库已打开', db);
+      resolve(db)
+      return
+    }
+
+    // 打开数据库
     const request = indexedDB.open(DB_NAME, DB_VERSION)
 
     request.onerror = () => {
       console.error('数据库打开失败')
-      reject(new Error('数据库打开失败'))
+      reject('数据库打开失败')
     }
 
     request.onsuccess = (event) => {
+      console.log('数据库连接成功')
       db = event.target.result
       resolve(db)
-      console.log('数据库连接成功')
     }
 
     request.onupgradeneeded = (event) => {
@@ -37,9 +45,9 @@ export const initDB = () => {
 
       // 创建消息存储
       if (!database.objectStoreNames.contains(MESSAGES_STORE)) {
-        const messageStore = database.createObjectStore(MESSAGES_STORE, { 
-          keyPath: 'id', 
-          autoIncrement: true 
+        const messageStore = database.createObjectStore(MESSAGES_STORE, {
+          keyPath: 'id',
+          autoIncrement: true,
         })
         messageStore.createIndex('timestamp', 'timestamp', { unique: false })
         messageStore.createIndex('senderId', 'senderId', { unique: false })
@@ -53,9 +61,9 @@ export const initDB = () => {
 
       // 创建文件存储
       if (!database.objectStoreNames.contains(FILES_STORE)) {
-        const fileStore = database.createObjectStore(FILES_STORE, { 
-          keyPath: 'id', 
-          autoIncrement: true 
+        const fileStore = database.createObjectStore(FILES_STORE, {
+          keyPath: 'id',
+          autoIncrement: true,
         })
         fileStore.createIndex('filename', 'filename', { unique: false })
         fileStore.createIndex('type', 'type', { unique: false })
@@ -65,71 +73,105 @@ export const initDB = () => {
 }
 
 /**
+ * 确保数据库已打开
+ * @returns {Promise} 返回数据库连接
+ */
+export const ensureDBOpen = async () => {
+  if (!db) {
+    console.log('数据库未初始化，正在打开数据库...')
+    return await initDB()
+  }
+  return db
+}
+
+/**
  * 添加数据到存储对象
  * @param {string} storeName - 存储对象名称
  * @param {Object} data - 要存储的数据
  * @returns {Promise} 返回添加的数据ID
  */
-export const addData = (storeName, data) => {
-  return new Promise((resolve, reject) => {
-    if (!db) {
-      console.error('数据库未初始化')
-      reject(new Error('数据库未初始化'))
-      return
-    }
+export const addData = async (storeName, data) => {
+  try {
+    await ensureDBOpen()
 
-    try {
-      const transaction = db.transaction([storeName], 'readwrite')
-      const store = transaction.objectStore(storeName)
-      const request = store.add(data)
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = db.transaction([storeName], 'readwrite')
+        const store = transaction.objectStore(storeName)
+        const request = store.add(data)
 
-      request.onsuccess = () => {
-        resolve(request.result)
+        request.onsuccess = () => {
+          resolve(request.result)
+        }
+
+        request.onerror = () => {
+          console.error('添加数据失败')
+          reject(new Error('添加数据失败'))
+        }
+      } catch (error) {
+        console.error('添加数据操作失败:', error)
+        reject(error)
       }
-
-      request.onerror = () => {
-        console.error('添加数据失败')
-        reject(new Error('添加数据失败'))
-      }
-    } catch (error) {
-      console.error('添加数据操作失败:', error)
-      reject(error)
-    }
-  })
+    })
+  } catch (error) {
+    console.error('数据库打开失败:', error)
+    throw error
+  }
 }
 
 /**
- * 根据ID获取数据
+ * 批量添加数据到存储对象
  * @param {string} storeName - 存储对象名称
- * @param {any} id - 数据ID
- * @returns {Promise} 返回查询到的数据
+ * @param {Array} dataArray - 要存储的数据数组
+ * @returns {Promise} 返回添加的数据ID数组
  */
-export const getData = (storeName, id) => {
-  return new Promise((resolve, reject) => {
-    if (!db) {
-      console.error('数据库未初始化')
-      reject(new Error('数据库未初始化'))
-      return
+export const addBatchData = async (storeName, dataArray) => {
+  try {
+    await ensureDBOpen()
+
+    if (!Array.isArray(dataArray)) {
+      throw new Error('数据必须是数组格式')
     }
 
-    try {
-      const transaction = db.transaction([storeName], 'readonly')
-      const store = transaction.objectStore(storeName)
-      const request = store.get(id)
-
-      request.onsuccess = () => {
-        resolve(request.result)
-      }
-
-      request.onerror = () => {
-        console.error('查询数据失败')
-        reject(new Error('查询数据失败'))
-      }
-    } catch (error) {
-      console.error('查询数据操作失败:', error)
-      reject(error)
+    if (dataArray.length === 0) {
+      return []
     }
-  })
+
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = db.transaction([storeName], 'readwrite')
+        const store = transaction.objectStore(storeName)
+        const results = []
+        let completed = 0
+        let hasError = false
+
+        dataArray.forEach((data, index) => {
+          const request = store.add(data)
+
+          request.onsuccess = () => {
+            results[index] = request.result
+            completed++
+            
+            if (completed === dataArray.length && !hasError) {
+              resolve(results)
+            }
+          }
+
+          request.onerror = () => {
+            hasError = true
+            console.error(`批量添加数据失败，索引 ${index}:`, request.error)
+            reject(new Error(`批量添加数据失败，索引 ${index}: ${request.error}`))
+          }
+        })
+      } catch (error) {
+        console.error('批量添加数据操作失败:', error)
+        reject(error)
+      }
+    })
+  } catch (error) {
+    console.error('数据库打开失败:', error)
+    throw error
+  }
 }
 
 /**
@@ -137,32 +179,77 @@ export const getData = (storeName, id) => {
  * @param {string} storeName - 存储对象名称
  * @returns {Promise} 返回所有数据
  */
-export const getAllData = (storeName) => {
-  return new Promise((resolve, reject) => {
-    if (!db) {
-      console.error('数据库未初始化')
-      reject(new Error('数据库未初始化'))
-      return
-    }
+export const getAllData = async (storeName) => {
+  try {
+    await ensureDBOpen()
 
-    try {
-      const transaction = db.transaction([storeName], 'readonly')
-      const store = transaction.objectStore(storeName)
-      const request = store.getAll()
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = db.transaction([storeName], 'readonly')
+        const store = transaction.objectStore(storeName)
+        const request = store.getAll()
 
-      request.onsuccess = () => {
-        resolve(request.result)
+        request.onsuccess = () => {
+          resolve(request.result)
+        }
+
+        request.onerror = () => {
+          console.error('查询所有数据失败')
+          reject(new Error('查询所有数据失败'))
+        }
+      } catch (error) {
+        console.error('查询所有数据操作失败:', error)
+        reject(error)
       }
+    })
+  } catch (error) {
+    console.error('数据库打开失败:', error)
+    throw error
+  }
+}
 
-      request.onerror = () => {
-        console.error('查询所有数据失败')
-        reject(new Error('查询所有数据失败'))
+/**
+ * 获取最后一条新数据
+ * @param {string} storeName - 存储对象名称
+ * @param {string} indexName - 索引名称（可选，默认为'timestamp'）
+ * @returns {Promise} 返回最后一条数据
+ */
+export const getLastData = async (storeName) => {
+  try {
+    await ensureDBOpen()
+
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = db.transaction([storeName], 'readonly')
+        const store = transaction.objectStore(storeName)
+
+        // 使用主键游标
+        const request = store.openCursor(null, 'prev')
+
+        request.onsuccess = (event) => {
+          const cursor = event.target.result
+          if (cursor) {
+            // 找到最后一条数据
+            resolve(cursor.value)
+          } else {
+            // 没有数据
+            resolve(null)
+          }
+        }
+
+        request.onerror = () => {
+          console.error('获取最后一条数据失败')
+          reject(new Error('获取最后一条数据失败'))
+        }
+      } catch (error) {
+        console.error('获取最后一条数据操作失败:', error)
+        reject(error)
       }
-    } catch (error) {
-      console.error('查询所有数据操作失败:', error)
-      reject(error)
-    }
-  })
+    })
+  } catch (error) {
+    console.error('数据库打开失败:', error)
+    throw error
+  }
 }
 
 /**
@@ -172,101 +259,34 @@ export const getAllData = (storeName) => {
  * @param {any} value - 索引值
  * @returns {Promise} 返回查询到的数据
  */
-export const getDataByIndex = (storeName, indexName, value) => {
-  return new Promise((resolve, reject) => {
-    if (!db) {
-      console.error('数据库未初始化')
-      reject(new Error('数据库未初始化'))
-      return
-    }
+export const getDataByIndex = async (storeName, indexName, value) => {
+  try {
+    await ensureDBOpen()
 
-    try {
-      const transaction = db.transaction([storeName], 'readonly')
-      const store = transaction.objectStore(storeName)
-      const index = store.index(indexName)
-      const request = index.getAll(value)
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = db.transaction([storeName], 'readonly')
+        const store = transaction.objectStore(storeName)
+        const index = store.index(indexName)
+        const request = index.getAll(value)
 
-      request.onsuccess = () => {
-        resolve(request.result)
+        request.onsuccess = () => {
+          resolve(request.result)
+        }
+
+        request.onerror = () => {
+          console.error('根据索引查询数据失败')
+          reject(new Error('根据索引查询数据失败'))
+        }
+      } catch (error) {
+        console.error('根据索引查询数据操作失败:', error)
+        reject(error)
       }
-
-      request.onerror = () => {
-        console.error('根据索引查询数据失败')
-        reject(new Error('根据索引查询数据失败'))
-      }
-    } catch (error) {
-      console.error('根据索引查询数据操作失败:', error)
-      reject(error)
-    }
-  })
-}
-
-/**
- * 更新数据
- * @param {string} storeName - 存储对象名称
- * @param {Object} data - 要更新的数据
- * @returns {Promise} 返回更新结果
- */
-export const updateData = (storeName, data) => {
-  return new Promise((resolve, reject) => {
-    if (!db) {
-      console.error('数据库未初始化')
-      reject(new Error('数据库未初始化'))
-      return
-    }
-
-    try {
-      const transaction = db.transaction([storeName], 'readwrite')
-      const store = transaction.objectStore(storeName)
-      const request = store.put(data)
-
-      request.onsuccess = () => {
-        resolve(request.result)
-      }
-
-      request.onerror = () => {
-        console.error('更新数据失败')
-        reject(new Error('更新数据失败'))
-      }
-    } catch (error) {
-      console.error('更新数据操作失败:', error)
-      reject(error)
-    }
-  })
-}
-
-/**
- * 删除数据
- * @param {string} storeName - 存储对象名称
- * @param {any} id - 数据ID
- * @returns {Promise} 返回删除结果
- */
-export const deleteData = (storeName, id) => {
-  return new Promise((resolve, reject) => {
-    if (!db) {
-      console.error('数据库未初始化')
-      reject(new Error('数据库未初始化'))
-      return
-    }
-
-    try {
-      const transaction = db.transaction([storeName], 'readwrite')
-      const store = transaction.objectStore(storeName)
-      const request = store.delete(id)
-
-      request.onsuccess = () => {
-        resolve(true)
-      }
-
-      request.onerror = () => {
-        console.error('删除数据失败')
-        reject(new Error('删除数据失败'))
-      }
-    } catch (error) {
-      console.error('删除数据操作失败:', error)
-      reject(error)
-    }
-  })
+    })
+  } catch (error) {
+    console.error('数据库打开失败:', error)
+    throw error
+  }
 }
 
 /**
@@ -274,32 +294,33 @@ export const deleteData = (storeName, id) => {
  * @param {string} storeName - 存储对象名称
  * @returns {Promise} 返回清空结果
  */
-export const clearData = (storeName) => {
-  return new Promise((resolve, reject) => {
-    if (!db) {
-      console.error('数据库未初始化')
-      reject(new Error('数据库未初始化'))
-      return
-    }
+export const clearData = async (storeName) => {
+  try {
+    await ensureDBOpen()
 
-    try {
-      const transaction = db.transaction([storeName], 'readwrite')
-      const store = transaction.objectStore(storeName)
-      const request = store.clear()
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = db.transaction([storeName], 'readwrite')
+        const store = transaction.objectStore(storeName)
+        const request = store.clear()
 
-      request.onsuccess = () => {
-        resolve(true)
+        request.onsuccess = () => {
+          resolve(true)
+        }
+
+        request.onerror = () => {
+          console.error('清空数据失败')
+          reject(new Error('清空数据失败'))
+        }
+      } catch (error) {
+        console.error('清空数据操作失败:', error)
+        reject(error)
       }
-
-      request.onerror = () => {
-        console.error('清空数据失败')
-        reject(new Error('清空数据失败'))
-      }
-    } catch (error) {
-      console.error('清空数据操作失败:', error)
-      reject(error)
-    }
-  })
+    })
+  } catch (error) {
+    console.error('数据库打开失败:', error)
+    throw error
+  }
 }
 
 /**
@@ -311,31 +332,6 @@ export const closeDB = () => {
     db = null
     console.log('数据库连接已关闭')
   }
-}
-
-/**
- * 删除整个数据库
- * @param {string} dbName - 数据库名称，默认为当前数据库
- * @returns {Promise} 返回删除结果
- */
-export const deleteDB = (dbName = DB_NAME) => {
-  return new Promise((resolve, reject) => {
-    try {
-      const request = indexedDB.deleteDatabase(dbName)
-
-      request.onsuccess = () => {
-        resolve(true)
-      }
-
-      request.onerror = () => {
-        console.error('删除数据库失败')
-        reject(new Error('删除数据库失败'))
-      }
-    } catch (error) {
-      console.error('删除数据库操作失败:', error)
-      reject(error)
-    }
-  })
 }
 
 // 使用示例：

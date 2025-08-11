@@ -1,76 +1,67 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useFileUpload } from '@/api/chat'
 import { baseURL } from '@/utils/request'
 
-// import { useUserStore } from '@/stores/User'
-// const userStore = useUserStore()
+import { updateUserInfo } from '@/api/user'
+import { USER_INFO_DATA, getStorage, setStorage } from '@/utils/localstorage'
+// 获取用户个人资料信息
+const userInfo = ref(getStorage(USER_INFO_DATA))
+console.log('userInfo', userInfo.value)
 
-// const userInfo = ref(userStore.getUserInfo())
-const userInfo = ref({
-  username: '用户名',
-  avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
-  signature: '这个人很懒，什么都没有留下...',
-  email: 'user@example.com',
-  createTime: '2024-01-01',
-  lastLoginTime: '2024-01-15 14:30:00',
-  status: '在线',
-  level: 'Lv.5',
-  posts: 128,
-  followers: 256,
-  following: 64,
-})
-
-const selectedFile = ref(null)  // 保存选择的文件对象
-const isEditing = ref(false)
+const selectedFile = ref(null) // 保存选择的文件对象
+const isEditing = ref(false) // 是否进入编辑状态
 // 选择头像响应
 const handleAvatarChange = (uploadFile) => {
-  console.log('选择的文件:', uploadFile)
-  selectedFile.value = uploadFile.raw  // 保存文件对象
-  userInfo.value.avatar = URL.createObjectURL(uploadFile.raw)  // 本地预览头像url
+  selectedFile.value = uploadFile.raw // 保存文件对象
+  userInfo.value.avatar = URL.createObjectURL(uploadFile.raw) // 本地预览头像url
 }
 
+// 编辑表单
 const editForm = ref({
-  nickname: userInfo.value.nickname,
-  signature: userInfo.value.signature,
   email: userInfo.value.email,
+  signature: userInfo.value.signature,
 })
 
+// 编辑处理逻辑
 const handleEdit = () => {
   isEditing.value = true
   editForm.value = {
-    nickname: userInfo.value.nickname,
-    signature: userInfo.value.signature,
     email: userInfo.value.email,
+    signature: userInfo.value.signature,
   }
 }
 
-// 保存
+// 保存处理逻辑
 const handleSave = async () => {
   console.log('保存')
-  // 立即上传文件
+  // 保存其他用户信息
+  userInfo.value.signature = editForm.value.signature
+  userInfo.value.email = editForm.value.email
+
   try {
+    // 上传新头像
+    if (selectedFile.value) {
     const res = await useFileUpload(selectedFile.value)
     console.log('头像上传结果:', res)
     userInfo.value.avatar = baseURL + '/' + res.data.data
+    }
+    // 更新本地存储
+    setStorage(USER_INFO_DATA, userInfo.value)
+    // 更新服务器数据
+    const { data } = await updateUserInfo(userInfo.value)
+    console.log('更新用户信息结果:', data)
   } catch (error) {
     console.error('头像上传失败:', error)
-  } 
-    // 保存其他用户信息
-    userInfo.value.signature = editForm.value.signature
-    userInfo.value.email = editForm.value.email
-    isEditing.value = false
+  }
+  isEditing.value = false
+  selectedFile.value = null // 重置选择的文件
 }
 
 const handleCancel = () => {
   isEditing.value = false
   selectedFile.value = null // 清除选择的文件
 }
-
-onMounted(() => {
-  // 这里应该从API获取用户信息
-  console.log('加载用户信息')
-})
 </script>
 
 <template>
@@ -94,7 +85,18 @@ onMounted(() => {
               accept=".png,.jpg,.jpeg"
               :on-change="handleAvatarChange"
             >
-              <img v-if="userInfo.avatar" :src="userInfo.avatar" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid #f0f8ff; box-shadow: 0 4px 16px rgba(70, 130, 180, 0.15);" />
+              <img
+                v-if="userInfo.avatar"
+                :src="userInfo.avatar"
+                style="
+                  width: 100px;
+                  height: 100px;
+                  border-radius: 50%;
+                  object-fit: cover;
+                  border: 4px solid #f0f8ff;
+                  box-shadow: 0 4px 16px rgba(70, 130, 180, 0.15);
+                "
+              />
               <el-icon v-else class="avatar-uploader-icon">
                 <Plus />
               </el-icon>
@@ -102,13 +104,13 @@ onMounted(() => {
 
             <div
               class="status-indicator"
-              :class="userInfo.status === '在线' ? 'online' : 'offline'"
+              :class="userInfo.status === 0 ? 'online' : 'offline'"
             ></div>
           </div>
           <div class="user-basic-info">
             <h1 class="username">{{ userInfo.username }}</h1>
-            <div class="user-level">{{ userInfo.level }}</div>
-            <div class="user-status">{{ userInfo.status }}</div>
+            <div class="user-level">Lv.{{ userInfo.level }}</div>
+            <div class="user-status">{{ userInfo.status === 0 ? '在线' : '离线' }}</div>
           </div>
         </div>
 
@@ -129,11 +131,22 @@ onMounted(() => {
         <h2 class="section-title">个人信息</h2>
 
         <div class="info-grid">
-          <!-- 个性签名 -->
-          <div class="info-item full-width">
-            <label class="info-label">个性签名</label>
-            <div class="info-value signature-text" v-if="!isEditing">{{ userInfo.signature }}</div>
-            <textarea v-else v-model="editForm.signature" class="edit-textarea" rows="3"></textarea>
+          <!-- 账号 -->
+          <div class="info-item">
+            <label class="info-label">账号</label>
+            <div class="info-value">{{ userInfo.account }}</div>
+          </div>
+
+          <!-- 注册时间 -->
+          <div class="info-item">
+            <label class="info-label">注册时间</label>
+            <div class="info-value">{{ userInfo.create_time }}</div>
+          </div>
+
+          <!-- 最后登录 -->
+          <div class="info-item">
+            <label class="info-label">最后登录</label>
+            <div class="info-value">{{ userInfo.last_login_time }}</div>
           </div>
 
           <!-- 邮箱 -->
@@ -143,16 +156,11 @@ onMounted(() => {
             <input v-else v-model="editForm.email" class="edit-input" type="email" />
           </div>
 
-          <!-- 注册时间 -->
-          <div class="info-item">
-            <label class="info-label">注册时间</label>
-            <div class="info-value">{{ userInfo.createTime }}</div>
-          </div>
-
-          <!-- 最后登录 -->
-          <div class="info-item">
-            <label class="info-label">最后登录</label>
-            <div class="info-value">{{ userInfo.lastLoginTime }}</div>
+          <!-- 个性签名 -->
+          <div class="info-item full-width">
+            <label class="info-label">个性签名</label>
+            <div class="info-value signature-text" v-if="!isEditing">{{ userInfo.signature }}</div>
+            <textarea v-else v-model="editForm.signature" class="edit-textarea" rows="3"></textarea>
           </div>
         </div>
       </div>
@@ -471,6 +479,7 @@ onMounted(() => {
   background: #f8f9fa;
   border-radius: 8px;
   border: 1px solid #e9ecef;
+  height: 51.33px;
 }
 
 .signature-text {
@@ -498,8 +507,9 @@ onMounted(() => {
 }
 
 .edit-textarea {
-  resize: vertical;
-  min-height: 80px;
+  resize: none;
+  min-height: 51.33px;
+  max-height: 51.33px;
 }
 
 /* 统计数据卡片 */

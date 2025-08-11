@@ -61,6 +61,12 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  // 清除登录信息
+  const clearLoginInfo = () => {
+    uid.value = ''
+    token.value = ''
+  }
+
   return {
     account,
     username,
@@ -80,5 +86,6 @@ export const useUserStore = defineStore('user', () => {
     setLoginInfo,
     setUserInfo,
     getUserInfo,
+    clearLoginInfo,
   }
 })

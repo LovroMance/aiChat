@@ -2,18 +2,31 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getUserInfo } from '@/api/user'
-import { USER_LOGIN_INFO, USER_INFO_DATA, getStorage, setStorage } from '@/utils/localstorage'
-import { useUserStore } from '@/stores/User'
-
-const userStore = useUserStore()
-const userInfo = getStorage(USER_LOGIN_INFO)
+import { USER_LOGIN_INFO, USER_INFO_DATA, setStorage, getStorage } from '@/utils/localstorage'
+import { ElMessage } from 'element-plus'
 
 onMounted(async () => {
-  const { data } = await getUserInfo(userInfo.uid)
-  console.log(data)
-  setStorage(USER_INFO_DATA, data.data)
-  userStore.setUserInfo(data.data)
+  try {
+    const { data } = await getUserInfo(getStorage(USER_LOGIN_INFO).uid)
+    // 错误提示
+    if (data.code !== 200) {
+      ElMessage({
+        message: data.message,
+        type: 'error',
+      })
+    }
+    // 成功逻辑
+    else {
+      setStorage(USER_INFO_DATA, data.data)
+    }
+  } catch (error) {
+    ElMessage({
+      message: error.message,
+      type: 'error',
+    })
+  }
 })
+
 
 const router = useRouter()
 
@@ -25,7 +38,7 @@ const menuItems = ref([
     description: '管理您的好友列表',
     icon: 'User',
     route: '/userFriends',
-    color: '#409EFF'
+    color: '#409EFF',
   },
   {
     id: 'chatroom',
@@ -33,7 +46,7 @@ const menuItems = ref([
     description: '进入聊天室开始对话',
     icon: 'ChatDotRound',
     route: '/userChat',
-    color: '#67C23A'
+    color: '#67C23A',
   },
   {
     id: 'profile',
@@ -41,7 +54,7 @@ const menuItems = ref([
     description: '查看和编辑个人信息',
     icon: 'UserFilled',
     route: '/userInfo',
-    color: '#E6A23C'
+    color: '#E6A23C',
   },
   {
     id: 'settings',
@@ -49,8 +62,8 @@ const menuItems = ref([
     description: '应用设置和偏好',
     icon: 'Setting',
     route: '/userSetting',
-    color: '#F56C6C'
-  }
+    color: '#F56C6C',
+  },
 ])
 
 // 导航到指定页面
@@ -65,14 +78,9 @@ const navigateTo = (item) => {
       <h1 class="home-title">欢迎回来</h1>
       <p class="home-subtitle">选择您要进行的操作</p>
     </div>
-    
+
     <div class="menu-grid">
-      <div 
-        v-for="item in menuItems" 
-        :key="item.id"
-        class="menu-card"
-        @click="navigateTo(item)"
-      >
+      <div v-for="item in menuItems" :key="item.id" class="menu-card" @click="navigateTo(item)">
         <div class="card-icon" :style="{ backgroundColor: item.color }">
           <el-icon :size="32" color="white">
             <component :is="item.icon" />
@@ -223,7 +231,7 @@ const navigateTo = (item) => {
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
   }
-  
+
   .home-title {
     font-size: 2.5rem;
   }
@@ -234,25 +242,25 @@ const navigateTo = (item) => {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .home-title {
     font-size: 2rem;
   }
-  
+
   .home-subtitle {
     font-size: 1rem;
   }
-  
+
   .menu-card {
     padding: 24px 20px;
     min-height: 160px;
   }
-  
+
   .card-icon {
     width: 60px;
     height: 60px;
   }
-  
+
   .card-title {
     font-size: 1.3rem;
   }

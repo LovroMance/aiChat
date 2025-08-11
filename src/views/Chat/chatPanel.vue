@@ -10,7 +10,11 @@ const receiveMessages = ref(messageStore.receiveMessages)
 const userUid = getStorage(USER_LOGIN_INFO).uid
 
 const props = defineProps({
-  messages: {
+  beforeMessages: {
+    type: Array,
+    required: true,
+  },
+  offlineMessages: {
     type: Array,
     required: true,
   },
@@ -31,7 +35,22 @@ watch(() => [...receiveMessages.value], () => {
   <el-scrollbar class="chat-panel" style="height: 100%">
     <!-- 过去的聊天记录 -->
     <div>
-      <div v-for="msg in props.messages" :key="msg.message_id"
+      <div v-for="msg in props.beforeMessages" :key="msg.message_id"
+        :class="['chat-message', msg.sender_uid === userUid ? 'self' : 'other']">
+        <img class="avatar" :src="msg.sender_avatar" :alt="msg.sender_name" />
+        <div class="message-content">
+          <div class="username-time" :class="msg.sender_uid === userUid ? 'self' : ''">
+            <span class="username">{{ msg.sender_name }}</span>
+            <span class="time">{{ formatTime(msg.create_time) }}</span>
+          </div>
+          <div class="content">{{ msg.content }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 离线的聊天记录 -->
+    <div>
+      <div v-for="msg in props.offlineMessages" :key="msg.message_id"
         :class="['chat-message', msg.sender_uid === userUid ? 'self' : 'other']">
         <img class="avatar" :src="msg.sender_avatar" :alt="msg.sender_name" />
         <div class="message-content">
@@ -149,6 +168,7 @@ watch(() => [...receiveMessages.value], () => {
   line-height: 1.8;
   letter-spacing: 0.01em;
   margin-top: 2px;
+  min-height: 28.79px;
 }
 
 .chat-message.self .content {

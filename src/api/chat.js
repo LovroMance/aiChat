@@ -19,10 +19,12 @@ export const getAllMessages = () => {
   })
 }
 
-export const getPartMessages = (existing_id) => {
+export const getPartMessages = (data) => {
   return instance.get('/user/get_records', {
     params: {
-      existing_id: existing_id
+      thread_id: data.thread_id,  // 会话id
+      existing_id: data.existing_id,  // 已有消息id
+      num: data.num  // 返回指定数量记录
     }
   })
 }
