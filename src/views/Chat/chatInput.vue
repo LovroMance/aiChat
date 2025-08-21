@@ -13,7 +13,8 @@ const send = async () => {
   // 构造消息对象
   const messageObj = {
     content: input.value.trim(),
-    attachment: null
+    attachment: null,
+    thread_id: 1  // TODO: 替换为实际的房间号
   }
   
   const success = await sendMessage(messageObj)

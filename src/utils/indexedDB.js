@@ -137,6 +137,17 @@ export const addBatchData = async (storeName, dataArray) => {
       return []
     }
 
+    // 清理数据，移除不可序列化的属性
+    const cleanDataArray = dataArray.map(data => {
+      try {
+        // 通过JSON序列化和反序列化来清理数据
+        return JSON.parse(JSON.stringify(data))
+      } catch (error) {
+        console.warn('数据清理失败，跳过该条数据:', error)
+        return null
+      }
+    })
+
     return new Promise((resolve, reject) => {
       try {
         const transaction = db.transaction([storeName], 'readwrite')
@@ -145,22 +156,22 @@ export const addBatchData = async (storeName, dataArray) => {
         let completed = 0
         let hasError = false
 
-        dataArray.forEach((data, index) => {
+        cleanDataArray.forEach((data, index) => {
           const request = store.add(data)
 
           request.onsuccess = () => {
             results[index] = request.result
             completed++
             
-            if (completed === dataArray.length && !hasError) {
+            if (completed === cleanDataArray.length && !hasError) {
               resolve(results)
             }
           }
 
           request.onerror = () => {
             hasError = true
-            console.error(`批量添加数据失败，索引 ${index}:`, request.error)
-            reject(new Error(`批量添加数据失败，索引 ${index}: ${request.error}`))
+            console.error('批量添加数据失败')
+            reject(new Error('批量添加数据失败'))
           }
         })
       } catch (error) {

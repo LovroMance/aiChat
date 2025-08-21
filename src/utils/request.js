@@ -1,6 +1,8 @@
 import axios from 'axios'
 import { useUserStore } from '@/stores/index'
 const userStore = useUserStore()
+import { USER_LOGIN_INFO ,getStorage } from './localstorage'
+const token = getStorage(USER_LOGIN_INFO)?.token
 
 const baseURL = 'http://localhost:10086'
 
@@ -12,13 +14,17 @@ const instance = axios.create({
 // 请求拦截器
 instance.interceptors.request.use(
   (config) => {
-    if ( userStore.token ) {
+    if (userStore.token) {
       console.log('userStore.token', userStore.token)
       config.headers.Authorization = 'JWT ' + userStore.token
     }
+    else if (token) {
+      console.log('getStorage(USER_LOGIN_INFO).token', token)
+      config.headers.Authorization = 'JWT ' + token
+    }
     return config
   },
-  (err) => Promise.reject(err)
+  (err) => Promise.reject(err),
 )
 
 // 响应拦截器
@@ -31,7 +37,7 @@ instance.interceptors.response.use(
   (err) => {
     // TODO 5. 处理401错误
     return Promise.reject(err)
-  }
+  },
 )
 
 export default instance

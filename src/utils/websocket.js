@@ -1,6 +1,8 @@
 import { baseURL } from '@/utils/request'
-import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
 import { useMessageStore } from '@/stores'
+import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
+import { MESSAGES_STORE, addData } from '@/utils/indexedDB'
+
 
 const messageStore = useMessageStore()
 
@@ -51,6 +53,7 @@ const bindEvents = async () => {
       try {
         const data = JSON.parse(event.data)  // 把JSON字符串转换为对象
         console.log('收到消息:', data)
+        await addData(MESSAGES_STORE, data) // 将消息添加到IndexedDB
         messageStore.addMessage(data) // 将消息添加到本地内存store中
       } catch {
         // 如果不是 JSON 格式，直接输出原始消息

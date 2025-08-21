@@ -44,7 +44,9 @@ const handleSave = async () => {
     if (selectedFile.value) {
     const res = await useFileUpload(selectedFile.value)
     console.log('头像上传结果:', res)
+    console.log(res.data.data)
     userInfo.value.avatar = baseURL + '/' + res.data.data
+    console.log('userInfo.value.avatar', userInfo.value.avatar)
     }
     // 更新本地存储
     setStorage(USER_INFO_DATA, userInfo.value)

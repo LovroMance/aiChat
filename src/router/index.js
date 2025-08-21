@@ -14,7 +14,7 @@ const routes = [
   {
     path: '/register',
     name: 'register',
-    component: () => import('@/views/User/userRegister.vue')
+    component: () => import('@/views/User/userRegister.vue'),
   },
   {
     path: '/userHome',
@@ -29,24 +29,29 @@ const routes = [
   {
     path: '/homePage',
     name: 'homePage',
-    component: () => import('../views/Home/homePage.vue'),
+    component: () => import('@/views/Home/homePage.vue'),
     children: [
       {
         path: '/userSetting',
         name: 'userSetting',
-        component: () => import('../views/User/userSetting.vue'),
+        component: () => import('@/views/User/userSetting.vue'),
       },
       {
         path: '/userChat',
         name: 'userChat',
-        component: () => import('../views/User/userChat.vue'),
+        component: () => import('@/views/User/userChat.vue'),
       },
       {
         path: '/userInfo',
         name: 'userInfo',
-        component: () => import('../views/User/userInfo.vue'),
-      }
-    ]
+        component: () => import('@/views/User/userInfo.vue'),
+      },
+      {
+        path: '/chatJoin',
+        name: 'chatJoin',
+        component: () => import('@/views/Chat/chatJoin.vue'),
+      },
+    ],
   },
 ]
 

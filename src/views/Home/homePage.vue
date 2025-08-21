@@ -4,28 +4,33 @@
   <el-container style="height: 100vh; min-height: 0">
     <!-- 侧边栏 -->
     <el-aside width="200px">
-      <el-menu default-active="2" class="el-menu-vertical-demo" router>
+      <el-menu default-active="4" class="el-menu-vertical-demo" router>
         <el-menu-item index="1" route="/userHome">
           <el-icon><Menu /></el-icon>
           <template #title>首页</template>
         </el-menu-item>
 
-        <el-menu-item index="2" route="/userFriends">
+        <el-menu-item index="2" route="/chatJoin">
+          <el-icon><Search /></el-icon>
+          <template #title>搜索</template>
+        </el-menu-item>
+
+        <el-menu-item index="3" route="/userFriends">
           <el-icon><UserFilled /></el-icon>
           <template #title>好友</template>
         </el-menu-item>
 
-        <el-menu-item index="3" route="/userChat">
+        <el-menu-item index="4" route="/userChat">
           <el-icon><ChatDotRound /></el-icon>
           <template #title>聊天室</template>
         </el-menu-item>
 
-        <el-menu-item index="4" route="/userInfo">
+        <el-menu-item index="5" route="/userInfo">
           <el-icon><User /></el-icon>
           <template #title>个人资料</template>
         </el-menu-item>
 
-        <el-menu-item index="5" route="/userSetting">
+        <el-menu-item index="6" route="/userSetting">
           <el-icon><Setting /></el-icon>
           <template #title>设置</template>
         </el-menu-item>

@@ -21,27 +21,36 @@ const props = defineProps({
 })
 
 // 监听消息变化，自动滚动到底部
-watch(() => [...receiveMessages.value], () => {
-  nextTick(() => {
-    const chatPanel = document.querySelector('.el-scrollbar__wrap')
-    if (chatPanel) {
-      chatPanel.scrollTop = chatPanel.scrollHeight
-    }
-  })
-}, { deep: true })
+watch(
+  () => [...receiveMessages.value],
+  () => {
+    nextTick(() => {
+      const chatPanel = document.querySelector('.el-scrollbar__wrap')
+      if (chatPanel) {
+        chatPanel.scrollTop = chatPanel.scrollHeight
+      }
+    })
+  },
+  { deep: true }
+)
 </script>
 
 <template>
   <el-scrollbar class="chat-panel" style="height: 100%">
     <!-- 过去的聊天记录 -->
     <div>
-      <div v-for="msg in props.beforeMessages" :key="msg.message_id"
-        :class="['chat-message', msg.sender_uid === userUid ? 'self' : 'other']">
+      <div
+        v-for="msg in props.beforeMessages"
+        :key="msg.message_id"
+        :class="['chat-message', msg.sender_uid === userUid ? 'self' : 'other']"
+      >
         <img class="avatar" :src="msg.sender_avatar" :alt="msg.sender_name" />
         <div class="message-content">
           <div class="username-time" :class="msg.sender_uid === userUid ? 'self' : ''">
             <span class="username">{{ msg.sender_name }}</span>
-            <span class="time">{{ formatTime(msg.create_time) }}</span>
+            <span :class="msg.sender_uid === userUid ? 'right-time' : 'left-time'">{{
+              formatTime(msg.create_time)
+            }}</span>
           </div>
           <div class="content">{{ msg.content }}</div>
         </div>
@@ -50,28 +59,43 @@ watch(() => [...receiveMessages.value], () => {
 
     <!-- 离线的聊天记录 -->
     <div>
-      <div v-for="msg in props.offlineMessages" :key="msg.message_id"
-        :class="['chat-message', msg.sender_uid === userUid ? 'self' : 'other']">
+      <div
+        v-for="msg in props.offlineMessages"
+        :key="msg.message_id"
+        :class="['chat-message', msg.sender_uid === userUid ? 'self' : 'other']"
+      >
         <img class="avatar" :src="msg.sender_avatar" :alt="msg.sender_name" />
         <div class="message-content">
           <div class="username-time" :class="msg.sender_uid === userUid ? 'self' : ''">
             <span class="username">{{ msg.sender_name }}</span>
-            <span class="time">{{ formatTime(msg.create_time) }}</span>
+            <span :class="msg.sender_uid === userUid ? 'right-time' : 'left-time'">{{
+              formatTime(msg.create_time)
+            }}</span>
           </div>
           <div class="content">{{ msg.content }}</div>
         </div>
       </div>
     </div>
 
+    <!-- 聊天历史提示 -->
+    <div v-if="props.beforeMessages.length || props.offlineMessages.length" class="history-tip">
+      —— 以上为历史聊天记录 ——
+    </div>
+
     <!-- 当前的聊天记录 -->
     <div>
-      <div v-for="msg in receiveMessages" :key="msg.message_id"
-        :class="['chat-message', msg.sender_uid === userUid ? 'self' : 'other']">
+      <div
+        v-for="msg in receiveMessages"
+        :key="msg.message_id"
+        :class="['chat-message', msg.sender_uid === userUid ? 'self' : 'other']"
+      >
         <img class="avatar" :src="msg.sender_avatar" :alt="msg.sender_name" />
         <div class="message-content">
           <div class="username-time" :class="msg.sender_uid === userUid ? 'self' : ''">
             <span class="username">{{ msg.sender_name }}</span>
-            <span class="time">{{ formatTime(msg.create_time) }}</span>
+            <span :class="msg.sender_uid === userUid ? 'right-time' : 'left-time'">{{
+              formatTime(msg.create_time)
+            }}</span>
           </div>
           <div class="content">{{ msg.content }}</div>
         </div>
@@ -154,10 +178,17 @@ watch(() => [...receiveMessages.value], () => {
   opacity: 0.85;
 }
 
-.time {
+.left-time {
   font-size: 12px;
   color: #5d6371;
   margin-left: 8px;
+  opacity: 0.7;
+}
+
+.right-time {
+  font-size: 12px;
+  color: #5d6371;
+  margin-right: 8px;
   opacity: 0.7;
 }
 
@@ -173,5 +204,14 @@ watch(() => [...receiveMessages.value], () => {
 
 .chat-message.self .content {
   color: #236d5e;
+}
+
+.history-tip {
+  text-align: center;
+  color: #8fa3b7;
+  font-size: 15px;
+  margin: 18px 0 12px 0;
+  letter-spacing: 2px;
+  user-select: none;
 }
 </style>

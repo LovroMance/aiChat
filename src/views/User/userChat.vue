@@ -7,10 +7,16 @@ import { onMounted, onUnmounted, ref, nextTick } from 'vue'
 import { chatPath, createWebSocket, closeWebSocket } from '@/utils/websocket.js'
 import { getUserInfo } from '@/api/user'
 import { USER_LOGIN_INFO, USER_INFO_DATA, setStorage, getStorage } from '@/utils/localstorage'
-import { MESSAGES_STORE, initDB, getAllData, closeDB, getLastData, addBatchData } from '@/utils/indexedDB'
+import {
+  MESSAGES_STORE,
+  initDB,
+  getAllData,
+  closeDB,
+  addBatchData,
+  getLastData,
+} from '@/utils/indexedDB'
 import { useMessageStore } from '@/stores'
 import { getPartMessages } from '@/api/chat'
-
 
 const messageStore = useMessageStore()
 
@@ -26,7 +32,7 @@ const scrollToBottom = () => {
     const chatPanel = document.querySelector('.el-scrollbar__wrap')
     if (chatPanel) {
       chatPanel.scrollTop = chatPanel.scrollHeight
-    } 
+    }
   })
 }
 
@@ -36,7 +42,7 @@ onMounted(async () => {
   console.log('getUserInfo/api', data)
   // 2. 加载用户数据存储到本地
   setStorage(USER_INFO_DATA, data.data)
-  username.value = getStorage(USER_INFO_DATA).username  //TODO: 删除
+  username.value = getStorage(USER_INFO_DATA).username
   // 3. 创建websocket连接
   createWebSocket(chatPath)
   // 4. 初始化（打开）本地数据库
@@ -47,17 +53,22 @@ onMounted(async () => {
 
   // 6. 获取离线聊天历史
   // 6.1 获取最后一条本地聊天记录id
-  const { message_id } = await getLastData(MESSAGES_STORE)
-  console.log('getLastData/indexedDB --> message_id' , message_id)
-  // 6.2 获取离线聊天记录 （根据message_id获取聊天历史）
-  const res = await getPartMessages({
-    thread_id: 1,
-    existing_id: message_id
-  })
-  console.log('getPartMessages/api --> 离线消息' , res.data.data)
-  // 7. 将离线消息添加到本地数据库
-  await addBatchData(MESSAGES_STORE, res.data.data)
-  offlineMessages.value = res.data.data
+
+  const getLastMessageId = await getLastData(MESSAGES_STORE)
+  if (getLastMessageId) {
+    const { message_id } = getLastMessageId
+    console.log('getLastData/indexedDB --> message_id', message_id)
+
+    // 6.2 获取离线聊天记录 （根据message_id获取聊天历史）
+    const res = await getPartMessages({
+      thread_id: 1,
+      existing_id: message_id,
+    })
+    console.log('getPartMessages/api --> 离线消息', res.data.data)
+    // 7. 将离线消息添加到本地数据库
+    await addBatchData(MESSAGES_STORE, res.data.data)
+    offlineMessages.value = res.data.data
+  }
 
   scrollToBottom()
 })
@@ -70,10 +81,14 @@ onUnmounted(async () => {
   // 关闭数据库
   await closeDB()
 })
+
+
 </script>
 
 <template>
-  <el-container style="height: 100vh; min-height: 0; border-left: 1px solid rgba(70, 130, 180, 0.2)">
+  <el-container
+    style="height: 100vh; min-height: 0; border-left: 1px solid rgba(70, 130, 180, 0.2)"
+  >
     <!-- 用户名 -->
     <el-header class="header-container" style="height: 10%">{{ username }}</el-header>
     <!-- 聊天内容 -->
@@ -81,11 +96,13 @@ onUnmounted(async () => {
       <chatPanel :beforeMessages="beforeMessages" :offlineMessages="offlineMessages" />
     </el-main>
     <!-- 输入框 -->
-    <el-footer style="
+    <el-footer
+      style="
         background: linear-gradient(120deg, #e8f4fd 0%, #f0f8ff 100%);
         height: 20%;
         border-top: 1px solid rgba(70, 130, 180, 0.1);
-      ">
+      "
+    >
       <chatInput @messageSent="scrollToBottom" />
     </el-footer>
   </el-container>
