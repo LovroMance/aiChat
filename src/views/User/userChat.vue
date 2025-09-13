@@ -41,12 +41,6 @@ const selectChat = (chat) => {
   chat.unreadCount = 0
 }
 
-// 格式化时间显示
-const formatTime = (timeStr) => {
-  // 这里可以根据实际需求格式化时间
-  return timeStr
-}
-
 // 计算总未读消息数
 const totalUnreadCount = computed(() => {
   return chatList.value.reduce((total, chat) => total + chat.unreadCount, 0)
@@ -134,23 +128,23 @@ onUnmounted(async () => {
           <div
             v-for="[key, value] in chatListStore.chatMap"
             :key="key"
-            :class="['chat-item', { active: activeChat?.id === chat.id }]"
+            :class="['chat-item', { active: activeChat?.id === key }]"
             @click="selectChat(chat)"
           >
             <div class="avatar-container">
-              <el-avatar :src="chat.avatar" :size="48" />
+              <el-avatar :src="value.thread_avatar" :size="48" />
             </div>
 
             <div class="chat-info">
               <div class="chat-header">
-                <span class="chat-name">{{ chat.name }}</span>
-                <span class="chat-time">{{ formatTime(chat.lastTime) }}</span>
+                <span class="chat-name">{{ value.thread_name }}</span>
+                <span class="chat-time">{{ value.lastTime }}</span>
               </div>
               <div class="chat-content">
-                <span class="last-message">{{ chat.lastMessage }}</span>
+                <span class="last-message">{{ value.content }}</span>
                 <el-badge
-                  v-if="chat.unreadCount > 0"
-                  :value="chat.unreadCount"
+                  v-if="value.unreadCount > 0"
+                  :value="value.unreadCount"
                   :max="99"
                   class="message-badge"
                 />
