@@ -192,7 +192,6 @@ const handleCancel = () => {
 
 <style scoped>
 .user-info-container {
-  width: 100vw;
   height: 100vh;
   background: linear-gradient(135deg, #f3fbfe 0%, #eafaf6 50%, #e8f4fd 100%);
   position: relative;

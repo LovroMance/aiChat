@@ -5,6 +5,8 @@ import { getUserInfo } from '@/api/user'
 import { USER_LOGIN_INFO, USER_INFO_DATA, setStorage, getStorage } from '@/utils/localstorage'
 import { ElMessage } from 'element-plus'
 
+import { chatPath, createWebSocket } from '@/utils/websocket.js'
+
 onMounted(async () => {
   try {
     const { data } = await getUserInfo(getStorage(USER_LOGIN_INFO).uid)
@@ -25,6 +27,9 @@ onMounted(async () => {
       type: 'error',
     })
   }
+
+  // 3. 创建websocket连接
+  createWebSocket(chatPath)
 })
 
 
@@ -33,11 +38,11 @@ const router = useRouter()
 // 菜单项配置
 const menuItems = ref([
   {
-    id: 'friends',
-    title: '好友',
-    description: '管理您的好友列表',
-    icon: 'User',
-    route: '/userFriends',
+    id: 'channel',
+    title: '频道',
+    description: '添加/查看频道',
+    icon: 'Connection',
+    route: '/chatJoin',
     color: '#409EFF',
   },
   {
@@ -103,7 +108,7 @@ const navigateTo = (item) => {
 <style scoped>
 .home-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #23272e 0%, #3a4047 70%, #6b7b8a 100%);
+  background: linear-gradient(135deg, #23272e 0%, #3a4047 60%, #6b7b8a 100%);
   padding: 40px 20px;
   display: flex;
   flex-direction: column;

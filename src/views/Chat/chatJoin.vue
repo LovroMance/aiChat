@@ -51,10 +51,6 @@ const joinRoom = async () => {
         </el-button>
       </div>
     </div>
-    <div class="art-bg"></div>
-    <div class="bubble bubble1"></div>
-    <div class="bubble bubble2"></div>
-    <div class="bubble bubble3"></div>
   </div>
 </template>
 
@@ -69,7 +65,7 @@ const joinRoom = async () => {
   display: flex;
   align-items: stretch;
   justify-content: stretch;
-  background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
+  background: linear-gradient(135deg, #23272e 0%, #3a4047 60%, #6b7b8a 100%);
 }
 .glass-layer {
   position: absolute;
@@ -169,48 +165,7 @@ const joinRoom = async () => {
   opacity: 0.07;
   filter: blur(2px);
 }
-.bubble {
-  position: absolute;
-  border-radius: 50%;
-  opacity: 0.18;
-  filter: blur(1.5px);
-  z-index: 0;
-  pointer-events: none;
-  animation: bubbleFloat 12s infinite alternate;
-}
-.bubble1 {
-  width: 180px;
-  height: 180px;
-  left: 8vw;
-  top: 12vh;
-  background: radial-gradient(circle at 30% 30%, #8ec5fc 0%, #e0c3fc 100%);
-  animation-delay: 0s;
-}
-.bubble2 {
-  width: 120px;
-  height: 120px;
-  right: 10vw;
-  bottom: 14vh;
-  background: radial-gradient(circle at 70% 70%, #e0c3fc 0%, #8ec5fc 100%);
-  animation-delay: 2s;
-}
-.bubble3 {
-  width: 90px;
-  height: 90px;
-  left: 50vw;
-  bottom: 8vh;
-  background: radial-gradient(circle at 50% 50%, #fff 0%, #e0c3fc 100%);
-  opacity: 0.13;
-  animation-delay: 4s;
-}
-@keyframes bubbleFloat {
-  0% {
-    transform: translateY(0) scale(1);
-  }
-  100% {
-    transform: translateY(-40px) scale(1.08);
-  }
-}
+
 @media (max-width: 600px) {
   .join-card {
     min-width: 90vw;

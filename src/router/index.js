@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-
 // 配置路由规则
 const routes = [
   {
@@ -22,15 +21,15 @@ const routes = [
     component: () => import('@/views/User/userHome.vue'),
   },
   {
-    path: '/userFriends',
-    name: 'userFriends',
-    component: () => import('@/views/User/userFriends.vue'),
-  },
-  {
     path: '/homePage',
     name: 'homePage',
     component: () => import('@/views/Home/homePage.vue'),
     children: [
+      {
+        path: '/FriendGroupList',
+        name: 'FriendGroupList',
+        component: () => import('@/views/Home/FriendGroupList.vue'),
+      },
       {
         path: '/userSetting',
         name: 'userSetting',

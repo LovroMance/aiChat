@@ -1,29 +1,56 @@
 <script setup>
 import chatPanel from '@/views/Chat/chatPanel.vue'
 import chatInput from '@/views/Chat/chatInput.vue'
+import { ChatLineRound } from '@element-plus/icons-vue'
 
-import { onMounted, onUnmounted, ref, nextTick } from 'vue'
+import { onMounted, onUnmounted, ref, nextTick, computed } from 'vue'
 
-import { chatPath, createWebSocket, closeWebSocket } from '@/utils/websocket.js'
+import { closeWebSocket } from '@/utils/websocket.js'
 import { getUserInfo } from '@/api/user'
 import { USER_LOGIN_INFO, USER_INFO_DATA, setStorage, getStorage } from '@/utils/localstorage'
-import {
-  MESSAGES_STORE,
-  initDB,
-  getAllData,
-  closeDB,
-  addBatchData,
-  getLastData,
-} from '@/utils/indexedDB'
+import { MESSAGES_STORE, initDB, getAllData, closeDB, addBatchData, getLastData } from '@/utils/indexedDB'
+
 import { useMessageStore } from '@/stores'
+const messageStore = useMessageStore()
+
+import { useChatListStore } from '@/stores'
+const chatListStore = useChatListStore()
+
 import { getPartMessages } from '@/api/chat'
 
-const messageStore = useMessageStore()
+
 
 const username = ref('')
 const userUid = getStorage(USER_LOGIN_INFO).uid
 const beforeMessages = ref([])
 const offlineMessages = ref([])
+
+
+
+
+// 侧边栏相关数据
+const activeChat = ref(null)
+const chatList = ref([
+  
+])
+
+// 选择聊天对象
+const selectChat = (chat) => {
+  activeChat.value = chat
+  // 清除未读消息数
+  chat.unreadCount = 0
+}
+
+// 格式化时间显示
+const formatTime = (timeStr) => {
+  // 这里可以根据实际需求格式化时间
+  return timeStr
+}
+
+// 计算总未读消息数
+const totalUnreadCount = computed(() => {
+  return chatList.value.reduce((total, chat) => total + chat.unreadCount, 0)
+})
 
 // 滚动到底部的函数
 const scrollToBottom = () => {
@@ -43,8 +70,9 @@ onMounted(async () => {
   // 2. 加载用户数据存储到本地
   setStorage(USER_INFO_DATA, data.data)
   username.value = getStorage(USER_INFO_DATA).username
-  // 3. 创建websocket连接
-  createWebSocket(chatPath)
+
+  // 3. 创建websocket连接 移动到home页面
+
   // 4. 初始化（打开）本地数据库
   await initDB()
   // 5. 获取本地数据库聊天历史
@@ -70,6 +98,11 @@ onMounted(async () => {
     offlineMessages.value = res.data.data
   }
 
+  // 默认选择第一个聊天
+  if (chatList.value.length > 0) {
+    activeChat.value = chatList.value[0]
+  }
+
   scrollToBottom()
 })
 
@@ -81,34 +114,199 @@ onUnmounted(async () => {
   // 关闭数据库
   await closeDB()
 })
-
-
 </script>
 
 <template>
-  <el-container
-    style="height: 100vh; min-height: 0; border-left: 1px solid rgba(70, 130, 180, 0.2)"
-  >
-    <!-- 用户名 -->
-    <el-header class="header-container" style="height: 10%">{{ username }}</el-header>
-    <!-- 聊天内容 -->
-    <el-main style="padding: 0; border-top: 1px solid rgba(70, 130, 180, 0.2)">
-      <chatPanel :beforeMessages="beforeMessages" :offlineMessages="offlineMessages" />
-    </el-main>
-    <!-- 输入框 -->
-    <el-footer
-      style="
-        background: linear-gradient(120deg, #e8f4fd 0%, #f0f8ff 100%);
-        height: 20%;
-        border-top: 1px solid rgba(70, 130, 180, 0.1);
-      "
+  <el-container style="height: 100vh; min-height: 0">
+    <!-- 左侧聊天列表侧边栏 -->
+    <el-aside width="320px" class="chat-sidebar">
+      <div class="sidebar-header">
+        <h3>消息列表</h3>
+        <el-badge :value="totalUnreadCount" :hidden="totalUnreadCount === 0" class="unread-badge">
+          <el-icon size="20">
+            <ChatLineRound />
+          </el-icon>
+        </el-badge>
+      </div>
+
+      <el-scrollbar class="chat-list-container">
+        <div class="chat-list">
+          <div
+            v-for="[key, value] in chatListStore.chatMap"
+            :key="key"
+            :class="['chat-item', { active: activeChat?.id === chat.id }]"
+            @click="selectChat(chat)"
+          >
+            <div class="avatar-container">
+              <el-avatar :src="chat.avatar" :size="48" />
+            </div>
+
+            <div class="chat-info">
+              <div class="chat-header">
+                <span class="chat-name">{{ chat.name }}</span>
+                <span class="chat-time">{{ formatTime(chat.lastTime) }}</span>
+              </div>
+              <div class="chat-content">
+                <span class="last-message">{{ chat.lastMessage }}</span>
+                <el-badge
+                  v-if="chat.unreadCount > 0"
+                  :value="chat.unreadCount"
+                  :max="99"
+                  class="message-badge"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </el-scrollbar>
+    </el-aside>
+
+    <!-- 右侧聊天区域 -->
+    <el-container
+      style="height: 100vh; min-height: 0; border-left: 1px solid rgba(70, 130, 180, 0.2)"
     >
-      <chatInput @messageSent="scrollToBottom" />
-    </el-footer>
+      <!-- 用户名 -->
+      <el-header class="header-container" style="height: 10%">
+        <span v-if="activeChat">{{ activeChat.name }}</span>
+        <span v-else>{{ username }}</span>
+      </el-header>
+      <!-- 聊天内容 -->
+      <el-main style="padding: 0; border-top: 1px solid rgba(70, 130, 180, 0.2)">
+        <chatPanel :beforeMessages="beforeMessages" :offlineMessages="offlineMessages" />
+      </el-main>
+      <!-- 输入框 -->
+      <el-footer
+        style="
+          background: linear-gradient(120deg, #e8f4fd 0%, #f0f8ff 100%);
+          height: 20%;
+          border-top: 1px solid rgba(70, 130, 180, 0.1);
+        "
+      >
+        <chatInput @messageSent="scrollToBottom" />
+      </el-footer>
+    </el-container>
   </el-container>
 </template>
 
 <style scoped>
+/* 左侧聊天列表侧边栏样式 */
+.chat-sidebar {
+  background: linear-gradient(180deg, #f8fbff 0%, #f0f8ff 100%);
+  border-right: 1px solid rgba(70, 130, 180, 0.15);
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(70, 130, 180, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.sidebar-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.unread-badge {
+  color: #409eff;
+}
+
+.chat-list-container {
+  height: calc(100vh - 73px);
+}
+
+.chat-list {
+  padding: 8px 0;
+}
+
+.chat-item {
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(70, 130, 180, 0.05);
+}
+
+.chat-item:hover {
+  background: rgba(64, 158, 255, 0.08);
+}
+
+.chat-item.active {
+  background: rgba(64, 158, 255, 0.12);
+  border-left: 3px solid #409eff;
+}
+
+.avatar-container {
+  position: relative;
+  margin-right: 12px;
+}
+
+.chat-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.chat-name {
+  font-weight: 500;
+  font-size: 14px;
+  color: #2c3e50;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-time {
+  font-size: 12px;
+  color: #909399;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.chat-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.last-message {
+  font-size: 13px;
+  color: #606266;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  line-height: 1.2;
+}
+
+.message-badge {
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+:deep(.el-badge__content) {
+  background-color: #f56c6c;
+  border: none;
+  font-size: 11px;
+  height: 18px;
+  line-height: 18px;
+  min-width: 18px;
+  padding: 0 4px;
+}
+
 /* 右侧主题头部的字体样式 */
 .header-container {
   background: linear-gradient(120deg, #f3fbfe 0%, #eafaf6 100%);

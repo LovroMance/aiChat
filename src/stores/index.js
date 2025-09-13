@@ -5,3 +5,4 @@ const pinia = createPinia()
 export default pinia
 export * from './User'
 export * from './message'
+export * from './chat-list'

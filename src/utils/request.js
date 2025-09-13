@@ -15,11 +15,9 @@ const instance = axios.create({
 instance.interceptors.request.use(
   (config) => {
     if (userStore.token) {
-      console.log('userStore.token', userStore.token)
       config.headers.Authorization = 'JWT ' + userStore.token
     }
     else if (token) {
-      console.log('getStorage(USER_LOGIN_INFO).token', token)
       config.headers.Authorization = 'JWT ' + token
     }
     return config

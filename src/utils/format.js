@@ -15,3 +15,18 @@ export const formatTime = (timeString) => {
     return timeString
   }
 }
+
+// 格式化时间
+export const formatTimeHour = (timeString) => {
+  if (!timeString) return ''
+  try {
+    const date = new Date(timeString)
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+
+    return `${hours}:${minutes}`
+  } catch (error) {
+    console.error('时间格式化错误:', error)
+    return timeString
+  }
+}

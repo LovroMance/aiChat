@@ -1,10 +1,14 @@
 import { baseURL } from '@/utils/request'
-import { useMessageStore } from '@/stores'
 import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
 import { MESSAGES_STORE, addData } from '@/utils/indexedDB'
 
+import { useChatListStore } from '@/stores'
+const chatListStore = useChatListStore()
 
+import { useMessageStore } from '@/stores'
 const messageStore = useMessageStore()
+
+import { formatTimeHour } from '@/utils/format'
 
 export const chatPath = '/ws/chatroom'
 
@@ -55,6 +59,21 @@ const bindEvents = async () => {
         console.log('收到消息:', data)
         await addData(MESSAGES_STORE, data) // 将消息添加到IndexedDB
         messageStore.addMessage(data) // 将消息添加到本地内存store中
+
+        // 创建消息列表信息
+        const count = chatListStore.chatMap.get(data.thread_id)?.unreadCount ?? 0
+        const unreadCount = count + 1
+        const chatListItem = {
+          thread_name: '待定',  // 这里改成thread的名字
+          thread_avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',  // 这里改成thread的头像
+          name: data.sender_name,
+          content: data.content,
+          lastTime: formatTimeHour(data.create_time),
+          unreadCount: unreadCount
+        }
+        chatListStore.chatMap.set(data.thread_id, chatListItem)
+        console.log(chatListStore.chatMap)
+
       } catch {
         // 如果不是 JSON 格式，直接输出原始消息
         console.log('收到消息:', event.data)
