@@ -1,16 +1,15 @@
 import { baseURL } from '@/utils/request'
 import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
-import { MESSAGES_STORE, addData } from '@/utils/indexedDB'
+import { MESSAGES_STORE, addData, UNREAD_MESSAGES_STORE } from '@/utils/indexedDB'
 
-import { useChatListStore } from '@/stores'
+import { useChatListStore, useMessageStore } from '@/stores'
 const chatListStore = useChatListStore()
-
-import { useMessageStore } from '@/stores'
 const messageStore = useMessageStore()
 
 import { formatTimeHour } from '@/utils/format'
 
-export const chatPath = '/ws/chatroom'
+export const chatPath = '/ws/chat'  // 用户聊天（私聊/群聊）
+export const AIChatPath = '/ws/ai/chat'  // AI聊天
 
 let ws = null // websocket实例
 let isConnected = false
@@ -71,7 +70,8 @@ const bindEvents = async () => {
           lastTime: formatTimeHour(data.create_time),
           unreadCount: unreadCount
         }
-        chatListStore.chatMap.set(data.thread_id, chatListItem)
+        await addData(UNREAD_MESSAGES_STORE, chatListItem)  // 将未读消息存到indexedDB中
+        chatListStore.chatMap.set(data.thread_id, chatListItem)  // 将未读消息存到store中
         console.log(chatListStore.chatMap)
 
       } catch {

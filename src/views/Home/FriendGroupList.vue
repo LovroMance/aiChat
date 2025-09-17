@@ -149,6 +149,7 @@ const getContactTypeColor = (type) => {
           <template #prefix>
             <el-icon class="search-icon"><Search /></el-icon>
           </template>
+          
         </el-input>
         <el-button 
           type="primary" 

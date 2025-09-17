@@ -1,8 +1,3 @@
-/**
- * IndexedDB 数据库操作工具
- * 提供简单的数据存储、查询、更新、删除功能
- */
-
 // 数据库配置
 const DB_NAME = 'aiChatDB'
 const DB_VERSION = 1
@@ -10,8 +5,7 @@ let db = null
 
 // 存储对象名称常量
 export const MESSAGES_STORE = 'messages'
-export const USERS_STORE = 'users'
-export const FILES_STORE = 'files'
+export const UNREAD_MESSAGES_STORE = 'unreadMessages'
 
 /**
  * 初始化数据库
@@ -49,24 +43,16 @@ export const initDB = () => {
           keyPath: 'id',
           autoIncrement: true,
         })
-        messageStore.createIndex('timestamp', 'timestamp', { unique: false })
-        messageStore.createIndex('senderId', 'senderId', { unique: false })
+        messageStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
       }
 
-      // 创建用户信息存储
-      if (!database.objectStoreNames.contains(USERS_STORE)) {
-        const userStore = database.createObjectStore(USERS_STORE, { keyPath: 'id' })
-        userStore.createIndex('username', 'username', { unique: true })
-      }
-
-      // 创建文件存储
-      if (!database.objectStoreNames.contains(FILES_STORE)) {
-        const fileStore = database.createObjectStore(FILES_STORE, {
+      // 创建未读消息存储
+      if (!database.objectStoreNames.contains(UNREAD_MESSAGES_STORE)) {
+        const unreadMessageStore = database.createObjectStore(UNREAD_MESSAGES_STORE, {
           keyPath: 'id',
-          autoIncrement: true,
+            autoIncrement: true,
         })
-        fileStore.createIndex('filename', 'filename', { unique: false })
-        fileStore.createIndex('type', 'type', { unique: false })
+        unreadMessageStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
       }
     }
   })
@@ -241,9 +227,11 @@ export const getLastData = async (storeName) => {
           const cursor = event.target.result
           if (cursor) {
             // 找到最后一条数据
+            console.log(`获取${{storeName}}的最后一条数据`,cursor.value);
             resolve(cursor.value)
           } else {
             // 没有数据
+            console.log(`该${{storeName}}暂无数据`);
             resolve(null)
           }
         }
@@ -345,37 +333,34 @@ export const closeDB = () => {
   }
 }
 
-// 使用示例：
-/*
-// 1. 初始化数据库
-await initDB()
+/**
+ * 根据 thread_id 获取特定会话的所有消息
+ * @param {number|string} threadId - 会话 ID
+ * @returns {Promise} 返回该会话的所有消息，按时间排序
+ */
+export const getMessagesByThreadId = async (storeName, threadId) => {
+  try {
+    const messages = await getDataByIndex(storeName, 'thread_id', threadId)
+    return messages
+  } catch (error) {
+    console.error(`获取会话 ${threadId} 的消息失败:`, error)
+    throw error
+  }
+}
 
-// 2. 添加消息
-const messageId = await addData(MESSAGES_STORE, {
-  content: 'Hello World',
-  senderId: 123,
-  timestamp: Date.now(),
-  type: 'text'
-})
-
-// 3. 查询消息
-const message = await getData(MESSAGES_STORE, messageId)
-
-// 4. 根据时间戳查询消息
-const recentMessages = await getDataByIndex(MESSAGES_STORE, 'timestamp', Date.now() - 86400000)
-
-// 5. 更新消息
-await updateData(MESSAGES_STORE, {
-  id: messageId,
-  content: 'Updated message',
-  senderId: 123,
-  timestamp: Date.now(),
-  type: 'text'
-})
-
-// 6. 删除消息
-await deleteData(MESSAGES_STORE, messageId)
-
-// 7. 清空所有消息
-await clearData(MESSAGES_STORE)
-*/
+/**
+ * 根据 thread_id 获取最新的 N 条消息
+ * @param {number|string} threadId - 会话 ID
+ * @param {number} limit - 限制数量，默认 50
+ * @returns {Promise} 返回最新的 N 条消息
+ */
+export const getRecentMessagesByThreadId = async (storeName, threadId, limit = 50) => {
+  try {
+    const allMessages = await getMessagesByThreadId(storeName, threadId)
+    // 返回最新的 N 条消息
+    return allMessages.slice(-limit)
+  } catch (error) {
+    console.error(`获取会话 ${threadId} 的最新消息失败:`, error)
+    throw error
+  }
+}

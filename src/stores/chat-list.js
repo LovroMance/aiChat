@@ -6,12 +6,14 @@ export const useChatListStore = defineStore('chatList', () => {
 
     const thread_id = ref('')  // 一个thread只需要一条最后消息
     const valueObject = {
-        thread_name: ref(''),  // 消息主人公名称
-        thread_avatar: ref(''),  // 头像
-        senderName: ref(''),  // 发送者名字
-        content: ref(''),  // 最后一条消息
-        lastTime: ref(''),  // 最后一条消息时间
-        unreadCount: ref()  // 未读消息数
+        thread_id: '',  // 会话id
+        thread_name: '',  // 消息主人公名称
+        thread_avatar: '',  // 头像
+        senderName: '',  // 发送者名字
+        content: '',  // 最后一条消息
+        lastTime: '' ,  // 最后一条消息时间
+        unreadCount: 0,   // 未读消息数
+        type: '',  // 会话类型（group）
     }
 
 

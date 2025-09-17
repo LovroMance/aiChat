@@ -29,7 +29,16 @@ onMounted(async () => {
   }
 
   // 3. 创建websocket连接
-  createWebSocket(chatPath)
+  try {
+    console.log('初始化WebSocket连接...')
+    createWebSocket(chatPath)
+  } catch (error) {
+    console.error('WebSocket初始化失败:', error)
+    ElMessage({
+      message: 'WebSocket连接初始化失败，请检查网络连接',
+      type: 'warning',
+    })
+  }
 })
 
 

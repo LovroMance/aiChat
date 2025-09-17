@@ -1,14 +1,21 @@
 <script setup>
 import chatPanel from '@/views/Chat/chatPanel.vue'
 import chatInput from '@/views/Chat/chatInput.vue'
-import { ChatLineRound } from '@element-plus/icons-vue'
+import chatThread from '../Chat/chatThread.vue'
 
 import { onMounted, onUnmounted, ref, nextTick, computed } from 'vue'
 
 import { closeWebSocket } from '@/utils/websocket.js'
 import { getUserInfo } from '@/api/user'
 import { USER_LOGIN_INFO, USER_INFO_DATA, setStorage, getStorage } from '@/utils/localstorage'
-import { MESSAGES_STORE, initDB, getAllData, closeDB, addBatchData, getLastData } from '@/utils/indexedDB'
+import {
+  MESSAGES_STORE,
+  initDB,
+  getAllData,
+  closeDB,
+  addBatchData,
+  getLastData,
+} from '@/utils/indexedDB'
 
 import { useMessageStore } from '@/stores'
 const messageStore = useMessageStore()
@@ -19,20 +26,26 @@ const chatListStore = useChatListStore()
 import { getPartMessages } from '@/api/chat'
 
 
+const isPopup = ref(false)
+
+// 处理子组件关闭事件
+const handleCloseDialog = () => {
+  isPopup.value = false
+}
+
+// 处理创建群聊事件
+const handleCreateGroup = () => {
+  isPopup.value = false
+}
 
 const username = ref('')
 const userUid = getStorage(USER_LOGIN_INFO).uid
 const beforeMessages = ref([])
 const offlineMessages = ref([])
 
-
-
-
 // 侧边栏相关数据
 const activeChat = ref(null)
-const chatList = ref([
-  
-])
+const chatList = ref([])
 
 // 选择聊天对象
 const selectChat = (chat) => {
@@ -112,15 +125,21 @@ onUnmounted(async () => {
 
 <template>
   <el-container style="height: 100vh; min-height: 0">
+    <chatThread 
+      v-if="isPopup" 
+      @close="handleCloseDialog"
+      @create="handleCreateGroup"
+    />
     <!-- 左侧聊天列表侧边栏 -->
     <el-aside width="320px" class="chat-sidebar">
       <div class="sidebar-header">
-        <h3>消息列表</h3>
-        <el-badge :value="totalUnreadCount" :hidden="totalUnreadCount === 0" class="unread-badge">
-          <el-icon size="20">
-            <ChatLineRound />
-          </el-icon>
-        </el-badge>
+        <div class="unread-badge">
+          <h3>消息列表</h3>
+          <el-badge :value="totalUnreadCount" :hidden="totalUnreadCount === 0" style="display: flex; margin-left: 5px;">
+            <el-icon size="20"><ChatLineRound /></el-icon>
+          </el-badge>
+        </div>
+        <el-icon size="20" class="circle-plus" @click="isPopup = !isPopup"><CirclePlus /></el-icon>
       </div>
 
       <el-scrollbar class="chat-list-container">
@@ -141,7 +160,9 @@ onUnmounted(async () => {
                 <span class="chat-time">{{ value.lastTime }}</span>
               </div>
               <div class="chat-content">
-                <span class="last-message">{{ value.content }}</span>
+                <span class="last-message">
+                  {{ value.type === 'group' ? `${value.senderName}: ${value.content}` : value.content }}
+                </span>
                 <el-badge
                   v-if="value.unreadCount > 0"
                   :value="value.unreadCount"
@@ -208,7 +229,21 @@ onUnmounted(async () => {
 }
 
 .unread-badge {
+  margin-left: 5px;
+  display: flex;
+  align-items: center;
   color: #409eff;
+}
+
+.circle-plus {
+  transition: all 0.3s ease;
+  color: #606266;
+  cursor: pointer;
+}
+
+.circle-plus:hover {
+  color: #636465;
+  filter: brightness(1.4);
 }
 
 .chat-list-container {
