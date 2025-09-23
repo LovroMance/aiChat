@@ -3,6 +3,10 @@ import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { groupCreate } from '@/api/chat'
 
+import { THREADS_STORE, addData } from '@/utils/indexedDB'
+import { useThreadStore } from '@/stores'
+const threadStore = useThreadStore()
+
 // 定义 emits
 const emit = defineEmits(['close', 'create'])
 
@@ -10,7 +14,7 @@ const emit = defineEmits(['close', 'create'])
 const groupForm = ref({
   group_name: '',
   group_description: '',
-  group_avatar: ''
+  group_avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'  // 默认头像
 })
 
 // 表单验证规则
@@ -66,9 +70,19 @@ const createGroup = async () => {
       // 调用创建群聊接口
       const { data } = await groupCreate(groupForm.value)
       console.log('创建群聊成功:', data)
-      
-      // 发射创建事件，传递接口返回的数据
-      emit('create')
+
+      // 添加数据到indexedDB
+      const threadObject = {
+        thread_id: data.thread_id,
+        avatar: groupForm.value.group_avatar,
+        name: groupForm.value.group_name,
+        type: 'group',
+        description: groupForm.value.group_description,
+      }
+      await addData(THREADS_STORE, threadObject)  // 保存到indexedDB
+      threadStore.threadObject = threadObject     // 保存到store
+   
+      emit('create')  // 发射创建事件，传递接口返回的数据
       ElMessage.success('群聊创建成功！')
     }
   } catch (error) {

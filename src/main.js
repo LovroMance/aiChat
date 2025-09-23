@@ -10,12 +10,19 @@ import router from './router'
 import pinia from './stores'
 
 const app = createApp(App)
+
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
-app.use(pinia)
-app.use(router)
-app.use(ElementPlus)
+import { initializeAppData } from '@/effects/loadingData'
+
+
+app.use(pinia).use(router).use(ElementPlus)
+
+
+// 加载/初始化 数据
+initializeAppData()
+
 
 app.mount('#app')

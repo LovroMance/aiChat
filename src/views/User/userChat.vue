@@ -7,24 +7,13 @@ import { onMounted, onUnmounted, ref, nextTick, computed } from 'vue'
 
 import { closeWebSocket } from '@/utils/websocket.js'
 import { getUserInfo } from '@/api/user'
-import { USER_LOGIN_INFO, USER_INFO_DATA, setStorage, getStorage } from '@/utils/localstorage'
-import {
-  MESSAGES_STORE,
-  initDB,
-  getAllData,
-  closeDB,
-  addBatchData,
-  getLastData,
-} from '@/utils/indexedDB'
-
-import { useMessageStore } from '@/stores'
-const messageStore = useMessageStore()
-
-import { useChatListStore } from '@/stores'
-const chatListStore = useChatListStore()
-
 import { getPartMessages } from '@/api/chat'
+import { USER_LOGIN_INFO, USER_INFO_DATA, setStorage, getStorage } from '@/utils/localstorage'
+import { MESSAGES_STORE, initDB, getAllData, closeDB, addBatchData, getLastData, } from '@/utils/indexedDB'
 
+import { useMessageStore, useUnreadMessagesStore} from '@/stores'
+const messageStore = useMessageStore()
+const unreadMessagesStore = useUnreadMessagesStore()
 
 const isPopup = ref(false)
 
@@ -69,6 +58,7 @@ const scrollToBottom = () => {
     }
   })
 }
+
 
 onMounted(async () => {
   // 1. 发送请求 获取用户基本数据
@@ -145,7 +135,7 @@ onUnmounted(async () => {
       <el-scrollbar class="chat-list-container">
         <div class="chat-list">
           <div
-            v-for="[key, value] in chatListStore.chatMap"
+            v-for="[key, value] in unreadMessagesStore.unreadMessagesMap"
             :key="key"
             :class="['chat-item', { active: activeChat?.id === key }]"
             @click="selectChat(chat)"

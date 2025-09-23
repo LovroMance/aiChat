@@ -6,6 +6,7 @@ let db = null
 // 存储对象名称常量
 export const MESSAGES_STORE = 'messages'
 export const UNREAD_MESSAGES_STORE = 'unreadMessages'
+export const THREADS_STORE = 'threads'
 
 /**
  * 初始化数据库
@@ -49,8 +50,15 @@ export const initDB = () => {
       // 创建未读消息存储
       if (!database.objectStoreNames.contains(UNREAD_MESSAGES_STORE)) {
         const unreadMessageStore = database.createObjectStore(UNREAD_MESSAGES_STORE, {
-          keyPath: 'id',
-            autoIncrement: true,
+          keyPath: 'thread_id',
+        })
+        unreadMessageStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
+      }
+
+      // 创建未读消息存储
+      if (!database.objectStoreNames.contains(THREADS_STORE)) {
+        const unreadMessageStore = database.createObjectStore(THREADS_STORE, {
+          keyPath: 'thread_id',
         })
         unreadMessageStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
       }
@@ -289,6 +297,108 @@ export const getDataByIndex = async (storeName, indexName, value) => {
 }
 
 /**
+ * 添加或更新数据到存储对象（如果主键存在则覆盖，不存在则新增）
+ * @param {string} storeName - 存储对象名称
+ * @param {Object} data - 要存储的数据
+ * @returns {Promise} 返回操作的数据ID
+ */
+export const putData = async (storeName, data) => {
+  try {
+    await ensureDBOpen()
+
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = db.transaction([storeName], 'readwrite')
+        const store = transaction.objectStore(storeName)
+        const request = store.put(data) // put方法会自动覆盖相同主键的数据
+
+        request.onsuccess = () => {
+          console.log('数据已保存/更新:', request.result)
+          resolve(request.result)
+        }
+
+        request.onerror = () => {
+          console.error('保存/更新数据失败')
+          reject(new Error('保存/更新数据失败'))
+        }
+      } catch (error) {
+        console.error('保存/更新数据操作失败:', error)
+        reject(error)
+      }
+    })
+  } catch (error) {
+    console.error('数据库打开失败:', error)
+    throw error
+  }
+}
+
+/**
+ * 批量添加或更新数据到存储对象
+ * @param {string} storeName - 存储对象名称
+ * @param {Array} dataArray - 要存储的数据数组
+ * @returns {Promise} 返回操作的数据ID数组
+ */
+export const putBatchData = async (storeName, dataArray) => {
+  try {
+    await ensureDBOpen()
+
+    if (!Array.isArray(dataArray)) {
+      throw new Error('数据必须是数组格式')
+    }
+
+    if (dataArray.length === 0) {
+      return []
+    }
+
+    // 清理数据，移除不可序列化的属性
+    const cleanDataArray = dataArray.map(data => {
+      try {
+        return JSON.parse(JSON.stringify(data))
+      } catch (error) {
+        console.warn('数据清理失败，跳过该条数据:', error)
+        return null
+      }
+    }).filter(data => data !== null)
+
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = db.transaction([storeName], 'readwrite')
+        const store = transaction.objectStore(storeName)
+        const results = []
+        let completed = 0
+        let hasError = false
+
+        cleanDataArray.forEach((data, index) => {
+          const request = store.put(data) // 使用put方法批量覆盖
+
+          request.onsuccess = () => {
+            results[index] = request.result
+            completed++
+            
+            if (completed === cleanDataArray.length && !hasError) {
+              console.log(`批量保存/更新了 ${cleanDataArray.length} 条数据`)
+              resolve(results)
+            }
+          }
+
+          request.onerror = () => {
+            hasError = true
+            console.error('批量保存/更新数据失败')
+            reject(new Error('批量保存/更新数据失败'))
+          }
+        })
+      } catch (error) {
+        console.error('批量保存/更新数据操作失败:', error)
+        reject(error)
+      }
+    })
+  } catch (error) {
+    console.error('数据库打开失败:', error)
+    throw error
+  }
+}
+
+/**
  * 清空存储对象中的所有数据
  * @param {string} storeName - 存储对象名称
  * @returns {Promise} 返回清空结果
@@ -364,3 +474,4 @@ export const getRecentMessagesByThreadId = async (storeName, threadId, limit = 5
     throw error
   }
 }
+
