@@ -13,7 +13,7 @@ export const useUnreadMessagesStore = defineStore('unreadMessages', () => {
         content: '',  // 最后一条消息
         lastTime: '' ,  // 最后一条消息时间
         unreadCount: 0,   // 未读消息数
-        type: '',  // 会话类型（group）
+        type: -1,  // 会话类型（group）
     }
 
     /**

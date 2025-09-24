@@ -15,14 +15,10 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
-import { initializeAppData } from '@/effects/loadingData'
-
-
 app.use(pinia).use(router).use(ElementPlus)
 
-
 // 加载/初始化 数据
+import { initializeAppData } from '@/effects/loadingData'
 initializeAppData()
-
 
 app.mount('#app')

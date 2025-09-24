@@ -1,6 +1,5 @@
 import axios from 'axios'
 import { useUserStore } from '@/stores/index'
-const userStore = useUserStore()
 import { USER_LOGIN_INFO ,getStorage } from './localstorage'
 const token = getStorage(USER_LOGIN_INFO)?.token
 
@@ -14,6 +13,9 @@ const instance = axios.create({
 // 请求拦截器
 instance.interceptors.request.use(
   (config) => {
+    // 在拦截器中获取 store，而不是在模块顶层
+    const userStore = useUserStore()
+    
     if (userStore.token) {
       config.headers.Authorization = 'JWT ' + userStore.token
     }

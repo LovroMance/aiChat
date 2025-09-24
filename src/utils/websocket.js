@@ -1,20 +1,10 @@
 import { baseURL } from '@/utils/request'
 import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
 import { MESSAGES_STORE, addData } from '@/utils/indexedDB'
-// import { MESSAGES_STORE, UNREAD_MESSAGES_STORE, addData, putData,  } from '@/utils/indexedDB'
-// import { useUnreadMessagesStore, useMessageStore, useThreadStore } from '@/stores'
-import { useMessageStore, useThreadStore } from '@/stores'
-// const chatListStore = useUnreadMessagesStore()
-const messageStore = useMessageStore()
-const threadStore = useThreadStore()
-console.log(threadStore)
-
+import { useMessageStore } from '@/stores'
 import { putRecord } from '@/effects/unreadRecord'
 
-// import { formatTimeHour } from '@/utils/format'
-
 export const chatPath = '/ws/chat'  // 用户聊天（私聊/群聊）
-export const AIChatPath = '/ws/ai/chat'  // AI聊天
 
 let ws = null // websocket实例
 let isConnected = false
@@ -61,6 +51,9 @@ const bindEvents = async () => {
       try {
         const data = JSON.parse(event.data)  // 把JSON字符串转换为对象
         console.log('收到消息:', data)
+        
+        // 在事件处理器中获取 store
+        const messageStore = useMessageStore()
         
         await addData(MESSAGES_STORE, data) // 将消息添加到IndexedDB
         messageStore.addMessage(data) // 将消息添加到本地内存store中
@@ -111,13 +104,5 @@ export const closeWebSocket = () => {
     ws = null
     console.log('WebSocket连接已关闭')
     isConnected = false
-  }
-}
-
-// 获取连接状态
-export const getConnectionStatus = () => {
-  return {
-    isConnected,
-    readyState: ws ? ws.readyState : null,
   }
 }

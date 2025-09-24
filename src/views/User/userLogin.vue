@@ -35,8 +35,8 @@ const userLogin = async () => {
     console.log('userLogin/api', data)
     // 登陆成功就把用户的信息存到UserStore里
     const userInfo = {
-      uid: data.uid,
-      token: data.token,
+      uid: data.data.uid,
+      token: data.data.token,
     }
     userStore.setLoginInfo(userInfo)
     // 把用户token存到本地存储

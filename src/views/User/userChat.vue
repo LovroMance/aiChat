@@ -3,18 +3,15 @@ import chatPanel from '@/views/Chat/chatPanel.vue'
 import chatInput from '@/views/Chat/chatInput.vue'
 import chatThread from '../Chat/chatThread.vue'
 
-import { onMounted, onUnmounted, ref, nextTick, computed } from 'vue'
+import { onMounted, onUnmounted, ref, nextTick } from 'vue'
 
 import { closeWebSocket } from '@/utils/websocket.js'
-import { getUserInfo } from '@/api/user'
 import { getPartMessages } from '@/api/chat'
-import { USER_LOGIN_INFO, USER_INFO_DATA, setStorage, getStorage } from '@/utils/localstorage'
-import { MESSAGES_STORE, initDB, getAllData, closeDB, addBatchData, getLastData, } from '@/utils/indexedDB'
+import { MESSAGES_STORE, getAllData, closeDB, addBatchData, getLastData, } from '@/utils/indexedDB'
 
 import { useMessageStore, useUnreadMessagesStore} from '@/stores'
 const messageStore = useMessageStore()
 const unreadMessagesStore = useUnreadMessagesStore()
-
 const isPopup = ref(false)
 
 // 处理子组件关闭事件
@@ -27,26 +24,20 @@ const handleCreateGroup = () => {
   isPopup.value = false
 }
 
-const username = ref('')
-const userUid = getStorage(USER_LOGIN_INFO).uid
 const beforeMessages = ref([])
 const offlineMessages = ref([])
 
 // 侧边栏相关数据
-const activeChat = ref(null)
-const chatList = ref([])
+const activeChat = ref({})
 
 // 选择聊天对象
 const selectChat = (chat) => {
   activeChat.value = chat
   // 清除未读消息数
+  // 这里可以做处理逻辑⭐
+
   chat.unreadCount = 0
 }
-
-// 计算总未读消息数
-const totalUnreadCount = computed(() => {
-  return chatList.value.reduce((total, chat) => total + chat.unreadCount, 0)
-})
 
 // 滚动到底部的函数
 const scrollToBottom = () => {
@@ -59,45 +50,27 @@ const scrollToBottom = () => {
   })
 }
 
-
 onMounted(async () => {
-  // 1. 发送请求 获取用户基本数据
-  const { data } = await getUserInfo(userUid)
-  console.log('getUserInfo/api', data)
-  // 2. 加载用户数据存储到本地
-  setStorage(USER_INFO_DATA, data.data)
-  username.value = getStorage(USER_INFO_DATA).username
-
-  // 3. 创建websocket连接 移动到home页面
-
-  // 4. 初始化（打开）本地数据库
-  await initDB()
-  // 5. 获取本地数据库聊天历史
+  // 1. 获取本地数据库聊天历史
   const messages = await getAllData(MESSAGES_STORE)
   beforeMessages.value = messages
 
-  // 6. 获取离线聊天历史
-  // 6.1 获取最后一条本地聊天记录id
-
+  // 2. 获取离线聊天历史
+  // 2.1 获取最后一条本地聊天记录id
   const getLastMessageId = await getLastData(MESSAGES_STORE)
   if (getLastMessageId) {
     const { message_id } = getLastMessageId
     console.log('getLastData/indexedDB --> message_id', message_id)
 
-    // 6.2 获取离线聊天记录 （根据message_id获取聊天历史）
+    // 2.2 获取离线聊天记录 （根据message_id获取聊天历史）
     const res = await getPartMessages({
       thread_id: 1,
       existing_id: message_id,
     })
     console.log('getPartMessages/api --> 离线消息', res.data.data)
-    // 7. 将离线消息添加到本地数据库
+    // 3. 将离线消息添加到本地数据库
     await addBatchData(MESSAGES_STORE, res.data.data)
     offlineMessages.value = res.data.data
-  }
-
-  // 默认选择第一个聊天
-  if (chatList.value.length > 0) {
-    activeChat.value = chatList.value[0]
   }
 
   scrollToBottom()
@@ -125,9 +98,6 @@ onUnmounted(async () => {
       <div class="sidebar-header">
         <div class="unread-badge">
           <h3>消息列表</h3>
-          <el-badge :value="totalUnreadCount" :hidden="totalUnreadCount === 0" style="display: flex; margin-left: 5px;">
-            <el-icon size="20"><ChatLineRound /></el-icon>
-          </el-badge>
         </div>
         <el-icon size="20" class="circle-plus" @click="isPopup = !isPopup"><CirclePlus /></el-icon>
       </div>
@@ -137,8 +107,8 @@ onUnmounted(async () => {
           <div
             v-for="[key, value] in unreadMessagesStore.unreadMessagesMap"
             :key="key"
-            :class="['chat-item', { active: activeChat?.id === key }]"
-            @click="selectChat(chat)"
+            :class="['chat-item', { active: activeChat?.thread_id === key }]"
+            @click="selectChat(value)"
           >
             <div class="avatar-container">
               <el-avatar :src="value.thread_avatar" :size="48" />
@@ -151,7 +121,7 @@ onUnmounted(async () => {
               </div>
               <div class="chat-content">
                 <span class="last-message">
-                  {{ value.type === 'group' ? `${value.senderName}: ${value.content}` : value.content }}
+                  {{ value.type == 0 ? `${value.senderName}: ${value.content}` : `${ value.content }` }}
                 </span>
                 <el-badge
                   v-if="value.unreadCount > 0"
@@ -172,8 +142,7 @@ onUnmounted(async () => {
     >
       <!-- 用户名 -->
       <el-header class="header-container" style="height: 10%">
-        <span v-if="activeChat">{{ activeChat.name }}</span>
-        <span v-else>{{ username }}</span>
+        <span>{{ activeChat.thread_name }}</span>
       </el-header>
       <!-- 聊天内容 -->
       <el-main style="padding: 0; border-top: 1px solid rgba(70, 130, 180, 0.2)">
@@ -299,6 +268,7 @@ onUnmounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-height: 20px; /* 确保容器高度一致 */
 }
 
 .last-message {
@@ -309,11 +279,14 @@ onUnmounted(async () => {
   white-space: nowrap;
   flex: 1;
   line-height: 1.2;
+  margin-right: 8px; /* 为徽章预留空间 */
 }
 
 .message-badge {
   flex-shrink: 0;
-  margin-left: 8px;
+  width: 26px; /* 固定宽度，确保布局稳定 */
+  display: flex;
+  justify-content: flex-end;
 }
 
 :deep(.el-badge__content) {

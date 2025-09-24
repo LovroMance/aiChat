@@ -5,8 +5,6 @@ import { getUserInfo } from '@/api/user'
 import { USER_LOGIN_INFO, USER_INFO_DATA, setStorage, getStorage } from '@/utils/localstorage'
 import { ElMessage } from 'element-plus'
 
-import { chatPath, createWebSocket } from '@/utils/websocket.js'
-
 onMounted(async () => {
   try {
     const { data } = await getUserInfo(getStorage(USER_LOGIN_INFO).uid)
@@ -28,17 +26,7 @@ onMounted(async () => {
     })
   }
 
-  // 3. 创建websocket连接
-  try {
-    console.log('初始化WebSocket连接...')
-    createWebSocket(chatPath)
-  } catch (error) {
-    console.error('WebSocket初始化失败:', error)
-    ElMessage({
-      message: 'WebSocket连接初始化失败，请检查网络连接',
-      type: 'warning',
-    })
-  }
+  
 })
 
 
