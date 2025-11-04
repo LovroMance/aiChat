@@ -16,7 +16,7 @@ export const initDB = () => {
   return new Promise((resolve, reject) => {
     // 如果数据库已打开，则直接返回
     if (db) {
-      console.log('数据库已打开', db);
+      console.log('数据库已打开', db)
       resolve(db)
       return
     }
@@ -44,7 +44,7 @@ export const initDB = () => {
           keyPath: 'id',
           autoIncrement: true,
         })
-        messageStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
+        messageStore.createIndex('message_id', 'message_id', { unique: false }) // 添加 message_id 索引
       }
 
       // 创建未读消息存储
@@ -53,14 +53,15 @@ export const initDB = () => {
           keyPath: 'thread_id',
         })
         unreadMessageStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
+        unreadMessageStore.createIndex('last_time', 'last_time', { unique: false }) // 添加 last_time 索引
       }
 
-      // 创建未读消息存储
+      // 创建thread存储
       if (!database.objectStoreNames.contains(THREADS_STORE)) {
-        const unreadMessageStore = database.createObjectStore(THREADS_STORE, {
+        const threadStore = database.createObjectStore(THREADS_STORE, {
           keyPath: 'thread_id',
         })
-        unreadMessageStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
+        threadStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
       }
     }
   })
@@ -132,7 +133,7 @@ export const addBatchData = async (storeName, dataArray) => {
     }
 
     // 清理数据，移除不可序列化的属性
-    const cleanDataArray = dataArray.map(data => {
+    const cleanDataArray = dataArray.map((data) => {
       try {
         // 通过JSON序列化和反序列化来清理数据
         return JSON.parse(JSON.stringify(data))
@@ -156,7 +157,7 @@ export const addBatchData = async (storeName, dataArray) => {
           request.onsuccess = () => {
             results[index] = request.result
             completed++
-            
+
             if (completed === cleanDataArray.length && !hasError) {
               resolve(results)
             }
@@ -235,11 +236,11 @@ export const getLastData = async (storeName) => {
           const cursor = event.target.result
           if (cursor) {
             // 找到最后一条数据
-            console.log(`获取${{storeName}}的最后一条数据`,cursor.value);
+            console.log(`获取${{ storeName }}的最后一条数据`, cursor.value)
             resolve(cursor.value)
           } else {
             // 没有数据
-            console.log(`该${{storeName}}暂无数据`);
+            console.log(`该${{ storeName }}暂无数据`)
             resolve(null)
           }
         }
@@ -351,14 +352,16 @@ export const putBatchData = async (storeName, dataArray) => {
     }
 
     // 清理数据，移除不可序列化的属性
-    const cleanDataArray = dataArray.map(data => {
-      try {
-        return JSON.parse(JSON.stringify(data))
-      } catch (error) {
-        console.warn('数据清理失败，跳过该条数据:', error)
-        return null
-      }
-    }).filter(data => data !== null)
+    const cleanDataArray = dataArray
+      .map((data) => {
+        try {
+          return JSON.parse(JSON.stringify(data))
+        } catch (error) {
+          console.warn('数据清理失败，跳过该条数据:', error)
+          return null
+        }
+      })
+      .filter((data) => data !== null)
 
     return new Promise((resolve, reject) => {
       try {
@@ -374,7 +377,7 @@ export const putBatchData = async (storeName, dataArray) => {
           request.onsuccess = () => {
             results[index] = request.result
             completed++
-            
+
             if (completed === cleanDataArray.length && !hasError) {
               console.log(`批量保存/更新了 ${cleanDataArray.length} 条数据`)
               resolve(results)
@@ -474,4 +477,3 @@ export const getRecentMessagesByThreadId = async (storeName, threadId, limit = 5
     throw error
   }
 }
-

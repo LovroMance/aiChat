@@ -9,14 +9,14 @@ const send = async () => {
     console.log('消息为空，不发送')
     return
   }
-  
+
   // 构造消息对象
   const messageObj = {
     content: input.value.trim(),
     attachment: null,
-    thread_id: 1  // TODO: 替换为实际的房间号
+    thread_id: 1, // TODO: 替换为实际的房间号
   }
-  
+
   const success = await sendMessage(messageObj)
   if (success) {
     input.value = '' // 清空输入框
@@ -141,8 +141,8 @@ const emit = defineEmits(['messageSent'])
   font-weight: 400;
   line-height: 1.6;
   padding: 16px 10px;
-  background: rgba(255,255,255,0.9);
-  border: 1px solid rgba(70,130,180,0.2);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(70, 130, 180, 0.2);
   resize: none;
   text-align: left;
   vertical-align: top;

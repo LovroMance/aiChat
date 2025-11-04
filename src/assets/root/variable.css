@@ -1,0 +1,60 @@
+:root {
+  /* 背景色 */
+  --bg-color-primary: #23272e;
+  --bg-color-secondary: #3a4047;
+  --bg-color-tertiary: #6b7b8a;
+
+  /* 字体色 */
+  --font-color-main: #f5f6fa; /* 主体文字，明亮 */
+  --font-color-secondary: #c2c8d0; /* 次级文字，灰白 */
+  --font-color-tertiary: #8a99a8; /* 辅助文字，弱化 */
+
+  /* 强调色 */
+  --accent-color: #8b5cf6; /* 紫色主色调 */
+  --accent-color-hover: #a78bfa; /* 紫色hover */
+  --danger-color: #ff6b6b; /* 错误/警告色 */
+  --success-color: #4ade80; /* 成功色 */
+
+  /* 按钮色 */
+  --btn-bg-primary: var(--accent-color);
+  --btn-bg-hover: var(--accent-color-hover);
+  --btn-font-color: #fff;
+
+  /* 边框/分割线 */
+  --border-color: #2e3440;
+  --border-radius: 10px;
+
+  /* 阴影 */
+  --shadow-light: 0 2px 8px rgba(35, 39, 46, 0.08);
+  --shadow-medium: 0 4px 16px rgba(35, 39, 46, 0.12);
+
+  /* 字体 */
+  --font-family: 'Inter', 'Segoe UI', 'PingFang SC', 'Arial', sans-serif;
+  --font-size-base: 1rem; /* 16px */
+  --font-size-sm: 0.95rem; /* 15px */
+  --font-size-lg: 1.25rem; /* 20px */
+  --font-size-xl: 2.5rem; /* 25px */
+  --font-size-title: 3rem; /* 48px */
+  --font-weight-normal: 400;
+  --font-weight-bold: 700;
+  --font-letter-spacing: 0.05em;
+
+  /* 间距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* 输入框 */
+  --input-bg: #2e3440;
+  --input-border: #3a4047;
+  --input-radius: 8px;
+  --input-font-color: var(--font-color-main);
+  --input-placeholder-color: var(--font-color-tertiary);
+
+  /* 卡片/浮层 */
+  --card-bg: rgba(35, 39, 46, 0.92);
+  --card-radius: 14px;
+  --card-shadow: var(--shadow-medium);
+}

@@ -5,54 +5,54 @@ const isCollapse = ref(true)
 </script>
 
 <template>
-  <el-container style="height: 100vh; min-height: 0; display: flex;" >
-      <el-menu default-active="4" class="el-menu-vertical-demo" :collapse="isCollapse" router>
-        <el-menu-item index="1" route="/userHome">
-          <el-icon>
-            <Menu />
-          </el-icon>
-          <template #title>首页</template>
-        </el-menu-item>
+  <el-container style="height: 100vh; min-height: 0; display: flex">
+    <el-menu default-active="4" class="el-menu-vertical-demo" :collapse="isCollapse" router>
+      <el-menu-item index="1" route="/userHome">
+        <el-icon>
+          <Menu />
+        </el-icon>
+        <template #title>首页</template>
+      </el-menu-item>
 
-        <el-menu-item index="2" route="/FriendGroupList">
-          <el-icon>
-            <List />
-          </el-icon>
-          <template #title>我的列表</template>
-        </el-menu-item>
+      <el-menu-item index="2" route="/FriendGroupList">
+        <el-icon>
+          <List />
+        </el-icon>
+        <template #title>我的列表</template>
+      </el-menu-item>
 
-        <el-menu-item index="3" route="/chatJoin">
-          <el-icon>
-            <Connection />
-          </el-icon>
-          <template #title>频道</template>
-        </el-menu-item>
+      <el-menu-item index="3" route="/chatJoin">
+        <el-icon>
+          <Connection />
+        </el-icon>
+        <template #title>频道</template>
+      </el-menu-item>
 
-        <el-menu-item index="4" route="/userChat">
-          <el-icon>
-            <ChatDotRound />
-          </el-icon>
-          <template #title>聊天室</template>
-        </el-menu-item>
+      <el-menu-item index="4" route="/userChat">
+        <el-icon>
+          <ChatDotRound />
+        </el-icon>
+        <template #title>聊天室</template>
+      </el-menu-item>
 
-        <el-menu-item index="5" route="/userInfo">
-          <el-icon>
-            <User />
-          </el-icon>
-          <template #title>个人资料</template>
-        </el-menu-item>
+      <el-menu-item index="5" route="/userInfo">
+        <el-icon>
+          <User />
+        </el-icon>
+        <template #title>个人资料</template>
+      </el-menu-item>
 
-        <el-menu-item index="6" route="/userSetting">
-          <el-icon>
-            <Setting />
-          </el-icon>
-          <template #title>设置</template>
-        </el-menu-item>
+      <el-menu-item index="6" route="/userSetting">
+        <el-icon>
+          <Setting />
+        </el-icon>
+        <template #title>设置</template>
+      </el-menu-item>
 
-        <button @click="isCollapse = !isCollapse">button</button>
-      </el-menu>
+      <button @click="isCollapse = !isCollapse">button</button>
+    </el-menu>
     <!-- 聊天框 -->
-    <router-view style="flex: 1;"/>
+    <router-view style="flex: 1" />
   </el-container>
 </template>
 

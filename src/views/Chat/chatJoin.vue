@@ -142,7 +142,10 @@ const joinRoom = async () => {
   letter-spacing: 1px;
   border-radius: 10px;
   box-shadow: 0 2px 12px #e0c3fc80;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    box-shadow 0.2s;
   font-weight: bold;
   background: linear-gradient(90deg, #8ec5fc 0%, #e0c3fc 100%);
   color: #fff;

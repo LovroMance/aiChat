@@ -25,10 +25,7 @@ onMounted(async () => {
       type: 'error',
     })
   }
-
-  
 })
-
 
 const router = useRouter()
 

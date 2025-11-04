@@ -21,6 +21,7 @@ export const formatTimeHour = (timeString) => {
   if (!timeString) return ''
   try {
     const date = new Date(timeString)
+    console.log('date', date)
     const hours = String(date.getHours()).padStart(2, '0')
     const minutes = String(date.getMinutes()).padStart(2, '0')
 

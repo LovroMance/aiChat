@@ -3,10 +3,10 @@ import { ref } from 'vue'
 
 const pinia = createPinia()
 
-export const isLoading = ref(false)  // 是否正在加载中
+export const isLoading = ref(false) // 是否正在加载中
 
 export default pinia
-export * from './User'
+export * from './user'
 export * from './message'
 export * from './unreadMessages'
 export * from './thread'

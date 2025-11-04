@@ -1,11 +1,10 @@
-import instance from "@/utils/request"
-
+import instance from '@/utils/request'
 
 // 获取thread基本信息
 export const getThreadInfo = (data) => {
   return instance.get('/thread/info', {
     params: {
-        thread_id: data.thread_id
-    }
+      thread_id: data.thread_id,
+    },
   })
 }

@@ -13,7 +13,7 @@ const friends = ref([
     lastMessage: '你好，今天天气不错',
     lastTime: '10:30',
     unreadCount: 2,
-    type: 'friend'
+    type: 'friend',
   },
   {
     id: 2,
@@ -22,7 +22,7 @@ const friends = ref([
     lastMessage: '明天的会议准备好了吗？',
     lastTime: '09:15',
     unreadCount: 0,
-    type: 'friend'
+    type: 'friend',
   },
   {
     id: 3,
@@ -31,7 +31,7 @@ const friends = ref([
     lastMessage: '王五: 这个新的 Vue 3 特性很有用',
     lastTime: '昨天',
     unreadCount: 5,
-    type: 'group'
+    type: 'group',
   },
   {
     id: 4,
@@ -40,8 +40,8 @@ const friends = ref([
     lastMessage: '我可以帮助您解决任何问题',
     lastTime: '2天前',
     unreadCount: 0,
-    type: 'ai'
-  }
+    type: 'ai',
+  },
 ])
 
 const searchQuery = ref('')
@@ -50,24 +50,24 @@ const activeTab = ref('all') // all, friends, groups, ai
 // 搜索过滤
 const filteredContacts = computed(() => {
   let result = friends.value
-  
+
   // 按类型过滤
   if (activeTab.value !== 'all') {
     const typeMap = {
-      'friends': 'friend',
-      'groups': 'group', 
-      'ai': 'ai'
+      friends: 'friend',
+      groups: 'group',
+      ai: 'ai',
     }
-    result = result.filter(contact => contact.type === typeMap[activeTab.value])
+    result = result.filter((contact) => contact.type === typeMap[activeTab.value])
   }
-  
+
   // 按搜索关键词过滤
   if (searchQuery.value.trim()) {
-    result = result.filter(contact => 
-      contact.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+    result = result.filter((contact) =>
+      contact.name.toLowerCase().includes(searchQuery.value.toLowerCase()),
     )
   }
-  
+
   return result
 })
 
@@ -82,16 +82,16 @@ const handleAddContact = () => {
   if (!searchQuery.value.trim()) {
     ElMessage({
       message: '请输入要搜索的用户名或群聊名',
-      type: 'warning'
+      type: 'warning',
     })
     return
   }
-  
+
   ElMessage({
     message: `正在搜索「${searchQuery.value}」...`,
-    type: 'info'
+    type: 'info',
   })
-  
+
   // 这里应该调用 API 搜索用户或群聊
   // TODO: 实现实际的搜索功能
 }
@@ -102,27 +102,35 @@ const handleContactClick = (contact) => {
   // 这里应该跳转到聊天页面或执行其他操作
   ElMessage({
     message: `打开与 ${contact.name} 的聊天`,
-    type: 'success'
+    type: 'success',
   })
 }
 
 // 获取联系人类型图标
 const getContactIcon = (type) => {
   switch (type) {
-    case 'friend': return UserFilled
-    case 'group': return ChatDotRound
-    case 'ai': return ChatDotRound
-    default: return UserFilled
+    case 'friend':
+      return UserFilled
+    case 'group':
+      return ChatDotRound
+    case 'ai':
+      return ChatDotRound
+    default:
+      return UserFilled
   }
 }
 
 // 获取联系人类型颜色
 const getContactTypeColor = (type) => {
   switch (type) {
-    case 'friend': return '#67C23A'
-    case 'group': return '#409EFF'
-    case 'ai': return '#E6A23C'
-    default: return '#909399'
+    case 'friend':
+      return '#67C23A'
+    case 'group':
+      return '#409EFF'
+    case 'ai':
+      return '#E6A23C'
+    default:
+      return '#909399'
   }
 }
 </script>
@@ -137,7 +145,7 @@ const getContactTypeColor = (type) => {
           添加联系人
         </h2>
       </div>
-      
+
       <div class="search-input-container">
         <el-input
           v-model="searchQuery"
@@ -149,10 +157,9 @@ const getContactTypeColor = (type) => {
           <template #prefix>
             <el-icon class="search-icon"><Search /></el-icon>
           </template>
-          
         </el-input>
-        <el-button 
-          type="primary" 
+        <el-button
+          type="primary"
           class="add-btn"
           @click="handleAddContact"
           :disabled="!searchQuery.trim()"
@@ -165,33 +172,25 @@ const getContactTypeColor = (type) => {
 
     <!-- 筛选标签 -->
     <div class="filter-tabs">
-      <div 
-        class="tab-item"
-        :class="{ active: activeTab === 'all' }"
-        @click="activeTab = 'all'"
-      >
+      <div class="tab-item" :class="{ active: activeTab === 'all' }" @click="activeTab = 'all'">
         全部 ({{ friends.length }})
       </div>
-      <div 
+      <div
         class="tab-item"
         :class="{ active: activeTab === 'friends' }"
         @click="activeTab = 'friends'"
       >
-        好友 ({{ friends.filter(f => f.type === 'friend').length }})
+        好友 ({{ friends.filter((f) => f.type === 'friend').length }})
       </div>
-      <div 
+      <div
         class="tab-item"
         :class="{ active: activeTab === 'groups' }"
         @click="activeTab = 'groups'"
       >
-        群聊 ({{ friends.filter(f => f.type === 'group').length }})
+        群聊 ({{ friends.filter((f) => f.type === 'group').length }})
       </div>
-      <div 
-        class="tab-item"
-        :class="{ active: activeTab === 'ai' }"
-        @click="activeTab = 'ai'"
-      >
-        AI ({{ friends.filter(f => f.type === 'ai').length }})
+      <div class="tab-item" :class="{ active: activeTab === 'ai' }" @click="activeTab = 'ai'">
+        AI ({{ friends.filter((f) => f.type === 'ai').length }})
       </div>
     </div>
 
@@ -199,42 +198,41 @@ const getContactTypeColor = (type) => {
     <div class="contacts-section">
       <h3 class="section-subtitle">
         <el-icon class="subtitle-icon"><ChatDotRound /></el-icon>
-        {{ activeTab === 'all' ? '全部联系人' : 
-           activeTab === 'friends' ? '我的好友' :
-           activeTab === 'groups' ? '群聊列表' : 'AI 助手' }}
+        {{
+          activeTab === 'all'
+            ? '全部联系人'
+            : activeTab === 'friends'
+              ? '我的好友'
+              : activeTab === 'groups'
+                ? '群聊列表'
+                : 'AI 助手'
+        }}
       </h3>
-      
+
       <div class="contacts-list">
-        <div 
-          v-for="contact in filteredContacts" 
+        <div
+          v-for="contact in filteredContacts"
           :key="contact.id"
           class="contact-item"
           @click="handleContactClick(contact)"
         >
           <div class="contact-avatar-container">
-            <el-avatar 
-              :src="contact.avatar" 
-              :size="50"
-              class="contact-avatar"
-            >
+            <el-avatar :src="contact.avatar" :size="50" class="contact-avatar">
               <el-icon><UserFilled /></el-icon>
             </el-avatar>
             <!-- 未读消息提示 -->
-            <div 
-              v-if="contact.unreadCount > 0" 
-              class="unread-count"
-            >
+            <div v-if="contact.unreadCount > 0" class="unread-count">
               {{ contact.unreadCount > 99 ? '99+' : contact.unreadCount }}
             </div>
             <!-- 联系人类型标识 -->
-            <div 
+            <div
               class="contact-type-badge"
               :style="{ backgroundColor: getContactTypeColor(contact.type) }"
             >
               <el-icon :size="10"><component :is="getContactIcon(contact.type)" /></el-icon>
             </div>
           </div>
-          
+
           <div class="contact-info">
             <div class="contact-header">
               <h4 class="contact-name">{{ contact.name }}</h4>
@@ -243,7 +241,7 @@ const getContactTypeColor = (type) => {
             <p class="last-message">{{ contact.lastMessage }}</p>
           </div>
         </div>
-        
+
         <!-- 空状态 -->
         <div v-if="filteredContacts.length === 0" class="empty-state">
           <div class="empty-icon">
@@ -404,12 +402,12 @@ const getContactTypeColor = (type) => {
 
 .tab-item:hover {
   background: #e8f4fd;
-  color: #409EFF;
+  color: #409eff;
   border-color: rgba(64, 158, 255, 0.2);
 }
 
 .tab-item.active {
-  background: linear-gradient(135deg, #409EFF, #1890ff);
+  background: linear-gradient(135deg, #409eff, #1890ff);
   color: white;
   box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
 }
@@ -593,26 +591,26 @@ const getContactTypeColor = (type) => {
     width: 100%;
     height: 100vh;
   }
-  
+
   .search-section {
     width: 100%;
     padding: 16px;
     box-sizing: border-box;
   }
-  
+
   .section-title {
     font-size: 1.3rem;
   }
-  
+
   .search-input-container {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .add-btn {
     width: 100%;
   }
-  
+
   .filter-tabs {
     width: 100%;
     padding: 12px 16px;
@@ -620,27 +618,27 @@ const getContactTypeColor = (type) => {
     gap: 6px;
     box-sizing: border-box;
   }
-  
+
   .tab-item {
     white-space: nowrap;
     font-size: 13px;
     padding: 6px 12px;
   }
-  
+
   .contacts-section {
     width: 100%;
     padding: 16px;
     box-sizing: border-box;
   }
-  
+
   .contact-item {
     padding: 12px;
   }
-  
+
   .contact-name {
     font-size: 15px;
   }
-  
+
   .last-message {
     font-size: 13px;
   }
@@ -650,17 +648,17 @@ const getContactTypeColor = (type) => {
   .contact-avatar-container {
     margin-right: 12px;
   }
-  
+
   :deep(.contact-avatar) {
     width: 40px !important;
     height: 40px !important;
   }
-  
+
   .unread-count {
     font-size: 9px;
     padding: 1px 4px;
   }
-  
+
   .contact-type-badge {
     width: 14px;
     height: 14px;

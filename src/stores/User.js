@@ -1,25 +1,24 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-
 export const useUserStore = defineStore('user', () => {
   const account = ref('') // 账号
-  const uid = ref('')  // 用户ID
-  const token = ref('')  // 令牌
+  const uid = ref('') // 用户ID
+  const token = ref('') // 令牌
 
-  const username = ref('')  // 用户名
-  const password = ref('')  // 密码
+  const username = ref('') // 用户名
+  const password = ref('') // 密码
 
-  const avatar = ref('')  // 头像
-  const signature = ref('')  // 个性签名
-  const email = ref('')  // 邮箱
-  const createTime = ref('')  // 创建时间
-  const lastLoginTime = ref('')  // 最后登录时间
-  const status = ref('')  // 状态
-  const level = ref('')  // 等级
-  const posts = ref('')  // 帖子数量
-  const followers = ref('')  // 粉丝数量
-  const following = ref('')  // 关注数量
+  const avatar = ref('') // 头像
+  const signature = ref('') // 个性签名
+  const email = ref('') // 邮箱
+  const createTime = ref('') // 创建时间
+  const lastLoginTime = ref('') // 最后登录时间
+  const status = ref('') // 状态
+  const level = ref('') // 等级
+  const posts = ref('') // 帖子数量
+  const followers = ref('') // 粉丝数量
+  const following = ref('') // 关注数量
 
   // 设置登录信息
   const setLoginInfo = (newInfo) => {

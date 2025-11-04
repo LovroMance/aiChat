@@ -5,7 +5,7 @@ import { getMessagesByThreadId, getRecentMessagesByThreadId } from '@/utils/inde
 
 const chatListStore = useUnreadMessagesStore()
 
-const test = async (existing_id = 10) => {
+const test = async (existing_id = 0) => {
   console.log(existing_id)
   const { data } = await getUnreadMessages({
     existing_id,
@@ -45,7 +45,6 @@ const test3 = async () => {
   console.log(messages)
 }
 
-
 const test4 = async () => {
   console.log('map', unreadMessagesStore.unreadMessagesMap)
 }
@@ -57,17 +56,15 @@ const test5 = async () => {
 import { useUnreadMessagesStore } from '@/stores'
 import { onMounted } from 'vue'
 const unreadMessagesStore = useUnreadMessagesStore()
-onMounted(() => { 
-    unreadMessagesStore.loadUnreadMessagesFromDB()
+onMounted(() => {
+  unreadMessagesStore.loadUnreadMessagesFromDB()
 })
 
-
-
-import { putRecord } from '@/effects/unreadRecord'
+import { putRecord } from '@/service/unreadMessageService'
 const test6 = () => {
   putRecord({
     thread_id: 1,
-    sender_name:'hi',
+    sender_name: 'hi',
     content: 'hello',
     lastTime: '2022-01-01 00:00:00',
   })

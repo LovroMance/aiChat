@@ -6,10 +6,11 @@ import chatThread from '../Chat/chatThread.vue'
 import { onMounted, onUnmounted, ref, nextTick } from 'vue'
 
 import { closeWebSocket } from '@/utils/websocket.js'
-import { getPartMessages } from '@/api/chat'
-import { MESSAGES_STORE, getAllData, closeDB, addBatchData, getLastData, } from '@/utils/indexedDB'
+import { getUnreadMessages } from '@/api/chat'
+import { MESSAGES_STORE, closeDB, getLastData } from '@/utils/indexedDB'
+import { putWholeRecord } from '@/service/unreadMessageService'
 
-import { useMessageStore, useUnreadMessagesStore} from '@/stores'
+import { useMessageStore, useUnreadMessagesStore } from '@/stores'
 const messageStore = useMessageStore()
 const unreadMessagesStore = useUnreadMessagesStore()
 const isPopup = ref(false)
@@ -52,26 +53,25 @@ const scrollToBottom = () => {
 
 onMounted(async () => {
   // 1. 获取本地数据库聊天历史
-  const messages = await getAllData(MESSAGES_STORE)
-  beforeMessages.value = messages
+  beforeMessages.value = messageStore.receiveMessages
 
-  // 2. 获取离线聊天历史
+  // 2. 获取离线未读消息记录
   // 2.1 获取最后一条本地聊天记录id
   const getLastMessageId = await getLastData(MESSAGES_STORE)
-  if (getLastMessageId) {
-    const { message_id } = getLastMessageId
-    console.log('getLastData/indexedDB --> message_id', message_id)
+  const { message_id } = getLastMessageId ?? { message_id: 0 }
+  console.log('getLastData/indexedDB --> message_id', message_id)
 
-    // 2.2 获取离线聊天记录 （根据message_id获取聊天历史）
-    const res = await getPartMessages({
-      thread_id: 1,
-      existing_id: message_id,
-    })
-    console.log('getPartMessages/api --> 离线消息', res.data.data)
-    // 3. 将离线消息添加到本地数据库
-    await addBatchData(MESSAGES_STORE, res.data.data)
-    offlineMessages.value = res.data.data
+  // 2.2 获取离线未读消息记录（根据message_id获取聊天历史）
+  const res = await getUnreadMessages({
+    existing_id: message_id,
+  })
+  console.log('getUnreadMessages/api --> 离线消息', res.data)
+  for (const record of res.data) {
+    await putWholeRecord(record)
   }
+
+  // offlineMessages.value = res.data.data
+  // TODO: 这里应该跟点击传递thread_id然后进行渲染相关处理的
 
   scrollToBottom()
 })
@@ -88,11 +88,7 @@ onUnmounted(async () => {
 
 <template>
   <el-container style="height: 100vh; min-height: 0">
-    <chatThread 
-      v-if="isPopup" 
-      @close="handleCloseDialog"
-      @create="handleCreateGroup"
-    />
+    <chatThread v-if="isPopup" @close="handleCloseDialog" @create="handleCreateGroup" />
     <!-- 左侧聊天列表侧边栏 -->
     <el-aside width="320px" class="chat-sidebar">
       <div class="sidebar-header">
@@ -121,7 +117,11 @@ onUnmounted(async () => {
               </div>
               <div class="chat-content">
                 <span class="last-message">
-                  {{ value.type == 0 ? `${value.senderName}: ${value.content}` : `${ value.content }` }}
+                  {{
+                    value.type == 'group'
+                      ? `${value.senderName}: ${value.content}`
+                      : `${value.content}`
+                  }}
                 </span>
                 <el-badge
                   v-if="value.unreadCount > 0"

@@ -2,18 +2,22 @@ import { createRouter, createWebHistory } from 'vue-router'
 // 配置路由规则
 const routes = [
   {
+    path: '/test',
+    component: () => import('@/views/authentication/login.vue'),
+  },
+  {
     path: '/',
     redirect: '/login',
   },
   {
     path: '/login',
     name: 'login',
-    component: () => import('@/views/User/userLogin.vue'),
+    component: () => import('@/views/authentication/login.vue'),
   },
   {
     path: '/register',
     name: 'register',
-    component: () => import('@/views/User/userRegister.vue'),
+    component: () => import('@/views/authentication/register.vue'),
   },
   {
     path: '/userHome',

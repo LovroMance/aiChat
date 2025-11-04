@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { useUserStore } from '@/stores/index'
-import { USER_LOGIN_INFO ,getStorage } from './localstorage'
+import { USER_LOGIN_INFO, getStorage } from './localstorage'
 const token = getStorage(USER_LOGIN_INFO)?.token
 
 const baseURL = 'http://localhost:10086'
@@ -15,11 +15,10 @@ instance.interceptors.request.use(
   (config) => {
     // 在拦截器中获取 store，而不是在模块顶层
     const userStore = useUserStore()
-    
+
     if (userStore.token) {
       config.headers.Authorization = 'JWT ' + userStore.token
-    }
-    else if (token) {
+    } else if (token) {
       config.headers.Authorization = 'JWT ' + token
     }
     return config

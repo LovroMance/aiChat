@@ -44,6 +44,6 @@ export const getUnreadMessages = (data) => {
   return instance.get('/thread/record/overview', {
     params: {
       existing_id: data.existing_id,
-    }
+    },
   })
 }

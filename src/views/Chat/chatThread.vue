@@ -14,18 +14,16 @@ const emit = defineEmits(['close', 'create'])
 const groupForm = ref({
   group_name: '',
   group_description: '',
-  group_avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'  // 默认头像
+  group_avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png', // 默认头像
 })
 
 // 表单验证规则
 const rules = {
   group_name: [
     { required: true, message: '请输入群聊名称', trigger: 'blur' },
-    { min: 2, max: 20, message: '群聊名称长度在 2 到 20 个字符', trigger: 'blur' }
+    { min: 2, max: 20, message: '群聊名称长度在 2 到 20 个字符', trigger: 'blur' },
   ],
-  group_description: [
-    { max: 100, message: '群聊简介不能超过 100 个字符', trigger: 'blur' }
-  ]
+  group_description: [{ max: 100, message: '群聊简介不能超过 100 个字符', trigger: 'blur' }],
 }
 
 const formRef = ref(null)
@@ -55,14 +53,14 @@ const beforeAvatarUpload = (file) => {
 // 头像文件选择回调
 const handleAvatarChange = (file) => {
   console.log('文件选择:', file)
-  selectedFile.value = file.raw  // 保存文件对象
-  groupForm.value.group_avatar = URL.createObjectURL(file.raw)  // 创建本地预览头像 URL
+  selectedFile.value = file.raw // 保存文件对象
+  groupForm.value.group_avatar = URL.createObjectURL(file.raw) // 创建本地预览头像 URL
 }
 
 // 创建群聊
 const createGroup = async () => {
   if (!formRef.value) return
-  
+
   try {
     // 先进行表单验证
     const isValid = await formRef.value.validate()
@@ -79,10 +77,10 @@ const createGroup = async () => {
         type: 'group',
         description: groupForm.value.group_description,
       }
-      await addData(THREADS_STORE, threadObject)  // 保存到indexedDB
-      threadStore.threadObject = threadObject     // 保存到store
-   
-      emit('create')  // 发射创建事件，传递接口返回的数据
+      await addData(THREADS_STORE, threadObject) // 保存到indexedDB
+      threadStore.threadObject = threadObject // 保存到store
+
+      emit('create') // 发射创建事件，传递接口返回的数据
       ElMessage.success('群聊创建成功！')
     }
   } catch (error) {
@@ -102,10 +100,10 @@ const createGroup = async () => {
 
       <!-- 对话框内容 -->
       <div class="dialog-content">
-        <el-form 
+        <el-form
           ref="formRef"
-          :model="groupForm" 
-          :rules="rules" 
+          :model="groupForm"
+          :rules="rules"
           label-width="80px"
           class="group-form"
         >
@@ -129,8 +127,8 @@ const createGroup = async () => {
 
           <!-- 群聊名称 -->
           <el-form-item label="群名称" prop="group_name">
-            <el-input 
-              v-model="groupForm.group_name" 
+            <el-input
+              v-model="groupForm.group_name"
               placeholder="请输入群聊名称"
               maxlength="20"
               show-word-limit
@@ -139,8 +137,8 @@ const createGroup = async () => {
 
           <!-- 群聊简介 -->
           <el-form-item label="群简介" prop="group_description">
-            <el-input 
-              v-model="groupForm.group_description" 
+            <el-input
+              v-model="groupForm.group_description"
               type="textarea"
               placeholder="请输入群聊简介（可选）"
               :rows="4"
@@ -362,7 +360,7 @@ const createGroup = async () => {
     width: 95vw;
     margin: 10px;
   }
-  
+
   .dialog-header,
   .dialog-content,
   .dialog-footer {
