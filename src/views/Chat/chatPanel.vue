@@ -1,28 +1,17 @@
 <script setup>
-import { ref, defineProps, watch, nextTick } from 'vue'
+import { watch, nextTick } from 'vue'
 import { useMessageStore } from '@/stores'
 import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
 import { formatTime } from '@/utils/format'
 
 const messageStore = useMessageStore()
-const receiveMessages = ref(messageStore.receiveMessages)
 
 const userUid = getStorage(USER_LOGIN_INFO).uid
 
-const props = defineProps({
-  beforeMessages: {
-    type: Array,
-    required: true,
-  },
-  offlineMessages: {
-    type: Array,
-    required: true,
-  },
-})
 
 // 监听消息变化，自动滚动到底部
 watch(
-  () => [...receiveMessages.value],
+  () => [...messageStore.beforeMessages],
   () => {
     nextTick(() => {
       const chatPanel = document.querySelector('.el-scrollbar__wrap')
@@ -40,7 +29,7 @@ watch(
     <!-- 过去的聊天记录 -->
     <div>
       <div
-        v-for="msg in props.beforeMessages"
+        v-for="msg in messageStore.beforeMessages"
         :key="msg.message_id"
         :class="['chat-message', msg.sender_uid === userUid ? 'self' : 'other']"
       >
@@ -60,7 +49,7 @@ watch(
     <!-- 离线的聊天记录 -->
     <div>
       <div
-        v-for="msg in props.offlineMessages"
+        v-for="msg in messageStore.offlineMessages"
         :key="msg.message_id"
         :class="['chat-message', msg.sender_uid === userUid ? 'self' : 'other']"
       >
@@ -78,14 +67,14 @@ watch(
     </div>
 
     <!-- 聊天历史提示 -->
-    <div v-if="props.beforeMessages.length || props.offlineMessages.length" class="history-tip">
-      —— 以上为历史聊天记录 ——
+    <div v-if="messageStore.beforeMessages.length || messageStore.offlineMessages.length" class="history-tip">
+      ———— 以上为历史聊天记录 ————
     </div>
 
     <!-- 当前的聊天记录 -->
     <div>
       <div
-        v-for="msg in receiveMessages"
+        v-for="msg in messageStore.onlineMessages"
         :key="msg.message_id"
         :class="['chat-message', msg.sender_uid === userUid ? 'self' : 'other']"
       >

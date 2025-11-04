@@ -38,6 +38,7 @@ export const createWebSocket = (path) => {
 const bindEvents = async () => {
   if (!ws) return
 
+  const messageStore = useMessageStore()
   // 设置连接成功钩子
   ws.onopen = () => {
     isConnected = true
@@ -51,13 +52,9 @@ const bindEvents = async () => {
       try {
         const data = JSON.parse(event.data) // 把JSON字符串转换为对象
         console.log('收到消息:', data)
-
-        // 在事件处理器中获取 store
-        const messageStore = useMessageStore()
-
         await addData(MESSAGES_STORE, data) // 将消息添加到IndexedDB
         messageStore.addMessage(data) // 将消息添加到本地内存store中
-        putRecord(data)
+        putRecord(data) // 将消息记录到未读消息表中
       } catch {
         // 如果不是 JSON 格式，直接输出原始消息
         console.log('收到消息:', event.data)

@@ -45,12 +45,14 @@ export const initDB = () => {
           autoIncrement: true,
         })
         messageStore.createIndex('message_id', 'message_id', { unique: false }) // 添加 message_id 索引
+        messageStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
       }
 
       // 创建未读消息存储
       if (!database.objectStoreNames.contains(UNREAD_MESSAGES_STORE)) {
         const unreadMessageStore = database.createObjectStore(UNREAD_MESSAGES_STORE, {
-          keyPath: 'thread_id',
+          keyPath: 'id',
+          autoIncrement: true,
         })
         unreadMessageStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
         unreadMessageStore.createIndex('last_time', 'last_time', { unique: false }) // 添加 last_time 索引
@@ -59,7 +61,8 @@ export const initDB = () => {
       // 创建thread存储
       if (!database.objectStoreNames.contains(THREADS_STORE)) {
         const threadStore = database.createObjectStore(THREADS_STORE, {
-          keyPath: 'thread_id',
+          keyPath: 'id',
+          autoIncrement: true,
         })
         threadStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
       }

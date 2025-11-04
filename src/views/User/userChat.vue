@@ -3,15 +3,15 @@ import chatPanel from '@/views/Chat/chatPanel.vue'
 import chatInput from '@/views/Chat/chatInput.vue'
 import chatThread from '../Chat/chatThread.vue'
 
-import { onMounted, onUnmounted, ref, nextTick } from 'vue'
+import { initChatPanel, loadThreadChat } from '@/core/chat'
+import { onMounted, ref, nextTick } from 'vue'
+import { useUnreadMessagesStore } from '@/stores'
 
-import { closeWebSocket } from '@/utils/websocket.js'
-import { getUnreadMessages } from '@/api/chat'
-import { MESSAGES_STORE, closeDB, getLastData } from '@/utils/indexedDB'
-import { putWholeRecord } from '@/service/unreadMessageService'
+onMounted(async () => {
+  await initChatPanel()
+  scrollToBottom()
+})
 
-import { useMessageStore, useUnreadMessagesStore } from '@/stores'
-const messageStore = useMessageStore()
 const unreadMessagesStore = useUnreadMessagesStore()
 const isPopup = ref(false)
 
@@ -25,19 +25,14 @@ const handleCreateGroup = () => {
   isPopup.value = false
 }
 
-const beforeMessages = ref([])
-const offlineMessages = ref([])
-
 // 侧边栏相关数据
 const activeChat = ref({})
 
 // 选择聊天对象
 const selectChat = (chat) => {
   activeChat.value = chat
-  // 清除未读消息数
-  // 这里可以做处理逻辑⭐
-
-  chat.unreadCount = 0
+  loadThreadChat(chat.thread_id)
+  // 更新unreadMessageMap 和 indexedDB
 }
 
 // 滚动到底部的函数
@@ -50,40 +45,6 @@ const scrollToBottom = () => {
     }
   })
 }
-
-onMounted(async () => {
-  // 1. 获取本地数据库聊天历史
-  beforeMessages.value = messageStore.receiveMessages
-
-  // 2. 获取离线未读消息记录
-  // 2.1 获取最后一条本地聊天记录id
-  const getLastMessageId = await getLastData(MESSAGES_STORE)
-  const { message_id } = getLastMessageId ?? { message_id: 0 }
-  console.log('getLastData/indexedDB --> message_id', message_id)
-
-  // 2.2 获取离线未读消息记录（根据message_id获取聊天历史）
-  const res = await getUnreadMessages({
-    existing_id: message_id,
-  })
-  console.log('getUnreadMessages/api --> 离线消息', res.data)
-  for (const record of res.data) {
-    await putWholeRecord(record)
-  }
-
-  // offlineMessages.value = res.data.data
-  // TODO: 这里应该跟点击传递thread_id然后进行渲染相关处理的
-
-  scrollToBottom()
-})
-
-onUnmounted(async () => {
-  // 组件卸载时关闭WebSocket连接 (内有关闭数据库)
-  closeWebSocket()
-  // 清空store中的消息
-  messageStore.clearMessage()
-  // 关闭数据库
-  await closeDB()
-})
 </script>
 
 <template>
@@ -146,7 +107,7 @@ onUnmounted(async () => {
       </el-header>
       <!-- 聊天内容 -->
       <el-main style="padding: 0; border-top: 1px solid rgba(70, 130, 180, 0.2)">
-        <chatPanel :beforeMessages="beforeMessages" :offlineMessages="offlineMessages" />
+        <chatPanel />
       </el-main>
       <!-- 输入框 -->
       <el-footer

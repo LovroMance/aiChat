@@ -3,14 +3,16 @@ import { ref } from 'vue'
 import { MESSAGES_STORE, getAllData } from '@/utils/indexedDB'
 
 export const useMessageStore = defineStore('message', () => {
-  const receiveMessages = ref([])
+  const beforeMessages = ref([])  // 过去聊天信息
+  const offlineMessages = ref([])  // 离线聊天信息
+  const onlineMessages = ref([])   // 在线聊天信息
 
   const addMessage = (message) => {
-    receiveMessages.value.push(message)
+    onlineMessages.value.push(message)
   }
 
   const clearMessage = () => {
-    receiveMessages.value = []
+    beforeMessages.value = []
   }
 
   /**
@@ -24,13 +26,13 @@ export const useMessageStore = defineStore('message', () => {
       const messages = await getAllData(MESSAGES_STORE)
 
       // 清空现有的消息数组
-      receiveMessages.value = []
+      beforeMessages.value = []
 
       // 将数据加载到数组中
-      receiveMessages.value.push(...messages)
+      beforeMessages.value.push(...messages)
 
       console.log(`成功加载 ${messages.length} 条消息到 store 中`)
-      console.log('receiveMessages:', receiveMessages.value)
+      console.log('beforeMessages:', beforeMessages.value)
 
       return messages
     } catch (error) {
@@ -40,7 +42,9 @@ export const useMessageStore = defineStore('message', () => {
   }
 
   return {
-    receiveMessages,
+    beforeMessages,
+    offlineMessages,
+    onlineMessages,
     addMessage,
     clearMessage,
     loadMessagesFromDB,
