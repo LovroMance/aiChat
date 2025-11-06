@@ -5,17 +5,15 @@ import { baseURL } from '@/utils/request'
 
 import { updateUserInfo } from '@/api/user'
 import { USER_INFO_DATA, getStorage, setStorage } from '@/utils/localstorage'
+
+import UploadAvatar from '@/components/file/uploadAvatar.vue'
 // 获取用户个人资料信息
 const userInfo = ref(getStorage(USER_INFO_DATA))
 console.log('userInfo', userInfo.value)
 
-const selectedFile = ref(null) // 保存选择的文件对象
+const selectedFile = ref({}) // 保存选择的文件对象
 const isEditing = ref(false) // 是否进入编辑状态
-// 选择头像响应
-const handleAvatarChange = (uploadFile) => {
-  selectedFile.value = uploadFile.raw // 保存文件对象
-  userInfo.value.avatar = URL.createObjectURL(uploadFile.raw) // 本地预览头像url
-}
+const recordAvatar = ref()  // 如果没保存修改，则恢复头像链接（内存）
 
 // 编辑表单
 const editForm = ref({
@@ -26,10 +24,15 @@ const editForm = ref({
 // 编辑处理逻辑
 const handleEdit = () => {
   isEditing.value = true
+  recordAvatar.value = userInfo.value.avatar
   editForm.value = {
     email: userInfo.value.email,
     signature: userInfo.value.signature,
   }
+}
+
+const handleFileSelected = (file) => {
+  selectedFile.value = file
 }
 
 // 保存处理逻辑
@@ -63,6 +66,7 @@ const handleSave = async () => {
 const handleCancel = () => {
   isEditing.value = false
   selectedFile.value = null // 清除选择的文件
+  userInfo.value.avatar = recordAvatar.value
 }
 </script>
 
@@ -78,32 +82,7 @@ const handleCancel = () => {
         <div class="avatar-section">
           <div class="avatar-container">
             <img :src="userInfo.avatar" alt="用户头像" class="avatar" v-if="!isEditing" />
-
-            <el-upload
-              v-if="isEditing"
-              class="avatar-upload-wrapper"
-              :auto-upload="false"
-              :show-file-list="false"
-              accept=".png,.jpg,.jpeg"
-              :on-change="handleAvatarChange"
-            >
-              <img
-                v-if="userInfo.avatar"
-                :src="userInfo.avatar"
-                style="
-                  width: 100px;
-                  height: 100px;
-                  border-radius: 50%;
-                  object-fit: cover;
-                  border: 4px solid #f0f8ff;
-                  box-shadow: 0 4px 16px rgba(70, 130, 180, 0.15);
-                "
-              />
-              <el-icon v-else class="avatar-uploader-icon">
-                <Plus />
-              </el-icon>
-            </el-upload>
-
+            <UploadAvatar v-if="isEditing" v-model="userInfo.avatar" :size="100" @fileSelected="handleFileSelected"></UploadAvatar>
             <div
               class="status-indicator"
               :class="userInfo.status === 0 ? 'online' : 'offline'"
@@ -246,6 +225,8 @@ const handleCancel = () => {
 }
 
 .avatar-container {
+  width: 100px;
+  height: 100px;
   position: relative;
 }
 
@@ -254,19 +235,14 @@ const handleCancel = () => {
   height: 100px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid #f0f8ff;
-  box-shadow: 0 4px 16px rgba(70, 130, 180, 0.15);
+  display: block;
 }
 
+/* TODO */
 .avatar-upload-wrapper {
   display: inline-block;
   width: 100px;
   height: 100px;
-  border-radius: 50%;
-  overflow: hidden;
-  cursor: pointer;
-  border: 4px solid #f0f8ff;
-  box-shadow: 0 4px 16px rgba(70, 130, 180, 0.15);
   position: relative;
 }
 
@@ -325,10 +301,10 @@ const handleCancel = () => {
 
 .status-indicator {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
-  width: 20px;
-  height: 20px;
+  bottom: 7px;
+  right: 7px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
   border: 3px solid white;
   z-index: 10;
