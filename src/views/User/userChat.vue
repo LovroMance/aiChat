@@ -5,7 +5,7 @@ import chatThread from '../Chat/chatThread.vue'
 
 import { initChatPanel, loadThreadChat } from '@/core/chat'
 import { onMounted, ref, nextTick } from 'vue'
-import { useUnreadMessagesStore } from '@/stores'
+import { useThreadStore, useUnreadMessagesStore } from '@/stores'
 
 onMounted(async () => {
   await initChatPanel()
@@ -13,6 +13,7 @@ onMounted(async () => {
 })
 
 const unreadMessagesStore = useUnreadMessagesStore()
+const threadStore = useThreadStore()
 const isPopup = ref(false)
 
 // 处理子组件关闭事件
@@ -25,21 +26,18 @@ const handleCreateGroup = () => {
   isPopup.value = false
 }
 
-// 侧边栏相关数据
-const activeChat = ref({})
 
 // 选择聊天对象
-const selectChat = (chat) => {
-  activeChat.value = chat
-  loadThreadChat(chat.thread_id)
-  // 更新unreadMessageMap 和 indexedDB
+const selectChat = async (chat) => {
+  threadStore.activeThread.value = chat  // 选中的聊天thread对象
+  await loadThreadChat(chat.thread_id)
 }
 
 // 滚动到底部的函数
 const scrollToBottom = () => {
   // 使用 nextTick 确保DOM更新后再滚动
   nextTick(() => {
-    const chatPanel = document.querySelector('.el-scrollbar__wrap')
+    const chatPanel = document.querySelector('.el-scrollbar__thumb')
     if (chatPanel) {
       chatPanel.scrollTop = chatPanel.scrollHeight
     }
@@ -64,7 +62,7 @@ const scrollToBottom = () => {
           <div
             v-for="[key, value] in unreadMessagesStore.unreadMessagesMap"
             :key="key"
-            :class="['chat-item', { active: activeChat?.thread_id === key }]"
+            :class="['chat-item', { active: threadStore.activeThread?.thread_id === key }]"
             @click="selectChat(value)"
           >
             <div class="avatar-container">
@@ -103,7 +101,7 @@ const scrollToBottom = () => {
     >
       <!-- 用户名 -->
       <el-header class="header-container" style="height: 10%">
-        <span>{{ activeChat.thread_name }}</span>
+        <span>{{ threadStore.activeThread.thread_name }}</span>
       </el-header>
       <!-- 聊天内容 -->
       <el-main style="padding: 0; border-top: 1px solid rgba(70, 130, 180, 0.2)">

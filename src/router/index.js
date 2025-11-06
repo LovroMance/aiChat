@@ -3,7 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 const routes = [
   {
     path: '/test',
-    component: () => import('@/views/authentication/login.vue'),
+    component: () => import('@/components/file/uploadAvatar.vue'),
   },
   {
     path: '/',

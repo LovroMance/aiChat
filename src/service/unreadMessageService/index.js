@@ -2,6 +2,7 @@ import { useUnreadMessagesStore } from '@/stores/unreadMessages'
 import { UNREAD_MESSAGES_STORE, putData } from '@/utils/indexedDB'
 import { formatTimeHour } from '@/utils/format'
 import { getThreadInfo } from '@/api/thread'
+import { useThreadStore } from '@/stores'
 
 /**
  * 加载 IndexedDB 中的未读消息数据到 Pinia 仓库
@@ -49,12 +50,18 @@ export const putRecord = async (messageData) => {
     unreadCount: passObj.unreadCount ? passObj.unreadCount + 1 : 1,
   }
 
+  // 如果当前在选中聊天中，则不添加未读消息数
+  const threadStore = useThreadStore()
+  if (threadStore.activeThread.value.thread_id === messageData.thread_id) {
+    valueObj.unreadCount = 0
+  }
+
+  // indexedDB更新
+  await putData(UNREAD_MESSAGES_STORE, valueObj)
   // 仓库更新
   unreadMessagesStore.unreadMessagesMap.set(messageData.thread_id, valueObj)
   console.log('更新未读消息成功:', unreadMessagesStore.unreadMessagesMap)
   console.log('valueObj', valueObj)
-  // indexedDB更新
-  await putData(UNREAD_MESSAGES_STORE, valueObj)
 }
 
 // 适用于拥有所有数据时处理
@@ -86,10 +93,30 @@ export const putWholeRecord = async (data) => {
     }
   }
 
+  // indexedDB更新
+  await putData(UNREAD_MESSAGES_STORE, valueObj)
   // 仓库更新
   unreadMessagesStore.unreadMessagesMap.set(valueObj.thread_id, valueObj)
   console.log('更新未读消息成功:', unreadMessagesStore.unreadMessagesMap)
   console.log('valueObj', valueObj)
+}
+
+// 点击对应聊天 更新时间和未读消息数
+export const updateRecord = async (thread_id) => {
+  const unreadMessagesStore = useUnreadMessagesStore()
+  const passObj = unreadMessagesStore.unreadMessagesMap.get(thread_id)
+  // 更新数据
+  const valueObj = {
+    ...passObj,
+    unreadCount: 0,
+    lastTime: formatTimeHour(Date.now()),
+  }
+
   // indexedDB更新
   await putData(UNREAD_MESSAGES_STORE, valueObj)
+
+  // 仓库更新
+  unreadMessagesStore.unreadMessagesMap.set(thread_id, valueObj)
+  console.log('更新未读消息成功:', unreadMessagesStore.unreadMessagesMap)
+  console.log('valueObj', valueObj)
 }

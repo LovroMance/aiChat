@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { THREADS_STORE, getAllData } from '@/utils/indexedDB'
 
 export const useThreadStore = defineStore('thread', () => {
+  const activeThread = ref({})    // 选中的聊天thread对象
   const threads = ref([
     {
       thread_id: '',
@@ -42,6 +43,7 @@ export const useThreadStore = defineStore('thread', () => {
 
   return {
     threads,
+    activeThread,
     loadThreadsFromDB,
   }
 })

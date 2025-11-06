@@ -87,8 +87,6 @@ const agree = ref(false)
   </div>
 </template>
 
-<!-- TODO: 添加登录逻辑 -->
-
 <style scoped>
 .register-bg {
   height: 100vh;

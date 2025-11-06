@@ -2,6 +2,7 @@ import { MESSAGES_STORE, getLastData, getMessagesByThreadId } from '@/utils/inde
 import { getPartMessages, getUnreadMessages } from '@/api/chat'
 import { putWholeRecord } from '@/service/unreadMessageService'
 import { useMessageStore } from '@/stores'
+import { updateRecord } from '@/service/unreadMessageService'
 
 let existing_id // 记录进入聊天室时本地的最后一条消息ID
 
@@ -26,17 +27,22 @@ export const initChatPanel = async () => {
 
 // 加载指定线程的聊天记录
 export const loadThreadChat = async (threadId) => {
-  // 根据threadId获取本地历史消息
+  // 清理 onlineMessage
   const messageStore = useMessageStore()
+  messageStore.onlineMessages = []
+  // 根据threadId获取本地历史消息
   messageStore.beforeMessages = await getMessagesByThreadId(MESSAGES_STORE, threadId)
   const lastMessage = messageStore.beforeMessages[messageStore.beforeMessages.length - 1] // 获取最后一条本地消息的message_id
   existing_id = lastMessage?.message_id ?? 0
+  // 根据threadId获取离线消息
   if (existing_id != 0) {
-    // 根据threadId获取离线消息
     const { data } = await getPartMessages({
       thread_id: threadId,
       existing_id,
     })
     messageStore.offlineMessages.push(...data.data)
   }
+  // 更新未读消息记录(包括仓库和db)
+  await updateRecord(threadId)
+  // TODO：1.在当前的thread_id收到消息不要添加unreadCount
 }

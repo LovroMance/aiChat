@@ -1,8 +1,10 @@
 <script setup>
 import { ref } from 'vue'
 import { sendMessage } from '@/utils/websocket.js'
+import { useThreadStore } from '@/stores'
 
 const input = ref('')
+const threadStore = useThreadStore()
 
 const send = async () => {
   if (!input.value.trim()) {
@@ -14,7 +16,7 @@ const send = async () => {
   const messageObj = {
     content: input.value.trim(),
     attachment: null,
-    thread_id: 1, // TODO: 替换为实际的房间号
+    thread_id: threadStore.activeThread.value.thread_id,
   }
 
   const success = await sendMessage(messageObj)
