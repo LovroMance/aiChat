@@ -11,7 +11,7 @@ import UploadAvatar from '@/components/file/uploadAvatar.vue'
 const userInfo = ref(getStorage(USER_INFO_DATA))
 console.log('userInfo', userInfo.value)
 
-const selectedFile = ref({}) // 保存选择的文件对象
+const selectedFile = ref(null) // 保存选择的文件对象
 const isEditing = ref(false) // 是否进入编辑状态
 const recordAvatar = ref()  // 如果没保存修改，则恢复头像链接（内存）
 
@@ -32,7 +32,7 @@ const handleEdit = () => {
 }
 
 const handleFileSelected = (file) => {
-  selectedFile.value = file
+  selectedFile.value = file.raw
 }
 
 // 保存处理逻辑
@@ -235,7 +235,6 @@ const handleCancel = () => {
   height: 100px;
   border-radius: 50%;
   object-fit: cover;
-  display: block;
 }
 
 /* TODO */

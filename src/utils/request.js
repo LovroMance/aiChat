@@ -6,7 +6,7 @@ const token = getStorage(USER_LOGIN_INFO)?.token
 const baseURL = 'http://localhost:10086'
 
 const instance = axios.create({
-  baseURL,
+  // baseURL,
   timeout: 50000,
 })
 

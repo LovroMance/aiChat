@@ -49,11 +49,6 @@ const routes = [
         name: 'userInfo',
         component: () => import('@/views/User/userInfo.vue'),
       },
-      {
-        path: '/chatJoin',
-        name: 'chatJoin',
-        component: () => import('@/views/Chat/chatJoin.vue'),
-      },
     ],
   },
 ]

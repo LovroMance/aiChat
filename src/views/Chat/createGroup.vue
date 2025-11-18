@@ -1,29 +1,29 @@
 <script setup>
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { baseURL } from '@/utils/request'
 import { groupCreate } from '@/api/chat'
-
-import { THREADS_STORE, addData } from '@/utils/indexedDB'
-import { useThreadStore } from '@/stores'
-const threadStore = useThreadStore()
+import { useFileUpload } from '@/api/chat'
+import UploadAvatar from '@/components/file/uploadAvatar.vue'
+import { putCreateGroupMessageRecord } from '@/service/unreadMessageService'
 
 // 定义 emits
 const emit = defineEmits(['close', 'create'])
 
 // 表单数据
 const groupForm = ref({
-  group_name: '',
-  group_description: '',
-  group_avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png', // 默认头像
+  name: '',
+  description: '',
+  avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png', // 默认头像
 })
 
 // 表单验证规则
 const rules = {
-  group_name: [
+  name: [
     { required: true, message: '请输入群聊名称', trigger: 'blur' },
     { min: 2, max: 20, message: '群聊名称长度在 2 到 20 个字符', trigger: 'blur' },
   ],
-  group_description: [{ max: 100, message: '群聊简介不能超过 100 个字符', trigger: 'blur' }],
+  description: [{ max: 100, message: '群聊简介不能超过 100 个字符', trigger: 'blur' }],
 }
 
 const formRef = ref(null)
@@ -34,27 +34,11 @@ const closeDialog = () => {
   emit('close')
 }
 
-// 头像上传前的验证
-const beforeAvatarUpload = (file) => {
-  const isJPG = file.type === 'image/jpeg' || file.type === 'image/png'
-  const isLt2M = file.size / 1024 / 1024 < 2
-
-  if (!isJPG) {
-    ElMessage.error('头像图片只能是 JPG/PNG 格式!')
-    return false
-  }
-  if (!isLt2M) {
-    ElMessage.error('头像图片大小不能超过 2MB!')
-    return false
-  }
-  return true
-}
-
 // 头像文件选择回调
 const handleAvatarChange = (file) => {
   console.log('文件选择:', file)
   selectedFile.value = file.raw // 保存文件对象
-  groupForm.value.group_avatar = URL.createObjectURL(file.raw) // 创建本地预览头像 URL
+  groupForm.value.avatar = URL.createObjectURL(file.raw) // 创建本地预览头像 URL
 }
 
 // 创建群聊
@@ -65,20 +49,24 @@ const createGroup = async () => {
     // 先进行表单验证
     const isValid = await formRef.value.validate()
     if (isValid) {
+      // 上传新头像
+      if (selectedFile.value) {
+        const res = await useFileUpload(selectedFile.value)
+        console.log('头像上传结果:', res)
+        console.log(res.data.data)
+        groupForm.value.avatar = baseURL + '/' + res.data.data
+      }
+
       // 调用创建群聊接口
       const { data } = await groupCreate(groupForm.value)
       console.log('创建群聊成功:', data)
 
-      // 添加数据到indexedDB
-      const threadObject = {
+      groupForm.value = {
+        ...groupForm.value,
         thread_id: data.thread_id,
-        avatar: groupForm.value.group_avatar,
-        name: groupForm.value.group_name,
-        type: 'group',
-        description: groupForm.value.group_description,
       }
-      await addData(THREADS_STORE, threadObject) // 保存到indexedDB
-      threadStore.threadObject = threadObject // 保存到store
+      putCreateGroupMessageRecord(groupForm.value)
+
 
       emit('create') // 发射创建事件，传递接口返回的数据
       ElMessage.success('群聊创建成功！')
@@ -109,26 +97,25 @@ const createGroup = async () => {
         >
           <!-- 群头像上传 -->
           <el-form-item label="群头像">
-            <el-upload
-              class="avatar-uploader"
-              :auto-upload="false"
-              :show-file-list="false"
-              :before-upload="beforeAvatarUpload"
-              :on-change="handleAvatarChange"
+            <UploadAvatar
+              v-model="groupForm.avatar"
+              :size="80"
+              :showTip="true"
+              @fileSelected="handleAvatarChange"
             >
-              <img v-if="groupForm.group_avatar" :src="groupForm.group_avatar" class="avatar" />
-              <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
-            </el-upload>
-            <div class="upload-tip">
-              <p>支持 JPG、PNG 格式，大小不超过 2MB</p>
-              <p>不上传头像会有默认头像</p>
-            </div>
+              <template #tip>
+                <div class="upload-tip">
+                  <p>支持 JPG、PNG 格式，大小不超过 2MB</p>
+                  <p>不上传头像会有默认头像</p>
+                </div>
+              </template>
+            </UploadAvatar>
           </el-form-item>
 
           <!-- 群聊名称 -->
-          <el-form-item label="群名称" prop="group_name">
+          <el-form-item label="群名称" prop="name">
             <el-input
-              v-model="groupForm.group_name"
+              v-model="groupForm.name"
               placeholder="请输入群聊名称"
               maxlength="20"
               show-word-limit
@@ -136,9 +123,9 @@ const createGroup = async () => {
           </el-form-item>
 
           <!-- 群聊简介 -->
-          <el-form-item label="群简介" prop="group_description">
+          <el-form-item label="群简介" prop="description">
             <el-input
-              v-model="groupForm.group_description"
+              v-model="groupForm.description"
               type="textarea"
               placeholder="请输入群聊简介（可选）"
               :rows="4"
@@ -225,49 +212,6 @@ const createGroup = async () => {
 
 .group-form {
   margin: 0;
-}
-
-/* 头像上传样式 */
-.avatar-uploader {
-  display: flex;
-  justify-content: center;
-}
-
-:deep(.avatar-uploader .el-upload) {
-  border: 2px dashed #d9d9d9;
-  border-radius: 50%;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  width: 80px;
-  height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-:deep(.avatar-uploader .el-upload:hover) {
-  border-color: #409eff;
-  background-color: rgba(64, 158, 255, 0.05);
-}
-
-.avatar-uploader-icon {
-  font-size: 28px;
-  color: #8c939d;
-  width: 80px;
-  height: 80px;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  object-fit: cover;
 }
 
 .upload-tip {

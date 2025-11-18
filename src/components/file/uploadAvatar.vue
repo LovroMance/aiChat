@@ -6,9 +6,8 @@ import { ref, watchEffect } from 'vue'
 const props = defineProps({
   modelValue: { type: String, default: '' }, // 头像URL
   accept: { type: String, default: '.png,.jpg,.jpeg' },
-  maxMB: { type: Number, default: 2 },
   size: { type: Number, default: 100 }, // 统一圆形尺寸
-  showTip: { type: Boolean, default: false },
+  showTip: { type: Boolean, default: false },  // 是否显示上传提示
 })
 
 // 传回本地预览
@@ -39,12 +38,12 @@ const onChange = (file) => {
   // if (!beforeUpload(file.raw)) return
   previewUrl.value = URL.createObjectURL(file.raw)
   emit('update:modelValue', previewUrl.value) // 回传预览URL
-  emit('fileSelected', file.raw)
+  emit('fileSelected', file)
 }
 </script>
 
 <template>
-  <el-upload
+    <el-upload
     class="avatar-uploader"
     :style="{ width: size + 'px', height: size + 'px' }"
     :auto-upload="false"
@@ -52,11 +51,12 @@ const onChange = (file) => {
     :accept="accept"
     :on-change="onChange"
   >
-    <img v-if="previewUrl" :src="previewUrl" :style="{ width: size + 'px', height: size + 'px' }" />
+    <img v-if="previewUrl" :src="previewUrl" :style="{ width: size + 'px', height: size + 'px' }" class="avatar-img" />
     <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
   </el-upload>
   <div v-if="showTip" class="upload-tip">
-    <p>支持 JPG、PNG 格式，大小不超过 {{ maxMB }}MB</p>
+    <slot name="tip">
+    </slot>
   </div>
 </template>
 
@@ -67,7 +67,6 @@ const onChange = (file) => {
   cursor: pointer;
 }
 .avatar-img {
-  display: block;
   border-radius: 50%;
   object-fit: cover;
 }

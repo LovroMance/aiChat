@@ -1,11 +1,12 @@
 <script setup>
 import chatPanel from '@/views/Chat/chatPanel.vue'
 import chatInput from '@/views/Chat/chatInput.vue'
-import chatThread from '../Chat/chatThread.vue'
+import createGroup from '@/views/Chat/createGroup.vue'
 
 import { initChatPanel, loadThreadChat } from '@/core/chat'
 import { onMounted, ref, nextTick } from 'vue'
 import { useThreadStore, useUnreadMessagesStore } from '@/stores'
+import { formatTimeHour } from '@/utils/format'
 
 onMounted(async () => {
   await initChatPanel()
@@ -47,7 +48,7 @@ const scrollToBottom = () => {
 
 <template>
   <el-container style="height: 100vh; min-height: 0">
-    <chatThread v-if="isPopup" @close="handleCloseDialog" @create="handleCreateGroup" />
+    <createGroup v-if="isPopup" @close="handleCloseDialog" @create="handleCreateGroup" />
     <!-- 左侧聊天列表侧边栏 -->
     <el-aside width="320px" class="chat-sidebar">
       <div class="sidebar-header">
@@ -62,7 +63,7 @@ const scrollToBottom = () => {
           <div
             v-for="[key, value] in unreadMessagesStore.unreadMessagesMap"
             :key="key"
-            :class="['chat-item', { active: threadStore.activeThread?.thread_id === key }]"
+            :class="['chat-item', { active: threadStore.activeThread?.value?.thread_id === key }]"
             @click="selectChat(value)"
           >
             <div class="avatar-container">
@@ -72,7 +73,7 @@ const scrollToBottom = () => {
             <div class="chat-info">
               <div class="chat-header">
                 <span class="chat-name">{{ value.thread_name }}</span>
-                <span class="chat-time">{{ value.lastTime }}</span>
+                <span class="chat-time">{{ formatTimeHour(value.lastTime) }}</span>
               </div>
               <div class="chat-content">
                 <span class="last-message">
@@ -101,7 +102,7 @@ const scrollToBottom = () => {
     >
       <!-- 用户名 -->
       <el-header class="header-container" style="height: 10%">
-        <span>{{ threadStore.activeThread.thread_name }}</span>
+        <span>{{ threadStore.activeThread?.value?.thread_name }}</span>
       </el-header>
       <!-- 聊天内容 -->
       <el-main style="padding: 0; border-top: 1px solid rgba(70, 130, 180, 0.2)">
@@ -131,6 +132,7 @@ const scrollToBottom = () => {
 }
 
 .sidebar-header {
+  height: 60px;
   padding: 16px 20px;
   border-bottom: 1px solid rgba(70, 130, 180, 0.1);
   display: flex;
@@ -260,6 +262,8 @@ const scrollToBottom = () => {
 
 /* 右侧主题头部的字体样式 */
 .header-container {
+  display: flex;
+  align-items: center;
   background: linear-gradient(120deg, #f3fbfe 0%, #eafaf6 100%);
   font-weight: 500;
   font-size: 25px;
@@ -267,6 +271,5 @@ const scrollToBottom = () => {
   height: 60px;
   min-height: 60px;
   max-height: 60px;
-  line-height: 60px;
 }
 </style>

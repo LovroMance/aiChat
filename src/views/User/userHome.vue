@@ -32,14 +32,6 @@ const router = useRouter()
 // 菜单项配置
 const menuItems = ref([
   {
-    id: 'channel',
-    title: '频道',
-    description: '添加/查看频道',
-    icon: 'Connection',
-    route: '/chatJoin',
-    color: '#409EFF',
-  },
-  {
     id: 'chatroom',
     title: '聊天室',
     description: '进入聊天室开始对话',
@@ -102,7 +94,8 @@ const navigateTo = (item) => {
 <style scoped>
 .home-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #23272e 0%, #3a4047 60%, #6b7b8a 100%);
+  /* 原深色背景替换为柔和浅色渐变 */
+  background: linear-gradient(135deg, #f8fbff 0%, #eef6ff 35%, #eaf9f6 70%, #f2f8ff 100%);
   padding: 40px 20px;
   display: flex;
   flex-direction: column;
@@ -115,7 +108,8 @@ const navigateTo = (item) => {
 }
 
 .home-title {
-  color: #ececec;
+  /* 深色文本提高对比 */
+  color: #2c3e50;
   font-size: 3rem;
   font-weight: 700;
   margin-bottom: 16px;
@@ -123,7 +117,7 @@ const navigateTo = (item) => {
 }
 
 .home-subtitle {
-  color: #b0b0b0;
+  color: #606266;
   font-size: 1.2rem;
   margin: 0;
 }
@@ -137,12 +131,14 @@ const navigateTo = (item) => {
 }
 
 .menu-card {
-  background: #23272e;
+  /* 改为浅色卡片，提升整体协调 */
+  background: linear-gradient(160deg, #ffffff 0%, #f6faff 100%);
+  border: 1px solid rgba(70, 130, 180, 0.15);
+  box-shadow: 0 6px 18px -6px rgba(64, 158, 255, 0.15);
   border-radius: 20px;
   padding: 32px 24px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 2px solid transparent;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -152,26 +148,10 @@ const navigateTo = (item) => {
   min-height: 200px;
 }
 
-.menu-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
 .menu-card:hover {
+  border-color: rgba(64, 158, 255, 0.45);
+  box-shadow: 0 14px 32px -8px rgba(64, 158, 255, 0.25);
   transform: translateY(-8px);
-  border-color: #6b7b8a;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-}
-
-.menu-card:hover::before {
-  opacity: 1;
 }
 
 .card-icon {
@@ -197,7 +177,7 @@ const navigateTo = (item) => {
 }
 
 .card-title {
-  color: #ececec;
+  color: #2c3e50;
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0 0 8px 0;
@@ -205,7 +185,7 @@ const navigateTo = (item) => {
 }
 
 .card-description {
-  color: #b0b0b0;
+  color: #606266;
   font-size: 0.95rem;
   margin: 0;
   line-height: 1.5;

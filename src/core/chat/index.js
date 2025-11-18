@@ -11,17 +11,18 @@ export const initChatPanel = async () => {
   // 1. 获取离线未读消息记录
   // 2. 获取最后一条本地聊天记录id
   const getLastMessageId = await getLastData(MESSAGES_STORE)
-  const { message_id } = getLastMessageId ?? { message_id: 0 }
+  const message_id = getLastMessageId?.message_id ?? 0
   existing_id = message_id
   console.log('getLastData/indexedDB --> message_id', message_id)
-
-  // 3. 获取离线未读消息记录（根据message_id获取聊天历史）
-  const res = await getUnreadMessages({
-    existing_id: message_id,
-  })
-  console.log('getUnreadMessages/api --> 离线消息', res.data)
-  for (const record of res.data) {
-    await putWholeRecord(record)
+  if (message_id != 0) {
+    // 3. 获取离线未读消息记录（根据message_id获取聊天历史）
+    const res = await getUnreadMessages({
+      existing_id: message_id,
+    })
+    console.log('getUnreadMessages/api --> 离线消息', res.data)
+    for (const record of res.data) {
+      await putWholeRecord(record)
+    }
   }
 }
 

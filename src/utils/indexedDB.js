@@ -51,7 +51,7 @@ export const initDB = () => {
       // 创建未读消息存储
       if (!database.objectStoreNames.contains(UNREAD_MESSAGES_STORE)) {
         const unreadMessageStore = database.createObjectStore(UNREAD_MESSAGES_STORE, {
-          keyPath: 'id',
+          keyPath: 'thread_id',
           autoIncrement: true,
         })
         unreadMessageStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引

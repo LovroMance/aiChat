@@ -1,667 +1,587 @@
-<!-- 好友群聊列表页面 -->
 <script setup>
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Search, Plus, UserFilled, ChatDotRound } from '@element-plus/icons-vue'
+import { Search, Plus, ChatDotRound, UserFilled, Service } from '@element-plus/icons-vue'
 
-// 模拟数据 - 实际开发中应该从 API 获取
-const friends = ref([
+// 模拟联系人数据
+const contacts = ref([
   {
     id: 1,
     name: '张三',
-    avatar: 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
-    lastMessage: '你好，今天天气不错',
+    avatar: 'https://avatars.githubusercontent.com/u/9919?s=48',
+    lastMessage: '待会儿一起评审接口文档',
     lastTime: '10:30',
-    unreadCount: 2,
+    unread: 2,
     type: 'friend',
   },
   {
     id: 2,
-    name: '李四',
-    avatar: 'https://cube.elemecdn.com/9/c2/f0ee8a3c7c9638a54940382568c9dpng.png',
-    lastMessage: '明天的会议准备好了吗？',
-    lastTime: '09:15',
-    unreadCount: 0,
-    type: 'friend',
-  },
-  {
-    id: 3,
-    name: '前端开发群',
-    avatar: 'https://cube.elemecdn.com/6/94/4d3ea53c84e5304d920c15e41b60dpng.png',
-    lastMessage: '王五: 这个新的 Vue 3 特性很有用',
-    lastTime: '昨天',
-    unreadCount: 5,
+    name: '前端重构群',
+    avatar: 'https://avatars.githubusercontent.com/u/139426?s=48',
+    lastMessage: '李四: 今晚合并 PR',
+    lastTime: '09:12',
+    unread: 5,
     type: 'group',
   },
   {
-    id: 4,
+    id: 3,
     name: 'AI 助手',
-    avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
-    lastMessage: '我可以帮助您解决任何问题',
+    avatar: 'https://avatars.githubusercontent.com/u/6154722?v=4',
+    lastMessage: '我可以帮你整理会议纪要',
+    lastTime: '08:05',
+    unread: 0,
+    type: 'ai',
+  },
+  {
+    id: 4,
+    name: '产品讨论群',
+    avatar: 'https://avatars.githubusercontent.com/u/9919?s=48',
+    lastMessage: '王五: 新原型已更新',
+    lastTime: '昨天',
+    unread: 0,
+    type: 'group',
+  },
+  {
+    id: 5,
+    name: '李四',
+    avatar: 'https://avatars.githubusercontent.com/u/810438?v=4',
+    lastMessage: '收到，我看看',
+    lastTime: '昨天',
+    unread: 1,
+    type: 'friend',
+  },
+  {
+    id: 6,
+    name: '数据同步机器人',
+    avatar: 'https://avatars.githubusercontent.com/u/9919?s=48',
+    lastMessage: '同步完成：3 条新增',
     lastTime: '2天前',
-    unreadCount: 0,
+    unread: 0,
     type: 'ai',
   },
 ])
 
-const searchQuery = ref('')
-const activeTab = ref('all') // all, friends, groups, ai
+// 搜索与筛选
+const query = ref('')
+const activeTab = ref('all') // all | friend | group | ai
 
-// 搜索过滤
+const tabs = [
+  { key: 'all', label: '全部' },
+  { key: 'friend', label: '好友' },
+  { key: 'group', label: '群聊' },
+  { key: 'ai', label: 'AI' },
+]
+
 const filteredContacts = computed(() => {
-  let result = friends.value
-
-  // 按类型过滤
-  if (activeTab.value !== 'all') {
-    const typeMap = {
-      friends: 'friend',
-      groups: 'group',
-      ai: 'ai',
-    }
-    result = result.filter((contact) => contact.type === typeMap[activeTab.value])
-  }
-
-  // 按搜索关键词过滤
-  if (searchQuery.value.trim()) {
-    result = result.filter((contact) =>
-      contact.name.toLowerCase().includes(searchQuery.value.toLowerCase()),
+  let list = contacts.value
+  if (activeTab.value !== 'all') list = list.filter((c) => c.type === activeTab.value)
+  if (query.value.trim()) {
+    const q = query.value.trim().toLowerCase()
+    list = list.filter(
+      (c) => c.name.toLowerCase().includes(q) || c.lastMessage.toLowerCase().includes(q),
     )
   }
-
-  return result
+  return list
 })
 
-// 计算未读消息总数
-const totalUnreadCount = computed(() => {
-  return friends.value.reduce((total, contact) => total + contact.unreadCount, 0)
-})
-console.log(totalUnreadCount)
+const activeLabel = computed(() => tabs.find((t) => t.key === activeTab.value)?.label || '全部')
 
-// 添加好友/群聊
-const handleAddContact = () => {
-  if (!searchQuery.value.trim()) {
-    ElMessage({
-      message: '请输入要搜索的用户名或群聊名',
-      type: 'warning',
-    })
+const handleSearch = () => {
+  if (!query.value.trim()) {
+    ElMessage({ type: 'warning', message: '请输入关键词' })
     return
   }
-
-  ElMessage({
-    message: `正在搜索「${searchQuery.value}」...`,
-    type: 'info',
-  })
-
-  // 这里应该调用 API 搜索用户或群聊
-  // TODO: 实现实际的搜索功能
+  // 这里可接入后端：搜索用户 / 群聊 / AI
+  ElMessage({ type: 'info', message: `搜索 / 添加逻辑：${query.value}` })
 }
 
-// 点击联系人
-const handleContactClick = (contact) => {
-  console.log('点击联系人:', contact)
-  // 这里应该跳转到聊天页面或执行其他操作
-  ElMessage({
-    message: `打开与 ${contact.name} 的聊天`,
-    type: 'success',
-  })
+const openChat = (c) => {
+  ElMessage({ type: 'success', message: `打开会话：${c.name}` })
+  // 可在此处路由跳转
 }
 
-// 获取联系人类型图标
-const getContactIcon = (type) => {
-  switch (type) {
-    case 'friend':
-      return UserFilled
-    case 'group':
-      return ChatDotRound
-    case 'ai':
-      return ChatDotRound
-    default:
-      return UserFilled
-  }
-}
+const typeBadgeText = (type) => (type === 'friend' ? '好友' : type === 'group' ? '群' : 'AI')
 
-// 获取联系人类型颜色
-const getContactTypeColor = (type) => {
-  switch (type) {
-    case 'friend':
-      return '#67C23A'
-    case 'group':
-      return '#409EFF'
-    case 'ai':
-      return '#E6A23C'
-    default:
-      return '#909399'
-  }
-}
+const typeIcon = (type) =>
+  type === 'friend' ? UserFilled : type === 'group' ? ChatDotRound : Service
 </script>
 
 <template>
-  <div class="friend-list-container">
-    <!-- 搜索区域 -->
-    <div class="search-section">
-      <div class="search-header">
-        <h2 class="section-title">
-          <el-icon class="title-icon"><Search /></el-icon>
-          添加联系人
-        </h2>
+  <div class="contact-page">
+    <!-- 添加联系人区域 -->
+    <section class="add-contact">
+      <div class="add-inner">
+        <h2 class="title">添加联系人</h2>
+        <p class="subtitle">搜索用户 / 群聊 / AI 机器人，按 Enter 或点击右侧按钮</p>
+        <div class="search-row">
+          <el-input
+            v-model="query"
+            placeholder="输入用户名、群名称、关键字"
+            clearable
+            @keyup.enter="handleSearch"
+            class="search-input"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+          <el-button
+            type="primary"
+            :disabled="!query.trim()"
+            @click="handleSearch"
+            class="search-btn"
+          >
+            <el-icon><Plus /></el-icon>
+            <span>搜索 / 添加</span>
+          </el-button>
+        </div>
+        <div class="tabs">
+          <div
+            v-for="t in tabs"
+            :key="t.key"
+            :class="['tab', { active: activeTab === t.key }]"
+            @click="activeTab = t.key"
+          >
+            {{ t.label }}
+            <span v-if="t.key === 'all'" class="count">{{ contacts.length }}</span>
+          </div>
+        </div>
       </div>
-
-      <div class="search-input-container">
-        <el-input
-          v-model="searchQuery"
-          placeholder="搜索用户名、群聊名或邮箱"
-          class="search-input"
-          clearable
-          @keyup.enter="handleAddContact"
-        >
-          <template #prefix>
-            <el-icon class="search-icon"><Search /></el-icon>
-          </template>
-        </el-input>
-        <el-button
-          type="primary"
-          class="add-btn"
-          @click="handleAddContact"
-          :disabled="!searchQuery.trim()"
-        >
-          <el-icon><Plus /></el-icon>
-          添加
-        </el-button>
-      </div>
-    </div>
-
-    <!-- 筛选标签 -->
-    <div class="filter-tabs">
-      <div class="tab-item" :class="{ active: activeTab === 'all' }" @click="activeTab = 'all'">
-        全部 ({{ friends.length }})
-      </div>
-      <div
-        class="tab-item"
-        :class="{ active: activeTab === 'friends' }"
-        @click="activeTab = 'friends'"
-      >
-        好友 ({{ friends.filter((f) => f.type === 'friend').length }})
-      </div>
-      <div
-        class="tab-item"
-        :class="{ active: activeTab === 'groups' }"
-        @click="activeTab = 'groups'"
-      >
-        群聊 ({{ friends.filter((f) => f.type === 'group').length }})
-      </div>
-      <div class="tab-item" :class="{ active: activeTab === 'ai' }" @click="activeTab = 'ai'">
-        AI ({{ friends.filter((f) => f.type === 'ai').length }})
-      </div>
-    </div>
+    </section>
 
     <!-- 联系人列表 -->
-    <div class="contacts-section">
-      <h3 class="section-subtitle">
-        <el-icon class="subtitle-icon"><ChatDotRound /></el-icon>
-        {{
-          activeTab === 'all'
-            ? '全部联系人'
-            : activeTab === 'friends'
-              ? '我的好友'
-              : activeTab === 'groups'
-                ? '群聊列表'
-                : 'AI 助手'
-        }}
-      </h3>
-
-      <div class="contacts-list">
-        <div
-          v-for="contact in filteredContacts"
-          :key="contact.id"
-          class="contact-item"
-          @click="handleContactClick(contact)"
-        >
-          <div class="contact-avatar-container">
-            <el-avatar :src="contact.avatar" :size="50" class="contact-avatar">
-              <el-icon><UserFilled /></el-icon>
-            </el-avatar>
-            <!-- 未读消息提示 -->
-            <div v-if="contact.unreadCount > 0" class="unread-count">
-              {{ contact.unreadCount > 99 ? '99+' : contact.unreadCount }}
-            </div>
-            <!-- 联系人类型标识 -->
-            <div
-              class="contact-type-badge"
-              :style="{ backgroundColor: getContactTypeColor(contact.type) }"
-            >
-              <el-icon :size="10"><component :is="getContactIcon(contact.type)" /></el-icon>
-            </div>
-          </div>
-
-          <div class="contact-info">
-            <div class="contact-header">
-              <h4 class="contact-name">{{ contact.name }}</h4>
-              <span class="last-time">{{ contact.lastTime }}</span>
-            </div>
-            <p class="last-message">{{ contact.lastMessage }}</p>
-          </div>
-        </div>
-
-        <!-- 空状态 -->
-        <div v-if="filteredContacts.length === 0" class="empty-state">
-          <div class="empty-icon">
-            <el-icon :size="48"><Search /></el-icon>
-          </div>
-          <p class="empty-text">
-            {{ searchQuery ? '未找到相关联系人' : '暂无联系人' }}
-          </p>
-          <p class="empty-hint">
-            {{ searchQuery ? '尝试使用其他关键词搜索' : '通过上方搜索框添加好友或群聊' }}
-          </p>
-        </div>
+    <section class="list-section">
+      <div class="list-header">
+        <h3>{{ activeLabel }}（{{ filteredContacts.length }}）</h3>
       </div>
-    </div>
+      <el-scrollbar class="contact-scroll">
+        <ul class="contact-list">
+          <li v-for="c in filteredContacts" :key="c.id" class="contact-item" @click="openChat(c)">
+            <div class="avatar-wrap">
+              <el-avatar :size="48" :src="c.avatar">
+                <el-icon><UserFilled /></el-icon>
+              </el-avatar>
+              <span class="type-badge" :data-type="c.type">
+                <el-icon :size="12"><component :is="typeIcon(c.type)" /></el-icon>
+              </span>
+              <span v-if="c.unread" class="unread">{{ c.unread > 99 ? '99+' : c.unread }}</span>
+            </div>
+            <div class="meta">
+              <div class="row top">
+                <span class="name">{{ c.name }}</span>
+                <span class="time">{{ c.lastTime }}</span>
+              </div>
+              <div class="row bottom">
+                <span class="last-msg">{{ c.lastMessage }}</span>
+                <span class="badge-text">{{ typeBadgeText(c.type) }}</span>
+              </div>
+            </div>
+          </li>
+        </ul>
+        <div v-if="filteredContacts.length === 0" class="empty">
+          <el-icon :size="36" class="empty-icon"><Search /></el-icon>
+          <p class="empty-text">暂无结果</p>
+          <p class="empty-hint">尝试更换关键词或清除筛选</p>
+        </div>
+      </el-scrollbar>
+    </section>
   </div>
 </template>
 
 <style scoped>
-.friend-list-container {
-  width: 100%;
+/* 布局骨架 */
+.contact-page {
   height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  background: linear-gradient(135deg, #f8fbff 0%, #eef6ff 35%, #eaf9f6 70%, #f2f8ff 100%);
   box-sizing: border-box;
+  padding: 16px 20px 20px;
+  gap: 16px;
 }
 
-/* 搜索区域样式 */
-.search-section {
+/* 顶部添加联系人区域 */
+.add-contact {
+  display: flex;
+}
+
+.add-inner {
   width: 100%;
-  background: linear-gradient(135deg, #23272e 0%, #3a4047 70%, #6b7b8a 100%);
-  padding: 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  box-sizing: border-box;
-}
-
-.search-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.section-title {
-  color: #ececec;
-  font-size: 1.5rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-}
-
-.title-icon {
-  color: #6b7b8a;
-}
-
-.unread-badge {
-  background: linear-gradient(45deg, #ff4757, #ff3742);
-  color: white;
-  font-size: 12px;
-  font-weight: bold;
-  padding: 4px 8px;
-  border-radius: 12px;
-  min-width: 20px;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
-}
-
-.search-input-container {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.search-input {
-  flex: 1;
-}
-
-:deep(.search-input .el-input__wrapper) {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(160deg, #ffffff 0%, #f6faff 100%);
+  border: 1px solid rgba(70, 130, 180, 0.15);
   border-radius: 20px;
-  padding: 8px 16px;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
+  padding: 28px 28px 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 6px 18px -10px rgba(64, 158, 255, 0.15);
+  transition: box-shadow 0.3s ease;
 }
 
-:deep(.search-input .el-input__wrapper:hover) {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+.add-inner:hover {
+  box-shadow: 0 12px 28px -12px rgba(64, 158, 255, 0.22);
 }
 
-:deep(.search-input .el-input__wrapper.is-focus) {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: #6b7b8a;
-  box-shadow: 0 0 0 2px rgba(107, 123, 138, 0.2);
+.title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: #2c3e50;
+  letter-spacing: 0.5px;
 }
 
-:deep(.search-input .el-input__inner) {
-  color: #ececec;
+.subtitle {
+  margin: 6px 0 18px;
+  font-size: 13px;
+  color: #606266;
+}
+
+/* 搜索行 */
+.search-row {
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+  margin-bottom: 16px;
+}
+
+.search-row :deep(.el-input__wrapper) {
+  background: #fff;
+  border: 1px solid rgba(70, 130, 180, 0.18);
+  box-shadow: none;
+  transition: all 0.25s ease;
+  height: 46px;
+}
+
+.search-row :deep(.el-input__wrapper:hover) {
+  border-color: rgba(64, 158, 255, 0.4);
+  box-shadow: 0 4px 12px -6px rgba(64, 158, 255, 0.25);
+}
+
+.search-row :deep(.el-input__wrapper.is-focus) {
+  border-color: #409eff;
+  box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.15);
+}
+
+.search-row :deep(.el-input__inner) {
+  color: #2c3e50;
   font-size: 14px;
 }
 
-:deep(.search-input .el-input__inner::placeholder) {
-  color: rgba(236, 236, 236, 0.6);
+.search-btn {
+  padding: 0 22px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 46px;
+  letter-spacing: 0.5px;
+  background: linear-gradient(90deg, #409eff 0%, #66b1ff 100%);
+  border: 1px solid rgba(64, 158, 255, 0.5);
+  box-shadow: 0 6px 16px -8px rgba(64, 158, 255, 0.3);
+  transition: all 0.25s ease;
 }
 
-.search-icon {
-  color: rgba(236, 236, 236, 0.7);
+.search-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px -12px rgba(64, 158, 255, 0.35);
 }
 
-.add-btn {
-  background: linear-gradient(90deg, #6b7b8a 60%, #545c64 100%);
-  border: none;
-  border-radius: 20px;
-  padding: 10px 20px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.add-btn:hover {
-  background: linear-gradient(90deg, #545c64 60%, #6b7b8a 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(107, 123, 138, 0.3);
-}
-
-.add-btn:disabled {
-  background: rgba(107, 123, 138, 0.5);
+.search-btn:disabled {
+  background: linear-gradient(90deg, rgba(64, 158, 255, 0.4), rgba(102, 177, 255, 0.4));
+  border-color: rgba(64, 158, 255, 0.25);
   transform: none;
   box-shadow: none;
 }
 
-/* 筛选标签样式 */
-.filter-tabs {
-  width: 100%;
+/* 筛选标签 */
+.tabs {
   display: flex;
-  background: white;
-  padding: 16px 24px;
-  gap: 8px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  box-sizing: border-box;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.tab-item {
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
+.tab {
+  font-size: 13px;
+  padding: 6px 14px;
+  background: #f3f7fb;
+  border: 1px solid rgba(70, 130, 180, 0.15);
+  border-radius: 16px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  color: #666;
-  background: #f5f7fa;
-  border: 1px solid transparent;
+  color: #606266;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.25s ease;
+  user-select: none;
 }
 
-.tab-item:hover {
+.tab:hover {
   background: #e8f4fd;
   color: #409eff;
-  border-color: rgba(64, 158, 255, 0.2);
+  border-color: rgba(64, 158, 255, 0.35);
 }
 
-.tab-item.active {
-  background: linear-gradient(135deg, #409eff, #1890ff);
-  color: white;
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+.tab.active {
+  background: linear-gradient(135deg, #409eff, #66b1ff);
+  color: #fff;
+  border-color: rgba(64, 158, 255, 0.6);
+  box-shadow: 0 6px 18px -10px rgba(64, 158, 255, 0.32);
 }
 
-/* 联系人区域样式 */
-.contacts-section {
-  width: 100%;
-  flex: 1;
-  padding: 24px;
-  overflow: hidden;
+.count {
+  background: rgba(255, 255, 255, 0.28);
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+/* 下方列表区域 */
+.list-section {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
+  background: #ffffffcc;
+  backdrop-filter: blur(2px);
+  border: 1px solid rgba(70, 130, 180, 0.12);
+  border-radius: 16px;
+  padding: 12px 0 4px;
+  box-shadow: 0 4px 14px -8px rgba(64, 158, 255, 0.18);
 }
 
-.section-subtitle {
-  color: #333;
-  font-size: 1.2rem;
+.list-header {
+  padding: 0 20px 8px;
+  border-bottom: 1px solid rgba(70, 130, 180, 0.12);
+}
+
+.list-header h3 {
+  margin: 0;
+  font-size: 16px;
   font-weight: 600;
-  margin: 0 0 16px 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  color: #2c3e50;
+  letter-spacing: 0.5px;
 }
 
-.subtitle-icon {
-  color: #6b7b8a;
-}
-
-.contacts-list {
-  width: 100%;
+.contact-scroll {
   flex: 1;
-  overflow-y: auto;
-  box-sizing: border-box;
+  padding: 4px 4px 10px;
+}
+
+.contact-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .contact-item {
   display: flex;
-  align-items: center;
-  padding: 16px;
-  margin-bottom: 8px;
-  background: white;
-  border-radius: 16px;
+  gap: 14px;
+  padding: 10px 14px;
+  background: linear-gradient(160deg, #ffffff 0%, #f6faff 100%);
+  border: 1px solid rgba(70, 130, 180, 0.14);
+  border-radius: 14px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.25s ease;
+  position: relative;
 }
 
 .contact-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  border-color: rgba(107, 123, 138, 0.2);
+  border-color: rgba(64, 158, 255, 0.45);
+  box-shadow: 0 10px 24px -12px rgba(64, 158, 255, 0.28);
+  transform: translateY(-4px);
 }
 
-.contact-avatar-container {
+.avatar-wrap {
   position: relative;
-  margin-right: 16px;
+  flex-shrink: 0;
 }
 
-.contact-avatar {
-  border: 2px solid rgba(107, 123, 138, 0.1);
-  transition: all 0.3s ease;
+.avatar-wrap :deep(.el-avatar) {
+  background: #fff;
+  border: 2px solid rgba(70, 130, 180, 0.15);
+  transition: border-color 0.25s ease;
 }
 
-.contact-item:hover .contact-avatar {
-  border-color: rgba(107, 123, 138, 0.3);
+.contact-item:hover .avatar-wrap :deep(.el-avatar) {
+  border-color: rgba(64, 158, 255, 0.45);
 }
 
-.unread-count {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  background: linear-gradient(45deg, #ff4757, #ff3742);
-  color: white;
-  font-size: 10px;
-  font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 10px;
-  min-width: 16px;
-  text-align: center;
-  box-shadow: 0 2px 6px rgba(255, 71, 87, 0.4);
-  animation: pulse 2s infinite;
-}
-
-.contact-type-badge {
+.type-badge {
   position: absolute;
   bottom: -2px;
   right: -2px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  background: #409eff;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  border: 2px solid white;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 10px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px -2px rgba(64, 158, 255, 0.4);
 }
 
-.contact-info {
+.type-badge[data-type='group'] {
+  background: #8e7ef1;
+}
+.type-badge[data-type='friend'] {
+  background: #67c23a;
+}
+.type-badge[data-type='ai'] {
+  background: #e6a23c;
+}
+
+.unread {
+  position: absolute;
+  top: -4px;
+  left: -6px;
+  background: linear-gradient(45deg, #ff6d6d, #ff4e4e);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px -4px rgba(255, 90, 90, 0.4);
+}
+
+.meta {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
   min-width: 0;
 }
 
-.contact-header {
-  display: flex;
+.row.top {
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
 }
 
-.contact-name {
-  font-size: 16px;
+.name {
+  font-size: 15px;
   font-weight: 600;
-  color: #333;
-  margin: 0;
+  color: #2c3e50;
+  max-width: 60%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.last-time {
+.time {
   font-size: 12px;
-  color: #999;
+  color: #909399;
   flex-shrink: 0;
-  margin-left: 8px;
+  margin-left: 12px;
 }
 
-.last-message {
-  font-size: 14px;
-  color: #666;
-  margin: 0;
+.row.bottom {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.last-msg {
+  font-size: 13px;
+  color: #606266;
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  line-height: 1.4;
+  line-height: 1.2;
 }
 
-/* 空状态样式 */
-.empty-state {
+.badge-text {
+  flex-shrink: 0;
+  font-size: 11px;
+  padding: 2px 8px;
+  background: #f0f6fb;
+  border: 1px solid rgba(70, 130, 180, 0.18);
+  border-radius: 12px;
+  color: #4a6b86;
+  letter-spacing: 0.5px;
+}
+
+/* 空状态 */
+.empty {
   text-align: center;
-  padding: 60px 20px;
-  color: #999;
+  padding: 60px 0 40px;
+  color: #606266;
 }
 
 .empty-icon {
-  margin-bottom: 16px;
-  opacity: 0.5;
+  color: #90b7d9;
+  margin-bottom: 12px;
 }
 
 .empty-text {
-  font-size: 16px;
-  font-weight: 500;
-  margin: 0 0 8px 0;
-  color: #666;
+  margin: 0 0 6px;
+  font-weight: 600;
+  font-size: 15px;
 }
 
 .empty-hint {
-  font-size: 14px;
   margin: 0;
-  color: #999;
+  font-size: 12px;
+  color: #909399;
 }
 
-/* 动画效果 */
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
+/* 滚动条微调（可选） */
+:deep(.el-scrollbar__bar.is-vertical > div) {
+  background: rgba(70, 130, 180, 0.25);
+}
+:deep(.el-scrollbar__thumb) {
+  background-color: rgba(64, 158, 255, 0.35);
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .friend-list-container {
-    width: 100%;
-    height: 100vh;
+/* 响应式 */
+@media (max-width: 860px) {
+  .add-contact {
+    flex: 0 0 38%;
   }
-
-  .search-section {
-    width: 100%;
-    padding: 16px;
-    box-sizing: border-box;
-  }
-
-  .section-title {
-    font-size: 1.3rem;
-  }
-
-  .search-input-container {
+  .search-row {
     flex-direction: column;
-    gap: 12px;
   }
-
-  .add-btn {
+  .search-btn {
     width: 100%;
-  }
-
-  .filter-tabs {
-    width: 100%;
-    padding: 12px 16px;
-    overflow-x: auto;
-    gap: 6px;
-    box-sizing: border-box;
-  }
-
-  .tab-item {
-    white-space: nowrap;
-    font-size: 13px;
-    padding: 6px 12px;
-  }
-
-  .contacts-section {
-    width: 100%;
-    padding: 16px;
-    box-sizing: border-box;
-  }
-
-  .contact-item {
-    padding: 12px;
-  }
-
-  .contact-name {
-    font-size: 15px;
-  }
-
-  .last-message {
-    font-size: 13px;
   }
 }
 
-@media (max-width: 480px) {
-  .contact-avatar-container {
-    margin-right: 12px;
+@media (max-width: 560px) {
+  .contact-page {
+    padding: 12px 14px;
   }
-
-  :deep(.contact-avatar) {
-    width: 40px !important;
-    height: 40px !important;
+  .add-inner {
+    padding: 22px 20px 16px;
   }
-
-  .unread-count {
-    font-size: 9px;
-    padding: 1px 4px;
+  .tabs {
+    gap: 6px;
   }
-
-  .contact-type-badge {
-    width: 14px;
-    height: 14px;
+  .tab {
+    padding: 5px 12px;
+    font-size: 12px;
+  }
+  .contact-item {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .name {
+    font-size: 14px;
+  }
+  .last-msg {
+    font-size: 12px;
+  }
+  .badge-text {
+    display: none;
   }
 }
 </style>
+  

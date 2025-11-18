@@ -1,11 +1,13 @@
 :root {
   /* 背景色 */
-  --bg-color-primary: #23272e;
-  --bg-color-secondary: #3a4047;
-  --bg-color-tertiary: #6b7b8a;
+  --bg-color-primary: #1b1f24;
+  --bg-color-secondary: #2f3339;
+  --bg-color-tertiary: #7c8a96;
+
+  --bg-color-tertiary-hover: #201c1c;
 
   /* 字体色 */
-  --font-color-main: #f5f6fa; /* 主体文字，明亮 */
+  --font-color-primary: #ffffff; /* 主体文字，明亮 */
   --font-color-secondary: #c2c8d0; /* 次级文字，灰白 */
   --font-color-tertiary: #8a99a8; /* 辅助文字，弱化 */
 

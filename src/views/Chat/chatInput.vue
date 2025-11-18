@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { showWarningMessage } from '@/utils/messageTips.js'
 import { sendMessage } from '@/utils/websocket.js'
 import { useThreadStore } from '@/stores'
 
@@ -8,7 +9,12 @@ const threadStore = useThreadStore()
 
 const send = async () => {
   if (!input.value.trim()) {
-    console.log('消息为空，不发送')
+    showWarningMessage('消息内容不能为空')
+    return
+  }
+
+  if (!threadStore.activeThread.value) {
+    showWarningMessage('没有选中的线程，无法发送消息')
     return
   }
 
