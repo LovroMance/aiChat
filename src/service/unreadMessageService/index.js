@@ -12,7 +12,6 @@ export const loadUnreadMessagesData = async () => {
     const unreadMessagesStore = useUnreadMessagesStore()
     // 调用 store 中的方法从 IndexedDB 加载数据
     await unreadMessagesStore.loadUnreadMessagesFromDB()
-
     console.log('未读消息数据加载成功')
     return true
   } catch (error) {
@@ -30,18 +29,17 @@ export const putCreateGroupMessageRecord = async (groupForm) => {
     thread_avatar: groupForm.avatar,
     thread_name: groupForm.name,
     senderName: '系统',
-    type: 'group',
+    type: '0',
     content: '群聊已创建',
-    lastTime: '',
+    lastTime: Math.floor(Date.now() / 1000),
     unreadCount: 0,
   }
-  console.log(valueObj)
+  console.log('valueObj', valueObj)
   // indexedDB更新
   await putData(UNREAD_MESSAGES_STORE, valueObj)
   // 仓库更新
   unreadMessagesStore.unreadMessagesMap.set(groupForm.thread_id, valueObj)
   console.log('更新未读消息成功:', unreadMessagesStore.unreadMessagesMap)
-  console.log('valueObj', valueObj)
 }
 
 // 适用于收到消息时 缺少threadInfo的场景
@@ -57,12 +55,11 @@ export const putRecord = async (messageData) => {
     console.log('thread/info / api 获取thread基本信息', data)
     passObj = {
       ...passObj,
-      thread_avatar: data.data.thread_avatar,
-      thread_name: data.data.thread_name,
-      type: data.data.thread_type,
+      thread_avatar: data.data.info.avatar,
+      thread_name: data.data.info.name,
+      type: data.data.info.type,
     }
   }
-
   const valueObj = {
     ...passObj,
     thread_id: messageData.thread_id,
@@ -125,22 +122,17 @@ export const putWholeRecord = async (data) => {
   console.log('valueObj', valueObj)
 }
 
-// 点击对应聊天 更新时间和未读消息数
-export const updateRecord = async (thread_id) => {
+export const selectedChatUpdate = async (thread_id) => {
   const unreadMessagesStore = useUnreadMessagesStore()
-  const passObj = unreadMessagesStore.unreadMessagesMap.get(thread_id)
-  // 更新数据
+  var passObj = unreadMessagesStore.unreadMessagesMap.get(thread_id) || null
   const valueObj = {
     ...passObj,
     unreadCount: 0,
-    lastTime: Date.now(),
   }
-
   // indexedDB更新
   await putData(UNREAD_MESSAGES_STORE, valueObj)
-
   // 仓库更新
-  unreadMessagesStore.unreadMessagesMap.set(thread_id, valueObj)
+  unreadMessagesStore.unreadMessagesMap.set(valueObj.thread_id, valueObj)
   console.log('更新未读消息成功:', unreadMessagesStore.unreadMessagesMap)
   console.log('valueObj', valueObj)
 }
