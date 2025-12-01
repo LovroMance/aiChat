@@ -1,6 +1,6 @@
 import { MESSAGES_STORE, addData } from '@/utils/indexedDB'
 import { useMessageStore, useThreadStore } from '@/stores'
-import { putRecord } from '@/service/unreadMessageService'
+import { putRecord } from '@/core/unreadMessage'
 
 export const receiveMessage = async (data) => {
   const messageStore = useMessageStore()

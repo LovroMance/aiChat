@@ -12,8 +12,7 @@ export const loadUnreadMessagesData = async () => {
     const unreadMessagesStore = useUnreadMessagesStore()
     // 调用 store 中的方法从 IndexedDB 加载数据
     await unreadMessagesStore.loadUnreadMessagesFromDB()
-    console.log('未读消息数据加载成功')
-    console.log(unreadMessagesStore.unreadMessagesMap);
+    console.log('未读消息数据加载成功', unreadMessagesStore.unreadMessagesMap)
     return true
   } catch (error) {
     console.error('加载未读消息数据失败:', error)
@@ -52,7 +51,6 @@ export const putRecord = async (messageData) => {
 
   if (!passObj?.thread_name) {
     const { data } = await getThreadInfo({ thread_id: messageData.thread_id })
-    console.log('thread/info / api 获取thread基本信息', data)
     passObj = {
       ...passObj,
       thread_avatar: data.data.info.avatar,

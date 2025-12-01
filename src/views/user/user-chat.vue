@@ -3,11 +3,11 @@ import chatPanel from '@/views/chat/chat-panel.vue'
 import chatInput from '@/views/chat/chat-input.vue'
 import createGroup from '@/views/chat/group-create.vue'
 
-import { initChatPanel, loadThreadChat } from '@/core/chat'
+import { initChatPanel, loadThreadChat } from '@/core/chatWorkflow'
 import { onMounted, ref, nextTick } from 'vue'
 import { useThreadStore, useUnreadMessagesStore } from '@/stores'
 import { formatTimeHour } from '@/utils/format'
-import { putCreateGroupMessageRecord } from '@/service/unreadMessageService'
+import { putCreateGroupMessageRecord } from '@/core/unreadMessage'
 
 onMounted(async () => {
   await initChatPanel()

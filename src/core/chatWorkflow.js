@@ -6,9 +6,9 @@ import {
   putData,
 } from '@/utils/indexedDB'
 import { getPartMessages, getUnreadMessages } from '@/api/chat'
-import { putWholeRecord } from '@/service/unreadMessageService'
+import { putWholeRecord } from '@/core/unreadMessage'
 import { useMessageStore } from '@/stores'
-import { selectedChatUpdate } from '@/service/unreadMessageService'
+import { selectedChatUpdate } from '@/core/unreadMessage'
 
 let existing_id // 记录进入聊天室时本地的最后一条消息ID
 

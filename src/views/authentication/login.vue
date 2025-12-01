@@ -1,6 +1,6 @@
 <script setup>
 import LeftPoster from '@/components/poster/left-poster.vue'
-import useLoginService from '@/service/authenticationService/login'
+import useLoginService from '@/composables/authentication/login'
 import { ref } from 'vue'
 
 const { loginForm, handleLogin, goRegister } = useLoginService()

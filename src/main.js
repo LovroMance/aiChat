@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import '@/assets/common.css'
-import '@/assets/root/variable.css'
+import '@/assets/variable.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
@@ -18,7 +18,7 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 app.use(pinia).use(router).use(ElementPlus)
 
 // 加载/初始化 数据
-import { initializeAppData } from '@/service/appService'
+import { initializeAppData } from '@/core/initApp'
 initializeAppData()
 
 app.mount('#app')

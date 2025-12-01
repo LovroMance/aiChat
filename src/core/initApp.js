@@ -1,4 +1,4 @@
-import { loadUnreadMessagesData } from '@/service/unreadMessageService'
+import { loadUnreadMessagesData } from '@/core/unreadMessage'
 import { showWarningTip } from '@/utils/messageTips'
 import { chatPath, createWebSocket } from '@/utils/websocket.js'
 
