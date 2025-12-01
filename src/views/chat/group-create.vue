@@ -1,11 +1,11 @@
 <script setup>
 import { ref } from 'vue'
-import { ElMessage } from 'element-plus'
 import { baseURL } from '@/utils/request'
 import { groupCreate } from '@/api/chat'
 import { useFileUpload } from '@/api/chat'
 import UploadAvatar from '@/components/file/uploadAvatar.vue'
-import { putCreateGroupMessageRecord } from '@/service/unreadMessageService'
+
+import { showErrorTip, showSuccessTip } from '@/utils/messageTips'
 
 // 定义 emits
 const emit = defineEmits(['close', 'create'])
@@ -17,6 +17,9 @@ const groupForm = ref({
   avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png', // 默认头像
 })
 
+const formRef = ref(null)
+const selectedFile = ref(null) // 保存选择的文件对象
+
 // 表单验证规则
 const rules = {
   name: [
@@ -25,9 +28,6 @@ const rules = {
   ],
   description: [{ max: 100, message: '群聊简介不能超过 100 个字符', trigger: 'blur' }],
 }
-
-const formRef = ref(null)
-const selectedFile = ref(null) // 保存选择的文件对象
 
 // 关闭弹窗
 const closeDialog = () => {
@@ -44,7 +44,6 @@ const handleAvatarChange = (file) => {
 // 创建群聊
 const createGroup = async () => {
   if (!formRef.value) return
-
   try {
     // 先进行表单验证
     const isValid = await formRef.value.validate()
@@ -53,7 +52,6 @@ const createGroup = async () => {
       if (selectedFile.value) {
         const res = await useFileUpload(selectedFile.value)
         console.log('头像上传结果:', res)
-        console.log(res.data.data)
         groupForm.value.avatar = baseURL + '/' + res.data.data
       }
 
@@ -61,19 +59,14 @@ const createGroup = async () => {
       const { data } = await groupCreate(groupForm.value)
       console.log('创建群聊成功:', data)
 
-      groupForm.value = {
-        ...groupForm.value,
-        thread_id: data.thread_id,
-      }
-      putCreateGroupMessageRecord(groupForm.value)
-
-
-      emit('create') // 发射创建事件，传递接口返回的数据
-      ElMessage.success('群聊创建成功！')
+      emit('create', groupForm.value, data.thread_id) // 发射创建事件，传递接口返回的数据
+      showSuccessTip('群聊创建成功！')
     }
   } catch (error) {
     console.error('创建群聊失败:', error)
-    ElMessage.error('创建群聊失败，请重试')
+    showErrorTip('创建群聊失败，请重试')
+  } finally {
+    URL.revokeObjectURL(groupForm.value.avatar)
   }
 }
 </script>

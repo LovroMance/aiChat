@@ -1,6 +1,6 @@
 <script setup>
-const test = async () => {
-
+const test = () => {
+  console.log(Math.floor(Date.now() / 1000))
 }
 </script>
 

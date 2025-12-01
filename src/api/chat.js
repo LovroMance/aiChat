@@ -13,7 +13,7 @@ export const useFileUpload = (file) => {
 
 // 获取离线记录
 export const getPartMessages = (data) => {
-  return instance.get('/api/thread/record/get', {
+  return instance.get('/api/thread/record/user', {
     params: {
       thread_id: data.thread_id, // 会话id
       existing_id: data.existing_id, // 上次获取的最后一条消息id

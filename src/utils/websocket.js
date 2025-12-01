@@ -1,8 +1,6 @@
 import { baseURL } from '@/utils/request'
 import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
-import { MESSAGES_STORE, addData } from '@/utils/indexedDB'
-import { useMessageStore } from '@/stores'
-import { putRecord } from '@/service/unreadMessageService'
+import { receiveMessage } from '@/core/onMessage'
 
 export const chatPath = '/ws/chat' // 用户聊天（私聊/群聊）
 
@@ -38,7 +36,6 @@ export const createWebSocket = (path) => {
 const bindEvents = async () => {
   if (!ws) return
 
-  const messageStore = useMessageStore()
   // 设置连接成功钩子
   ws.onopen = () => {
     isConnected = true
@@ -52,9 +49,8 @@ const bindEvents = async () => {
       try {
         const data = JSON.parse(event.data) // 把JSON字符串转换为对象
         console.log('收到消息:', data)
-        await addData(MESSAGES_STORE, data) // 将消息添加到IndexedDB
-        messageStore.addMessage(data) // 将消息添加到本地内存store中
-        putRecord(data) // 将消息记录到未读消息表中
+        // 处理收到消息逻辑
+        receiveMessage(data)
       } catch {
         // 如果不是 JSON 格式，直接输出原始消息
         console.log('收到消息:', event.data)

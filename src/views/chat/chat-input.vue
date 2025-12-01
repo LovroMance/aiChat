@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { showWarningMessage } from '@/utils/messageTips.js'
+import { showWarningTip } from '@/utils/messageTips.js'
 import { sendMessage } from '@/utils/websocket.js'
 import { useThreadStore } from '@/stores'
 
@@ -9,12 +9,12 @@ const threadStore = useThreadStore()
 
 const send = async () => {
   if (!input.value.trim()) {
-    showWarningMessage('消息内容不能为空')
+    showWarningTip('消息内容不能为空')
     return
   }
 
   if (!threadStore.activeThread.value) {
-    showWarningMessage('没有选中的线程，无法发送消息')
+    showWarningTip('没有选中的线程，无法发送消息')
     return
   }
 
@@ -25,8 +25,8 @@ const send = async () => {
     thread_id: threadStore.activeThread.value.thread_id,
   }
 
-  const success = await sendMessage(messageObj)
-  if (success) {
+  const result = await sendMessage(messageObj)
+  if (result) {
     input.value = '' // 清空输入框
     console.log('消息发送成功')
     // 触发滚动到底部事件

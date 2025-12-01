@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { showWarningTip, showSuccessTip } from '@/utils/messageTips'
 
 import { useUserRegister } from '@/api/user' // 注册api调用
 
@@ -23,10 +23,7 @@ export default function useRegisterService() {
       password: registerForm.value.password,
     })
     console.log(data)
-    ElMessage({
-      message: '注册成功',
-      type: 'success',
-    })
+    showSuccessTip('注册成功')
     router.push('/login')
   }
 
@@ -34,39 +31,24 @@ export default function useRegisterService() {
   const handleRegister = () => {
     const accountRegex = /^[a-zA-Z0-9]{8,15}$/
     if (!accountRegex.test(registerForm.value.account)) {
-      ElMessage({
-        message: '账号不符合要求，请输入8-15位字母或数字',
-        type: 'warning',
-      })
+      showWarningTip('账号不符合要求，请输入8-15位字母或数字')
       return
     }
     if (!registerForm.value.username) {
-      ElMessage({
-        message: '请填写正确的用户名',
-        type: 'warning',
-      })
+      showWarningTip('请填写用户名')
       return
     }
     if (!registerForm.value.password) {
-      ElMessage({
-        message: '请填写密码',
-        type: 'warning',
-      })
+      showWarningTip('请填写密码')
       return
     }
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/
     if (!passwordRegex.test(registerForm.value.password)) {
-      ElMessage({
-        message: '密码必须包含数字和字母，长度不低于8位',
-        type: 'warning',
-      })
+      showWarningTip('密码必须包含数字和字母，长度不低于8位')
       return
     }
     if (registerForm.value.password !== registerForm.value.confirmPassword) {
-      ElMessage({
-        message: '两次输入的密码不一致',
-        type: 'warning',
-      })
+      showWarningTip('两次输入的密码不一致')
       return
     }
     userRegister()

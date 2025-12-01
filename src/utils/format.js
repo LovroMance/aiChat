@@ -5,7 +5,7 @@ export const formatTime = (timestamp) => {
 
   try {
     // new Date() 可以直接接收数字类型的时间戳（毫秒）
-    const date = new Date(timestamp*1000)
+    const date = new Date(timestamp * 1000)
 
     // 获取年份的后两位
     const year = String(date.getFullYear()).slice(-2)
@@ -29,7 +29,7 @@ export const formatTime = (timestamp) => {
 export const formatTimeHour = (timeString) => {
   if (!timeString) return ''
   try {
-    const date = new Date(timeString)
+    const date = new Date(timeString * 1000)
     const hours = String(date.getHours()).padStart(2, '0')
     const minutes = String(date.getMinutes()).padStart(2, '0')
 

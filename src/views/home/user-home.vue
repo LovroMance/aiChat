@@ -3,27 +3,21 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getUserInfo } from '@/api/user'
 import { USER_LOGIN_INFO, USER_INFO_DATA, setStorage, getStorage } from '@/utils/localstorage'
-import { ElMessage } from 'element-plus'
+import { showErrorTip } from '@/utils/messageTips'
 
 onMounted(async () => {
   try {
     const { data } = await getUserInfo(getStorage(USER_LOGIN_INFO).uid)
     // 错误提示
     if (data.code !== 200) {
-      ElMessage({
-        message: data.message,
-        type: 'error',
-      })
+      showErrorTip(data.message)
     }
     // 成功逻辑
     else {
       setStorage(USER_INFO_DATA, data.data)
     }
   } catch (error) {
-    ElMessage({
-      message: error.message,
-      type: 'error',
-    })
+    showErrorTip(error.message)
   }
 })
 

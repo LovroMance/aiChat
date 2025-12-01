@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElLoading } from 'element-plus'
+import { ElLoading } from 'element-plus'
+import { showWarningTip, showSuccessTip, showErrorTip } from '@/utils/messageTips'
 import { useUserLogin } from '@/api/user' // 调用登录API
 import { useUserStore } from '@/stores/index' // 获取用户仓库，存储用户信息
 import { USER_LOGIN_INFO, setStorage } from '@/utils/localstorage' // localstorage封装
@@ -18,10 +19,7 @@ export default function useLoginService() {
   // 用户登录逻辑
   const handleLogin = async () => {
     if (!loginForm.value.account || !loginForm.value.password) {
-      ElMessage({
-        message: '请输入账号和密码',
-        type: 'warning',
-      })
+      showWarningTip('请输入账号和密码')
       return
     }
     const loadingInstance = ElLoading.service({
@@ -43,18 +41,12 @@ export default function useLoginService() {
       userStore.setLoginInfo(userInfo)
       // 把用户token存到本地存储
       setStorage(USER_LOGIN_INFO, userInfo)
-      ElMessage({
-        message: '登录成功',
-        type: 'success',
-      })
+      showSuccessTip('登录成功')
       loginForm.value.account = ''
       loginForm.value.password = ''
       router.push('/userHome')
     } catch (error) {
-      ElMessage({
-        message: error.response.data.message,
-        type: 'error',
-      })
+      showErrorTip(error.response.data.message)
     } finally {
       loadingInstance.close()
     }

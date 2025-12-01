@@ -9,6 +9,18 @@ export const UNREAD_MESSAGES_STORE = 'unreadMessages'
 export const THREADS_STORE = 'threads'
 
 /**
+ * 确保数据库已打开
+ * @returns {Promise} 返回数据库连接
+ */
+export const ensureDBOpen = async () => {
+  if (!db) {
+    console.log('数据库未初始化，正在打开数据库...')
+    return await initDB()
+  }
+  return db
+}
+
+/**
  * 初始化数据库
  * @returns {Promise} 返回数据库连接
  */
@@ -41,10 +53,8 @@ export const initDB = () => {
       // 创建消息存储
       if (!database.objectStoreNames.contains(MESSAGES_STORE)) {
         const messageStore = database.createObjectStore(MESSAGES_STORE, {
-          keyPath: 'id',
-          autoIncrement: true,
+          keyPath: 'msg_id',
         })
-        messageStore.createIndex('message_id', 'message_id', { unique: false }) // 添加 message_id 索引
         messageStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
       }
 
@@ -52,7 +62,6 @@ export const initDB = () => {
       if (!database.objectStoreNames.contains(UNREAD_MESSAGES_STORE)) {
         const unreadMessageStore = database.createObjectStore(UNREAD_MESSAGES_STORE, {
           keyPath: 'thread_id',
-          autoIncrement: true,
         })
         unreadMessageStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
         unreadMessageStore.createIndex('last_time', 'last_time', { unique: false }) // 添加 last_time 索引
@@ -70,17 +79,6 @@ export const initDB = () => {
   })
 }
 
-/**
- * 确保数据库已打开
- * @returns {Promise} 返回数据库连接
- */
-export const ensureDBOpen = async () => {
-  if (!db) {
-    console.log('数据库未初始化，正在打开数据库...')
-    return await initDB()
-  }
-  return db
-}
 
 /**
  * 添加数据到存储对象
@@ -264,6 +262,38 @@ export const getLastData = async (storeName) => {
 }
 
 /**
+ * 根据主键获取单条数据
+ */
+export const getDataByKey = async (storeName, key) => {
+  try {
+    await ensureDBOpen()
+
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = db.transaction([storeName], 'readonly')
+        const store = transaction.objectStore(storeName)
+        const request = store.get(key)
+
+        request.onsuccess = () => {
+          resolve(request.result ?? null)
+        }
+
+        request.onerror = () => {
+          console.error('根据主键查询数据失败')
+          reject(new Error('根据主键查询数据失败'))
+        }
+      } catch (error) {
+        console.error('根据主键查询数据操作失败:', error)
+        reject(error)
+      }
+    })
+  } catch (error) {
+    console.error('数据库打开失败:', error)
+    throw error
+  }
+}
+
+/**
  * 根据索引查询数据
  * @param {string} storeName - 存储对象名称
  * @param {string} indexName - 索引名称
@@ -317,7 +347,7 @@ export const putData = async (storeName, data) => {
         const request = store.put(data) // put方法会自动覆盖相同主键的数据
 
         request.onsuccess = () => {
-          console.log('数据已保存/更新:', request.result)
+          console.log('indexedDB数据已保存/更新:', request.result)
           resolve(request.result)
         }
 

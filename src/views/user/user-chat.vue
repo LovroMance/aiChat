@@ -1,12 +1,13 @@
 <script setup>
-import chatPanel from '@/views/Chat/chatPanel.vue'
-import chatInput from '@/views/Chat/chatInput.vue'
-import createGroup from '@/views/Chat/createGroup.vue'
+import chatPanel from '@/views/chat/chat-panel.vue'
+import chatInput from '@/views/chat/chat-input.vue'
+import createGroup from '@/views/chat/group-create.vue'
 
 import { initChatPanel, loadThreadChat } from '@/core/chat'
 import { onMounted, ref, nextTick } from 'vue'
 import { useThreadStore, useUnreadMessagesStore } from '@/stores'
 import { formatTimeHour } from '@/utils/format'
+import { putCreateGroupMessageRecord } from '@/service/unreadMessageService'
 
 onMounted(async () => {
   await initChatPanel()
@@ -23,14 +24,18 @@ const handleCloseDialog = () => {
 }
 
 // 处理创建群聊事件
-const handleCreateGroup = () => {
+const handleCreateGroup = (groupForm, thread_id) => {
   isPopup.value = false
+  const newGroupForm = {
+    ...groupForm,
+    thread_id,
+  }
+  putCreateGroupMessageRecord(newGroupForm)
 }
-
 
 // 选择聊天对象
 const selectChat = async (chat) => {
-  threadStore.activeThread.value = chat  // 选中的聊天thread对象
+  threadStore.activeThread.value = chat // 选中的聊天thread对象
   await loadThreadChat(chat.thread_id)
 }
 
@@ -61,31 +66,32 @@ const scrollToBottom = () => {
       <el-scrollbar class="chat-list-container">
         <div class="chat-list">
           <div
-            v-for="[key, value] in unreadMessagesStore.unreadMessagesMap"
-            :key="key"
-            :class="['chat-item', { active: threadStore.activeThread?.value?.thread_id === key }]"
-            @click="selectChat(value)"
+            v-for="chat in unreadMessagesStore.sortedUnreadMessagesMap"
+            :key="chat.thread_id"
+            :class="[
+              'chat-item',
+              { active: threadStore.activeThread?.value?.thread_id === chat.thread_id },
+            ]"
+            @click="selectChat(chat)"
           >
             <div class="avatar-container">
-              <el-avatar :src="value.thread_avatar" :size="48" />
+              <el-avatar :src="chat.thread_avatar" :size="48" />
             </div>
 
             <div class="chat-info">
               <div class="chat-header">
-                <span class="chat-name">{{ value.thread_name }}</span>
-                <span class="chat-time">{{ formatTimeHour(value.lastTime) }}</span>
+                <span class="chat-name">{{ chat.thread_name }}</span>
+                <span class="chat-time">{{ formatTimeHour(chat.lastTime) }}</span>
               </div>
               <div class="chat-content">
                 <span class="last-message">
                   {{
-                    value.type == 'group'
-                      ? `${value.senderName}: ${value.content}`
-                      : `${value.content}`
+                    chat.type == 'group' ? `${chat.senderName}: ${chat.content}` : `${chat.content}`
                   }}
                 </span>
                 <el-badge
-                  v-if="value.unreadCount > 0"
-                  :value="value.unreadCount"
+                  v-if="chat.unreadCount > 0"
+                  :value="chat.unreadCount"
                   :max="99"
                   class="message-badge"
                 />

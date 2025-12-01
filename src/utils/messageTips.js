@@ -12,7 +12,7 @@ const showMessage = (message, type) => {
  * 显示一个警告消息的便捷函数
  * @param {string} message - 要显示的警告内容
  */
-export const showWarningMessage = (message) => {
+export const showWarningTip = (message) => {
     showMessage(message, 'warning')
 }
 
@@ -20,7 +20,7 @@ export const showWarningMessage = (message) => {
  * 显示一个错误消息的便捷函数
  * @param {string} message - 要显示的错误内容
  */
-export const showErrorMessage = (message) => {
+export const showErrorTip = (message) => {
     showMessage(message, 'error')
 }
 
@@ -28,6 +28,6 @@ export const showErrorMessage = (message) => {
  * 显示一个成功消息的便捷函数
  * @param {string} message - 要显示的成功内容
  */
-export const showSuccessMessage = (message) => {
+export const showSuccessTip = (message) => {
     showMessage(message, 'success')
 }

@@ -13,6 +13,7 @@ export const loadUnreadMessagesData = async () => {
     // 调用 store 中的方法从 IndexedDB 加载数据
     await unreadMessagesStore.loadUnreadMessagesFromDB()
     console.log('未读消息数据加载成功')
+    console.log(unreadMessagesStore.unreadMessagesMap);
     return true
   } catch (error) {
     console.error('加载未读消息数据失败:', error)
@@ -38,13 +39,12 @@ export const putCreateGroupMessageRecord = async (groupForm) => {
   // indexedDB更新
   await putData(UNREAD_MESSAGES_STORE, valueObj)
   // 仓库更新
-  unreadMessagesStore.unreadMessagesMap.set(groupForm.thread_id, valueObj)
+  unreadMessagesStore.updateUnreadMessage(groupForm.thread_id, valueObj)
   console.log('更新未读消息成功:', unreadMessagesStore.unreadMessagesMap)
 }
 
 // 适用于收到消息时 缺少threadInfo的场景
 export const putRecord = async (messageData) => {
-  // 在函数内部获取 store
   const unreadMessagesStore = useUnreadMessagesStore()
 
   var passObj = unreadMessagesStore.unreadMessagesMap.get(messageData.thread_id) || null
@@ -70,7 +70,6 @@ export const putRecord = async (messageData) => {
   }
 
   console.log(valueObj)
-
   // 如果当前在选中聊天中，则不添加未读消息数
   const threadStore = useThreadStore()
   if (threadStore.activeThread.value?.thread_id === messageData.thread_id) {
@@ -80,14 +79,14 @@ export const putRecord = async (messageData) => {
   // indexedDB更新
   await putData(UNREAD_MESSAGES_STORE, valueObj)
   // 仓库更新
-  unreadMessagesStore.unreadMessagesMap.set(messageData.thread_id, valueObj)
+  unreadMessagesStore.updateUnreadMessage(messageData.thread_id, valueObj)
   console.log('更新未读消息成功:', unreadMessagesStore.unreadMessagesMap)
-  console.log('valueObj', valueObj)
 }
 
 // 适用于拥有所有数据时处理
 export const putWholeRecord = async (data) => {
   const unreadMessagesStore = useUnreadMessagesStore()
+
   var passObj = unreadMessagesStore.unreadMessagesMap.get(data.thread_id) || null
   const passCount = passObj ? passObj.unreadCount : 0
   // TODO: 这里没处理ai  ⭐⭐⭐
@@ -114,10 +113,12 @@ export const putWholeRecord = async (data) => {
     }
   }
 
+
+
   // indexedDB更新
   await putData(UNREAD_MESSAGES_STORE, valueObj)
   // 仓库更新
-  unreadMessagesStore.unreadMessagesMap.set(valueObj.thread_id, valueObj)
+  unreadMessagesStore.updateUnreadMessage(valueObj.thread_id, valueObj)
   console.log('更新未读消息成功:', unreadMessagesStore.unreadMessagesMap)
   console.log('valueObj', valueObj)
 }
@@ -132,7 +133,7 @@ export const selectedChatUpdate = async (thread_id) => {
   // indexedDB更新
   await putData(UNREAD_MESSAGES_STORE, valueObj)
   // 仓库更新
-  unreadMessagesStore.unreadMessagesMap.set(valueObj.thread_id, valueObj)
+  unreadMessagesStore.updateUnreadMessage(valueObj.thread_id, valueObj)
   console.log('更新未读消息成功:', unreadMessagesStore.unreadMessagesMap)
   console.log('valueObj', valueObj)
 }

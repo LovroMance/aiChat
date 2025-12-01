@@ -22,32 +22,32 @@ const routes = [
   {
     path: '/userHome',
     name: 'userHome',
-    component: () => import('@/views/User/userHome.vue'),
+    component: () => import('@/views/home/user-home.vue'),
   },
   {
-    path: '/homePage',
-    name: 'homePage',
-    component: () => import('@/views/Home/homePage.vue'),
+    path: '/HomeLayout',
+    name: 'HomeLayout',
+    component: () => import('@/layout/home-layout.vue'),
     children: [
       {
         path: '/FriendGroupList',
         name: 'FriendGroupList',
-        component: () => import('@/views/Home/FriendGroupList.vue'),
+        component: () => import('@/views/user/friend-group-list.vue'),
       },
       {
         path: '/userSetting',
         name: 'userSetting',
-        component: () => import('@/views/User/userSetting.vue'),
+        component: () => import('@/views/user/user-setting.vue'),
       },
       {
         path: '/userChat',
         name: 'userChat',
-        component: () => import('@/views/User/userChat.vue'),
+        component: () => import('@/views/user/user-chat.vue'),
       },
       {
         path: '/userInfo',
         name: 'userInfo',
-        component: () => import('@/views/User/userInfo.vue'),
+        component: () => import('@/views/user/user-info.vue'),
       },
     ],
   },

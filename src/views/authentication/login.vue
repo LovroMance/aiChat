@@ -1,7 +1,5 @@
 <script setup>
 import LeftPoster from '@/components/poster/left-poster.vue'
-import '@/assets/common.css'
-import '@/assets/root/variable.css'
 import useLoginService from '@/service/authenticationService/login'
 import { ref } from 'vue'
 

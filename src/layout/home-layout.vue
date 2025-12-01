@@ -1,45 +1,31 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { Menu, List, ChatDotRound, User, Setting, Expand, Fold } from '@element-plus/icons-vue'
 const isCollapse = ref(true)
+const route = useRoute()
+const activeMenu = computed(() => route.path)
+console.log(activeMenu)
+
+const menuList = [
+  { index: '/userHome', icon: Menu, title: '首页' },
+  { index: '/FriendGroupList', icon: List, title: '我的列表' },
+  { index: '/userChat', icon: ChatDotRound, title: '聊天室' },
+  { index: '/userInfo', icon: User, title: '个人资料' },
+  { index: '/userSetting', icon: Setting, title: '设置' },
+]
+
 </script>
 
 <template>
   <el-container style="height: 100vh; display: flex">
-    <el-menu default-active="4" :collapse="isCollapse" router>
-      <el-menu-item index="1" route="/userHome">
+    <el-menu :default-active="activeMenu" :collapse="isCollapse" router>
+      <!-- 侧边栏选项 -->
+      <el-menu-item v-for="item in menuList" :key="item.index" :index="item.index">
         <el-icon>
-          <Menu />
+          <component :is="item.icon" />
         </el-icon>
-        <template #title>首页</template>
-      </el-menu-item>
-
-      <el-menu-item index="2" route="/FriendGroupList">
-        <el-icon>
-          <List />
-        </el-icon>
-        <template #title>我的列表</template>
-      </el-menu-item>
-
-      <el-menu-item index="3" route="/userChat">
-        <el-icon>
-          <ChatDotRound />
-        </el-icon>
-        <template #title>聊天室</template>
-      </el-menu-item>
-
-      <el-menu-item index="4" route="/userInfo">
-        <el-icon>
-          <User />
-        </el-icon>
-        <template #title>个人资料</template>
-      </el-menu-item>
-
-      <el-menu-item index="5" route="/userSetting">
-        <el-icon>
-          <Setting />
-        </el-icon>
-        <template #title>设置</template>
+        <template #title>{{ item.title }}</template>
       </el-menu-item>
 
       <div class="el-menu-item" @click="isCollapse = !isCollapse" style="margin-top: auto;">
