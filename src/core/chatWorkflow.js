@@ -43,9 +43,12 @@ export const initChatPanel = async () => {
 
 // 加载指定线程的聊天记录
 export const loadThreadChat = async (thread_id) => {
-  // 清理 onlineMessage
   const messageStore = useMessageStore()
+  // 重置消息列表，防止切换时显示旧数据
   messageStore.onlineMessages = []
+  messageStore.beforeMessages = []
+  messageStore.offlineMessages = []
+
   // 根据threadId获取本地历史消息
   messageStore.beforeMessages = await getMessagesByThreadId(MESSAGES_STORE, thread_id)
   // 获取最后一条本地消息的msg_id

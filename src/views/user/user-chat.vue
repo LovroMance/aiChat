@@ -1,100 +1,93 @@
 <script setup>
+import { onMounted, ref } from 'vue'
+import { CirclePlus, MoreFilled } from '@element-plus/icons-vue'
+import { useChat } from '@/composables/chat/useChat'
+import { formatTimeHour } from '@/utils/format'
 import chatPanel from '@/views/chat/chat-panel.vue'
 import chatInput from '@/views/chat/chat-input.vue'
-import createGroup from '@/views/chat/group-create.vue'
+import createGroup from '@/components/chat/group-create.vue'
 
-import { initChatPanel, loadThreadChat } from '@/core/chatWorkflow'
-import { onMounted, ref, nextTick } from 'vue'
-import { useThreadStore, useUnreadMessagesStore } from '@/stores'
-import { formatTimeHour } from '@/utils/format'
-import { putCreateGroupMessageRecord } from '@/core/unreadMessage'
+// ✅ 使用 Composables 替代之前的复杂逻辑
+const {
+  activeThread,
+  unreadMessages,
+  initChat,
+  selectThread,
+  createGroup: handleCreateGroup,
+  scrollToBottom,
+  setChatPanelRef,
+} = useChat()
 
+// 只保留 UI 相关的状态
+const isPopup = ref(false)
+const chatPanelRef = ref(null)
+
+// ✅ 应用启动时初始化
 onMounted(async () => {
-  await initChatPanel()
+  await initChat()
+  setChatPanelRef(chatPanelRef.value)
   scrollToBottom()
 })
 
-const unreadMessagesStore = useUnreadMessagesStore()
-const threadStore = useThreadStore()
-const isPopup = ref(false)
-
-// 处理子组件关闭事件
+// ✅ 处理弹窗关闭
 const handleCloseDialog = () => {
   isPopup.value = false
 }
 
-// 处理创建群聊事件
-const handleCreateGroup = (groupForm, thread_id) => {
-  isPopup.value = false
-  const newGroupForm = {
-    ...groupForm,
-    thread_id,
+// ✅ 处理群聊创建
+const handleGroupCreated = async (groupForm) => {
+  const success = await handleCreateGroup(groupForm)
+  if (success) {
+    isPopup.value = false
   }
-  putCreateGroupMessageRecord(newGroupForm)
 }
 
-// 选择聊天对象
-const selectChat = async (chat) => {
-  threadStore.activeThread.value = chat // 选中的聊天thread对象
-  await loadThreadChat(chat.thread_id)
-}
-
-// 滚动到底部的函数
-const scrollToBottom = () => {
-  // 使用 nextTick 确保DOM更新后再滚动
-  nextTick(() => {
-    const chatPanel = document.querySelector('.el-scrollbar__thumb')
-    if (chatPanel) {
-      chatPanel.scrollTop = chatPanel.scrollHeight
-    }
-  })
+// ✅ 处理线程选择
+const handleSelectChat = async (chat) => {
+  await selectThread(chat)
+  scrollToBottom()
 }
 </script>
 
 <template>
-  <el-container style="height: 100vh; min-height: 0">
-    <createGroup v-if="isPopup" @close="handleCloseDialog" @create="handleCreateGroup" />
+  <el-container class="chat-layout">
+    <createGroup v-if="isPopup" @close="handleCloseDialog" @submit="handleGroupCreated" />
+
     <!-- 左侧聊天列表侧边栏 -->
-    <el-aside width="320px" class="chat-sidebar">
+    <el-aside width="280px" class="chat-sidebar">
       <div class="sidebar-header">
-        <div class="unread-badge">
-          <h3>消息列表</h3>
-        </div>
-        <el-icon size="20" class="circle-plus" @click="isPopup = !isPopup"><CirclePlus /></el-icon>
+        <h3 class="title">消息</h3>
+        <el-button circle text @click="isPopup = !isPopup">
+          <el-icon :size="20"><CirclePlus /></el-icon>
+        </el-button>
       </div>
 
-      <el-scrollbar class="chat-list-container">
+      <el-scrollbar class="chat-list-scroll">
         <div class="chat-list">
           <div
-            v-for="chat in unreadMessagesStore.sortedUnreadMessagesMap"
+            v-for="chat in unreadMessages"
             :key="chat.thread_id"
-            :class="[
-              'chat-item',
-              { active: threadStore.activeThread?.value?.thread_id === chat.thread_id },
-            ]"
-            @click="selectChat(chat)"
+            :class="['chat-item', { active: activeThread?.thread_id === chat.thread_id }]"
+            @click="handleSelectChat(chat)"
           >
-            <div class="avatar-container">
-              <el-avatar :src="chat.thread_avatar" :size="48" />
+            <div class="avatar-wrapper">
+              <el-avatar :src="chat.thread_avatar" :size="44" shape="square" class="chat-avatar" />
+              <div v-if="chat.unreadCount > 0" class="unread-dot">
+                {{ chat.unreadCount > 99 ? '99+' : chat.unreadCount }}
+              </div>
             </div>
 
             <div class="chat-info">
-              <div class="chat-header">
+              <div class="chat-header-row">
                 <span class="chat-name">{{ chat.thread_name }}</span>
                 <span class="chat-time">{{ formatTimeHour(chat.lastTime) }}</span>
               </div>
-              <div class="chat-content">
+              <div class="chat-content-row">
                 <span class="last-message">
                   {{
                     chat.type == 'group' ? `${chat.senderName}: ${chat.content}` : `${chat.content}`
                   }}
                 </span>
-                <el-badge
-                  v-if="chat.unreadCount > 0"
-                  :value="chat.unreadCount"
-                  :max="99"
-                  class="message-badge"
-                />
               </div>
             </div>
           </div>
@@ -103,25 +96,24 @@ const scrollToBottom = () => {
     </el-aside>
 
     <!-- 右侧聊天区域 -->
-    <el-container
-      style="height: 100vh; min-height: 0; border-left: 1px solid rgba(70, 130, 180, 0.2)"
-    >
-      <!-- 用户名 -->
-      <el-header class="header-container" style="height: 10%">
-        <span>{{ threadStore.activeThread?.value?.thread_name }}</span>
+    <el-container class="chat-main-area">
+      <!-- 顶部导航 -->
+      <el-header class="chat-header-bar">
+        <div class="header-content">
+          <span class="current-chat-name">{{ activeThread?.thread_name }}</span>
+          <el-button link>
+            <el-icon :size="20"><MoreFilled /></el-icon>
+          </el-button>
+        </div>
       </el-header>
+
       <!-- 聊天内容 -->
-      <el-main style="padding: 0; border-top: 1px solid rgba(70, 130, 180, 0.2)">
-        <chatPanel />
+      <el-main class="chat-content-area">
+        <chatPanel ref="chatPanelRef" />
       </el-main>
+
       <!-- 输入框 -->
-      <el-footer
-        style="
-          background: linear-gradient(120deg, #e8f4fd 0%, #f0f8ff 100%);
-          height: 20%;
-          border-top: 1px solid rgba(70, 130, 180, 0.1);
-        "
-      >
+      <el-footer class="chat-input-area">
         <chatInput @messageSent="scrollToBottom" />
       </el-footer>
     </el-container>
@@ -129,96 +121,112 @@ const scrollToBottom = () => {
 </template>
 
 <style scoped>
-/* 左侧聊天列表侧边栏样式 */
-.chat-sidebar {
-  background: linear-gradient(180deg, #f8fbff 0%, #f0f8ff 100%);
-  border-right: 1px solid rgba(70, 130, 180, 0.15);
+.chat-layout {
   height: 100vh;
+  background-color: #ffffff;
   overflow: hidden;
+}
+
+/* 侧边栏 */
+.chat-sidebar {
+  background-color: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-header {
   height: 60px;
-  padding: 16px 20px;
-  border-bottom: 1px solid rgba(70, 130, 180, 0.1);
+  padding: 0 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #ffffff;
 }
 
-.sidebar-header h3 {
+.title {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #2c3e50;
+  color: #1e293b;
 }
 
-.unread-badge {
-  margin-left: 5px;
-  display: flex;
-  align-items: center;
-  color: #409eff;
-}
-
-.circle-plus {
-  transition: all 0.3s ease;
-  color: #606266;
-  cursor: pointer;
-}
-
-.circle-plus:hover {
-  color: #636465;
-  filter: brightness(1.4);
-}
-
-.chat-list-container {
-  height: calc(100vh - 73px);
+.chat-list-scroll {
+  flex: 1;
 }
 
 .chat-list {
-  padding: 8px 0;
+  padding: 0;
 }
 
 .chat-item {
-  padding: 12px 20px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border-bottom: 1px solid rgba(70, 130, 180, 0.05);
+  transition: all 0.2s;
+  border-radius: 0;
 }
 
 .chat-item:hover {
-  background: rgba(64, 158, 255, 0.08);
+  background-color: #f1f5f9;
 }
 
 .chat-item.active {
-  background: rgba(64, 158, 255, 0.12);
-  border-left: 3px solid #409eff;
+  background-color: #e0f2fe;
+  border-left: 3px solid #3b82f6;
 }
 
-.avatar-container {
+.avatar-wrapper {
   position: relative;
   margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.chat-avatar {
+  background: #cbd5e1;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.unread-dot {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  font-size: 10px;
+  padding: 0 4px;
+  height: 16px;
+  line-height: 16px;
+  border-radius: 8px;
+  min-width: 16px;
+  text-align: center;
+  border: 2px solid #f8fafc;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
 }
 
 .chat-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
 }
 
-.chat-header {
+.chat-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
 }
 
 .chat-name {
-  font-weight: 500;
   font-size: 14px;
-  color: #2c3e50;
+  font-weight: 500;
+  color: #1e293b;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -226,56 +234,66 @@ const scrollToBottom = () => {
 
 .chat-time {
   font-size: 12px;
-  color: #909399;
+  color: #94a3b8;
   flex-shrink: 0;
   margin-left: 8px;
 }
 
-.chat-content {
+.chat-content-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  min-height: 20px; /* 确保容器高度一致 */
 }
 
 .last-message {
   font-size: 13px;
-  color: #606266;
+  color: #64748b;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  flex: 1;
-  line-height: 1.2;
-  margin-right: 8px; /* 为徽章预留空间 */
+  line-height: 1.4;
 }
 
-.message-badge {
-  flex-shrink: 0;
-  width: 26px; /* 固定宽度，确保布局稳定 */
+/* 右侧主区域 */
+.chat-main-area {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  background-color: #ffffff;
 }
 
-:deep(.el-badge__content) {
-  background-color: #f56c6c;
-  border: none;
-  font-size: 11px;
-  height: 18px;
-  line-height: 18px;
-  min-width: 18px;
-  padding: 0 4px;
-}
-
-/* 右侧主题头部的字体样式 */
-.header-container {
+.chat-header-bar {
+  height: 60px;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0 20px;
+  background-color: #ffffff;
   display: flex;
   align-items: center;
-  background: linear-gradient(120deg, #f3fbfe 0%, #eafaf6 100%);
-  font-weight: 500;
-  font-size: 25px;
-  letter-spacing: -1px;
-  height: 60px;
-  min-height: 60px;
-  max-height: 60px;
+}
+
+.header-content {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.current-chat-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.chat-content-area {
+  flex: 1;
+  padding: 0;
+  background-color: #f8fafc;
+  overflow: hidden;
+}
+
+.chat-input-area {
+  height: auto !important;
+  min-height: 140px;
+  padding: 0;
+  border-top: 1px solid #e2e8f0;
+  background-color: #ffffff;
 }
 </style>

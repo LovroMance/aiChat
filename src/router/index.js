@@ -49,6 +49,11 @@ const routes = [
         name: 'userInfo',
         component: () => import('@/views/user/user-info.vue'),
       },
+      {
+        path: '/aiChat',
+        name: 'aiChat',
+        component: () => import('@/views/ai/index.vue'),
+      },
     ],
   },
 ]

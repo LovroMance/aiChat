@@ -46,8 +46,10 @@ export const putCreateGroupMessageRecord = async (groupForm) => {
 export const putRecord = async (messageData) => {
   const unreadMessagesStore = useUnreadMessagesStore()
 
-  var passObj = unreadMessagesStore.unreadMessagesMap.get(messageData.thread_id) || null
-  console.log('passObj', passObj)
+  const existingRecord = unreadMessagesStore.getUnreadRecord(messageData.thread_id)
+  console.log('passObj', existingRecord)
+
+  let passObj = existingRecord
 
   if (!passObj?.thread_name) {
     const { data } = await getThreadInfo({ thread_id: messageData.thread_id })
@@ -70,7 +72,7 @@ export const putRecord = async (messageData) => {
   console.log(valueObj)
   // 如果当前在选中聊天中，则不添加未读消息数
   const threadStore = useThreadStore()
-  if (threadStore.activeThread.value?.thread_id === messageData.thread_id) {
+  if (threadStore.activeThread?.thread_id === messageData.thread_id) {
     valueObj.unreadCount = 0
   }
 
@@ -85,7 +87,7 @@ export const putRecord = async (messageData) => {
 export const putWholeRecord = async (data) => {
   const unreadMessagesStore = useUnreadMessagesStore()
 
-  var passObj = unreadMessagesStore.unreadMessagesMap.get(data.thread_id) || null
+  const passObj = unreadMessagesStore.getUnreadRecord(data.thread_id)
   const passCount = passObj ? passObj.unreadCount : 0
   // TODO: 这里没处理ai  ⭐⭐⭐
   var generalObj = {
@@ -111,8 +113,6 @@ export const putWholeRecord = async (data) => {
     }
   }
 
-
-
   // indexedDB更新
   await putData(UNREAD_MESSAGES_STORE, valueObj)
   // 仓库更新
@@ -123,11 +123,8 @@ export const putWholeRecord = async (data) => {
 
 export const selectedChatUpdate = async (thread_id) => {
   const unreadMessagesStore = useUnreadMessagesStore()
-  var passObj = unreadMessagesStore.unreadMessagesMap.get(thread_id) || null
-  const valueObj = {
-    ...passObj,
-    unreadCount: 0,
-  }
+  const valueObj = unreadMessagesStore.markThreadAsRead(thread_id)
+  if (!valueObj) return
   // indexedDB更新
   await putData(UNREAD_MESSAGES_STORE, valueObj)
   // 仓库更新

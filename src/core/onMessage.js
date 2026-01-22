@@ -2,17 +2,19 @@ import { MESSAGES_STORE, addData } from '@/utils/indexedDB'
 import { useMessageStore, useThreadStore } from '@/stores'
 import { putRecord } from '@/core/unreadMessage'
 
+// 统一处理 WebSocket 收到的消息：先持久化，再按当前会话决定是否立即展示，最后更新未读
 export const receiveMessage = async (data) => {
   const messageStore = useMessageStore()
   const threadStore = useThreadStore()
-  if (threadStore.activeThread?.value?.thread_id !== data.thread_id) {
-    // 不是当前激活的线程
-    await addData(MESSAGES_STORE, data) // 将消息添加到IndexedDB
-    putRecord(data)
-  } else {
-    // 是当前激活的线程
-    await addData(MESSAGES_STORE, data) // 将消息添加到IndexedDB
-    messageStore.addOnlineMessage(data) // 将消息添加到本地内存store中
-    putRecord(data) // 将消息记录到未读消息表中
+
+  try {
+    await addData(MESSAGES_STORE, data)
+    const isActive = threadStore.activeThread?.thread_id === data.thread_id
+    if (isActive) {
+      messageStore.addOnlineMessage(data)
+    }
+    await putRecord(data)
+  } catch (error) {
+    console.error('处理收到的消息失败:', error)
   }
 }

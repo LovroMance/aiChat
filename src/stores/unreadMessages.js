@@ -4,7 +4,7 @@ import { UNREAD_MESSAGES_STORE, getAllData } from '@/utils/indexedDB'
 
 export const useUnreadMessagesStore = defineStore('unreadMessages', () => {
   const unreadMessagesMap = ref(new Map())
-  const unreadMsgId = ref(0)  // 避免重复添加未读消息数
+  const unreadMsgId = ref(0) // 避免重复添加未读消息数
 
   const sortedUnreadMessagesMap = computed(() => {
     // 1. 将 Map 转换为数组
@@ -18,10 +18,17 @@ export const useUnreadMessagesStore = defineStore('unreadMessages', () => {
     return chatArray
   })
 
-
   // 更新未读消息
   const updateUnreadMessage = (threadId, messageData) => {
     unreadMessagesMap.value.set(threadId, messageData)
+  }
+
+  const getUnreadRecord = (threadId) => unreadMessagesMap.value.get(threadId) || null
+
+  const markThreadAsRead = (threadId) => {
+    const exist = getUnreadRecord(threadId)
+    if (!exist) return null
+    return { ...exist, unreadCount: 0 }
   }
 
   // 从 IndexedDB 加载
@@ -45,5 +52,7 @@ export const useUnreadMessagesStore = defineStore('unreadMessages', () => {
     sortedUnreadMessagesMap,
     loadUnreadMessagesFromDB,
     updateUnreadMessage,
+    getUnreadRecord,
+    markThreadAsRead,
   }
 })
