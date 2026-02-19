@@ -27,6 +27,8 @@ const { userInfo, editForm, isEditing, handleEdit, handleFileSelected, handleSav
             </div>
           </div>
 
+          <button @click="console.log(userInfo);">eee</button>
+
           <h2 class="user-name">{{ userInfo.username }}</h2>
           <div class="user-tags">
             <span class="tag-level">Lv.{{ userInfo.level }}</span>

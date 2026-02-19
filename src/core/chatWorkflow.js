@@ -45,14 +45,12 @@ export const initChatPanel = async () => {
 export const loadThreadChat = async (thread_id) => {
   const messageStore = useMessageStore()
   // 重置消息列表，防止切换时显示旧数据
-  messageStore.onlineMessages = []
-  messageStore.beforeMessages = []
-  messageStore.offlineMessages = []
+  messageStore.resetThread(thread_id)
 
   // 根据threadId获取本地历史消息
-  messageStore.beforeMessages = await getMessagesByThreadId(MESSAGES_STORE, thread_id)
+  const localHistory = await getMessagesByThreadId(MESSAGES_STORE, thread_id)
   // 获取最后一条本地消息的msg_id
-  const lastMessage = messageStore.beforeMessages[messageStore.beforeMessages.length - 1]
+  const lastMessage = localHistory[localHistory.length - 1]
   existing_id = lastMessage?.msg_id ?? 0
   // 根据threadId获取离线消息
   const { data } = await getPartMessages({
@@ -60,7 +58,9 @@ export const loadThreadChat = async (thread_id) => {
     existing_id,
   })
   const appendList = data ? data : []
-  messageStore.offlineMessages.push(...appendList)
+
+  messageStore.setHistory(thread_id, localHistory)
+  messageStore.appendOffline(thread_id, appendList)
   // 更新未读消息记录(包括仓库和db)
   await selectedChatUpdate(thread_id)
 }

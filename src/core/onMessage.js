@@ -11,7 +11,7 @@ export const receiveMessage = async (data) => {
     await addData(MESSAGES_STORE, data)
     const isActive = threadStore.activeThread?.thread_id === data.thread_id
     if (isActive) {
-      messageStore.addOnlineMessage(data)
+      messageStore.addOnline(data.thread_id, data)
     }
     await putRecord(data)
   } catch (error) {

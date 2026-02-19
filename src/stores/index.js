@@ -9,4 +9,5 @@ export * from './unreadMessages'
 export * from './thread'
 
 // AI聊天部分
-export * from './aiMessage'
+export * from './ai'
+export * from './aiMessages'

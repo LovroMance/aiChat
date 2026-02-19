@@ -1,10 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
-// 配置路由规则
+import { useUserStore } from '@/stores'
+import pinia from '@/stores'
+import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
+
 const routes = [
-  {
-    path: '/test',
-    component: () => import('@/components/file/uploadAvatar.vue'),
-  },
   {
     path: '/',
     redirect: '/login',
@@ -13,46 +12,62 @@ const routes = [
     path: '/login',
     name: 'login',
     component: () => import('@/views/authentication/login.vue'),
+    meta: { title: '登录' },
   },
   {
     path: '/register',
     name: 'register',
     component: () => import('@/views/authentication/register.vue'),
+    meta: { title: '注册' },
   },
   {
-    path: '/userHome',
+    path: '/user-home',
     name: 'userHome',
     component: () => import('@/views/home/user-home.vue'),
+    meta: { title: '个人主页', requiresAuth: true },
+    alias: ['/userHome'],
   },
   {
-    path: '/HomeLayout',
+    path: '/home-layout',
     name: 'HomeLayout',
     component: () => import('@/layout/home-layout.vue'),
+    meta: { requiresAuth: true },
+    alias: ['/HomeLayout'],
     children: [
       {
-        path: '/FriendGroupList',
+        path: 'friend-group-list',
         name: 'FriendGroupList',
         component: () => import('@/views/user/friend-group-list.vue'),
+        meta: { title: '好友与群组', requiresAuth: true },
+        alias: ['/FriendGroupList'],
       },
       {
-        path: '/userSetting',
+        path: 'user-setting',
         name: 'userSetting',
         component: () => import('@/views/user/user-setting.vue'),
+        meta: { title: '设置', requiresAuth: true },
+        alias: ['/userSetting'],
       },
       {
-        path: '/userChat',
+        path: 'user-chat',
         name: 'userChat',
         component: () => import('@/views/user/user-chat.vue'),
+        meta: { title: '聊天', requiresAuth: true },
+        alias: ['/userChat'],
       },
-      {
-        path: '/userInfo',
+      { 
+        path: 'user-info',
         name: 'userInfo',
         component: () => import('@/views/user/user-info.vue'),
+        meta: { title: '个人信息', requiresAuth: true },
+        alias: ['/userInfo'],
       },
       {
-        path: '/aiChat',
+        path: 'ai-chat',
         name: 'aiChat',
-        component: () => import('@/views/ai/index.vue'),
+        component: () => import('@/views/ai/ai-chat.vue'),
+        meta: { title: 'AI 聊天', requiresAuth: true },
+        alias: ['/aiChat'],
       },
     ],
   },
@@ -61,6 +76,26 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+router.beforeEach((to) => {
+  const userStore = useUserStore(pinia)
+  const stored = getStorage(USER_LOGIN_INFO)
+  const token = userStore.token || stored?.token
+
+  if (to.meta?.requiresAuth && !token) {
+    return {
+      path: '/login',
+      query: { redirect: to.fullPath },
+    }
+  }
+  return true
+})
+
+router.afterEach((to) => {
+  const base = import.meta.env?.VITE_APP_TITLE || 'aiChat'
+  const title = to.meta?.title ? `${to.meta.title} - ${base}` : base
+  document.title = title
 })
 
 export default router

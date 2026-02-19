@@ -1,10 +1,14 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { THREADS_STORE, getAllData } from '@/utils/indexedDB'
 
 export const useThreadStore = defineStore('thread', () => {
-  const activeThread = ref(null) // 选中的聊天线程
   const threads = ref(new Map()) // thread_id -> 线程对象
+  const activeThreadId = ref(null) // 当前选中线程 id
+  const activeThread = computed(() => {
+    if (!activeThreadId.value) return null
+    return threads.value.get(activeThreadId.value) || null
+  })
 
   const setThreads = (list) => {
     threads.value = new Map()
@@ -21,9 +25,17 @@ export const useThreadStore = defineStore('thread', () => {
     threads.value.set(thread.thread_id, thread)
   }
 
+  const setActiveThreadId = (threadId) => {
+    activeThreadId.value = threadId || null
+  }
+
   const setActiveThread = (thread) => {
-    activeThread.value = thread || null
-    console.log('eee', activeThread.value);
+    if (!thread?.thread_id) {
+      activeThreadId.value = null
+      return
+    }
+    threads.value.set(thread.thread_id, thread)
+    activeThreadId.value = thread.thread_id
   }
 
   const loadThreadsFromDB = async () => {
@@ -42,9 +54,11 @@ export const useThreadStore = defineStore('thread', () => {
 
   return {
     threads,
+    activeThreadId,
     activeThread,
     setThreads,
     upsertThread,
+    setActiveThreadId,
     setActiveThread,
     loadThreadsFromDB,
   }

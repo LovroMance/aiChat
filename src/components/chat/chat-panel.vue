@@ -2,8 +2,8 @@
 import { useChatPanel } from '@/composables/chat/useChatPanel'
 import { useMessageStore } from '@/stores'
 import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
-import chatRecord from '@/components/chat/chatRecord.vue'
-import { Loading } from '@element-plus/icons-vue'
+import chatRecord from '@/components/chat/chat-record.vue'
+import LoadingView from '@/components/feedback/LoadingView.vue'
 
 const messageStore = useMessageStore()
 const userUid = getStorage(USER_LOGIN_INFO).uid
@@ -22,8 +22,7 @@ defineExpose({
   <!-- 绑定 ref -->
   <el-scrollbar ref="scrollbarRef" class="chat-panel-scroll">
     <div v-if="isLoading" class="loading-container">
-      <el-icon class="is-loading" :size="24"><Loading /></el-icon>
-      <span style="margin-top: 8px; color: #909399; font-size: 14px">加载中...</span>
+      <LoadingView />
     </div>
     <div v-else class="chat-panel-content">
       <!-- 过去的聊天记录 -->

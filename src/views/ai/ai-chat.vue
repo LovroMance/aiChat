@@ -1,5 +1,4 @@
 <script setup>
-import { ref, reactive, nextTick } from 'vue'
 import {
   Plus,
   Search,
@@ -11,89 +10,33 @@ import {
   MoreFilled,
 } from '@element-plus/icons-vue'
 import createGroup from '@/components/chat/group-create.vue'
+import { useAiChat } from '@/composables/ai/useAiChat'
+import { useAiChatViewModel } from '@/composables/ai/useAiChatViewModel'
 
-// Mock Data for Sidebar
-const chatHistory = reactive([
-  { id: 1, title: '关于 Vue3 的性能优化', date: '今天' },
-  { id: 2, title: '解释量子纠缠', date: '昨天' },
-  { id: 3, title: '写一个 Python 爬虫脚本', date: '前天' },
-  { id: 4, title: '翻译这段英文到中文', date: '一周前' },
-])
+const { aiDialogAttrs, handleCreateAiChat } = useAiChat()
+const {
+  chatHistory,
+  messages,
+  inputMessage,
+  isSearching,
+  isDeepThinking,
+  isCreateDialogOpen,
+  toggleSearch,
+  toggleDeepThinking,
+  handleDeleteChat,
+  handleSelectChat,
+  selectedChatId,
+  scrollbarRef,
+  innerRef,
+  handleSend,
+  handleFileUpload,
+} = useAiChatViewModel()
 
-// Mock Data for Messages
-const messages = reactive([
-  {
-    id: 1,
-    role: 'ai',
-    content:
-      '你好！我是你的 AI 助手。有什么我可以帮你的吗？你可以问我任何问题，或者让我帮你处理文档。',
-    time: '10:00',
-  },
-])
-
-const inputMessage = ref('')
-const isSearching = ref(false)
-const isDeepThinking = ref(false)
-const isCreateDialogOpen = ref(false)
-
-// 切换功能
-const toggleSearch = () => {
-  isSearching.value = !isSearching.value
-}
-
-const toggleDeepThinking = () => {
-  isDeepThinking.value = !isDeepThinking.value
-}
-
-// 删除对话
-const handleDeleteChat = (chatId) => {
-  const index = chatHistory.findIndex((item) => item.id === chatId)
-  if (index > -1) {
-    chatHistory.splice(index, 1)
+const handleCreateAiChatSubmit = async (formData) => {
+  const ok = await handleCreateAiChat(formData)
+  if (ok) {
+    isCreateDialogOpen.value = false
   }
-}
-
-// Scroll to bottom logic
-const scrollbarRef = ref(null)
-const innerRef = ref(null)
-
-const scrollToBottom = async () => {
-  await nextTick()
-  if (scrollbarRef.value) {
-    scrollbarRef.value.setScrollTop(innerRef.value.clientHeight)
-  }
-}
-
-const handleSend = () => {
-  if (!inputMessage.value.trim()) return
-
-  // Add user message
-  messages.push({
-    id: Date.now(),
-    role: 'user',
-    content: inputMessage.value,
-    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-  })
-
-  const tempMsg = inputMessage.value
-  inputMessage.value = ''
-  scrollToBottom()
-
-  // Simulate AI response
-  setTimeout(() => {
-    messages.push({
-      id: Date.now() + 1,
-      role: 'ai',
-      content: `收到你的消息："${tempMsg}"。 \n\n(这是一个模拟回复。实际功能需要对接后端 API)`,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    })
-    scrollToBottom()
-  }, 1000)
-}
-
-const handleFileUpload = () => {
-  // Logic to trigger file input
-  console.log('Upload file clicked')
 }
 </script>
 
@@ -111,18 +54,26 @@ const handleFileUpload = () => {
       <!-- Create Dialog -->
       <createGroup
         v-if="isCreateDialogOpen"
-        title="新建智能体对话"
-        :config="aiDialogConfig"
+        :title="aiDialogAttrs.title"
+        :config="aiDialogAttrs.config"
+        :show-init-setting="true"
+        :show-avatar="false"
         @close="isCreateDialogOpen = false"
-        @submit="handleChatCreated"
+        @submit="handleCreateAiChatSubmit"
       />
 
       <div class="history-list">
         <div class="history-group">
           <div class="group-title">最近</div>
-          <div v-for="item in chatHistory" :key="item.id" class="history-item">
+          <div
+            v-for="item in chatHistory"
+            :key="item.id"
+            class="history-item"
+            :class="{ 'is-active': item.id === selectedChatId }"
+            @click="handleSelectChat(item.id)"
+          >
             <span class="item-title">{{ item.title }}</span>
-            <el-dropdown trigger="click" placement="bottom-end">
+            <el-dropdown trigger="click" placement="bottom-end" @click.stop>
               <el-icon class="item-more"><MoreFilled /></el-icon>
               <template #dropdown>
                 <el-dropdown-menu>
@@ -336,6 +287,16 @@ const handleFileUpload = () => {
 .history-item:hover {
   background-color: #f1f5f9;
   color: #1e293b;
+}
+
+.history-item.is-active {
+  background-color: #eff6ff;
+  color: #1e40af;
+}
+
+.history-item.is-active .item-more {
+  opacity: 1;
+  color: #3b82f6;
 }
 
 .item-icon {

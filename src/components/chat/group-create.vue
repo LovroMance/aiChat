@@ -7,7 +7,7 @@ import UploadAvatar from '@/components/file/uploadAvatar.vue'
 import { showErrorTip } from '@/utils/messageTips'
 
 // 定义 props
-defineProps({
+const props = defineProps({
   title: {
     type: String,
     default: '创建群聊',
@@ -15,12 +15,22 @@ defineProps({
   config: {
     type: Object,
     default: () => ({
+      avatarLabel: '群头像',
       nameLabel: '群名称',
       namePlaceholder: '请输入群聊名称',
       descriptionLabel: '群简介',
       descriptionPlaceholder: '请输入群聊简介（可选）',
-      avatarLabel: '群头像',
+      initLabel: '初始化设置',
+      initOptions: [{ label: '默认助手', value: 'default_assistant' }],
     }),
+  },
+  showAvatar: {
+    type: Boolean,
+    default: true,
+  },
+  showInitSetting: {
+    type: Boolean,
+    default: false,
   },
 })
 
@@ -31,6 +41,7 @@ const emit = defineEmits(['close', 'submit'])
 const groupForm = ref({
   name: '',
   description: '',
+  initSetting: props.showInitSetting ? props.config.initOptions?.[0]?.value || '' : '',
   avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png', // 默认头像
 })
 
@@ -45,7 +56,6 @@ const rules = {
     { required: true, message: '请输入名称', trigger: 'blur' },
     { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' },
   ],
-  description: [{ max: 500, message: '内容不能超过 500 个字符', trigger: 'blur' }],
 }
 
 // 关闭弹窗
@@ -124,7 +134,7 @@ onUnmounted(() => {
           class="group-form"
         >
           <!-- 头像上传 -->
-          <el-form-item :label="config.avatarLabel || '头像'">
+          <el-form-item v-if="showAvatar" :label="config.avatarLabel || '头像'">
             <div class="avatar-upload-wrapper">
               <UploadAvatar
                 v-model="groupForm.avatar"
@@ -149,8 +159,18 @@ onUnmounted(() => {
             />
           </el-form-item>
 
-          <!-- 简介/设定 -->
-          <el-form-item :label="config.descriptionLabel" prop="description">
+          <!-- 初始化设置 / 简介 -->
+          <el-form-item v-if="showInitSetting" :label="config.initLabel" prop="initSetting">
+            <el-select v-model="groupForm.initSetting" filterable class="init-select">
+              <el-option
+                v-for="option in config.initOptions"
+                :key="option.value"
+                :label="option.label"
+                :value="option.value"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item v-else :label="config.descriptionLabel" prop="description">
             <el-input
               v-model="groupForm.description"
               type="textarea"
