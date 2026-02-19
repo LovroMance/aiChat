@@ -125,10 +125,9 @@ export const selectedChatUpdate = async (thread_id) => {
   const unreadMessagesStore = useUnreadMessagesStore()
   const valueObj = unreadMessagesStore.markThreadAsRead(thread_id)
   if (!valueObj) return
-  // indexedDB更新
+  // indexedDB 更新（store 已同步）
   await putData(UNREAD_MESSAGES_STORE, valueObj)
-  // 仓库更新
-  unreadMessagesStore.updateUnreadMessage(valueObj.thread_id, valueObj)
   console.log('更新未读消息成功:', unreadMessagesStore.unreadMessagesMap)
   console.log('valueObj', valueObj)
 }
+  

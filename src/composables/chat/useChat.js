@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useThreadStore, useUnreadMessagesStore } from '@/stores'
 import { initChatPanel, loadThreadChat } from '@/core/chatWorkflow'
@@ -45,17 +45,29 @@ export function useChat() {
       return
     }
 
+    // 更简单的切换逻辑：使用组件的 loading 与滚动方法，避免直接操作 DOM
     loading.value = true
     try {
-      // 更新活跃线程（通过 store 方法，保持 ref 不被覆盖）
-      threadStore.setActiveThread(chat)
+      if (chatPanelRef && typeof chatPanelRef.setLoading === 'function') {
+        chatPanelRef.setLoading(true)
+      }
 
-      // 加载聊天内容（Core 层编排）
+      // 更新活跃线程并加载消息
+      threadStore.setActiveThread(chat)
       await loadThreadChat(chat.thread_id)
+
+      // 确保渲染后滚动到底部
+      await nextTick()
+      if (chatPanelRef && typeof chatPanelRef.scrollToBottom === 'function') {
+        chatPanelRef.scrollToBottom()
+      }
     } catch (error) {
       console.error('加载聊天失败:', error)
       showErrorTip('加载聊天失败，请重试')
     } finally {
+      if (chatPanelRef && typeof chatPanelRef.setLoading === 'function') {
+        chatPanelRef.setLoading(false)
+      }
       loading.value = false
     }
   }

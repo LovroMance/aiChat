@@ -3,10 +3,9 @@ import { onMounted, ref } from 'vue'
 import { CirclePlus, MoreFilled } from '@element-plus/icons-vue'
 import { useChat } from '@/composables/chat/useChat'
 import { formatTimeHour } from '@/utils/format'
-import chatPanel from '@/views/chat/chat-panel.vue'
-import chatInput from '@/views/chat/chat-input.vue'
+import chatPanel from '@/components/chat/chat-panel.vue'
+import chatInput from '@/components/chat/chat-input.vue'
 import createGroup from '@/components/chat/group-create.vue'
-
 // ✅ 使用 Composables 替代之前的复杂逻辑
 const {
   activeThread,

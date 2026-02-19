@@ -2195,3 +2195,54 @@ Week 7: 细节优化
 3. ⭐⭐⭐⭐☆ 建立 Store-DB 同步机制
 4. ⭐⭐⭐⭐☆ 拆分大组件
 5. ⭐⭐⭐☆☆ 使用策略模式提升扩展性
+
+
+
+
+
+
+
+# 重构路线图（精简版）
+
+## 当前代码快照（基于实际文件）
+
+- Store：message/thread/unread 已切到 Map 结构，提供 resetThread/setHistory/appendOffline/addOnline 等方法；thread 有 activeThreadId/activeThread；unreadMessages 只管未读计数 + 末条元信息。
+- Core：chatWorkflow 通过 store 方法装配历史与离线；onMessage 先落库再按激活线程追加在线消息；unreadMessage 仍集成“取元信息 + 构造记录 + DB/Store 双写”，且 AI 类型未处理。
+- 网络层：request.js 仍硬编码 baseURL 且未启用 env；websocket.js 将 token 放入 URL query，无重连/心跳；当前仓库缺失 .env.* 文件。
+- 路由：存在 /test 测试路由，路径命名混杂（/userHome、/FriendGroupList 等），无登录鉴权守卫与标题管理。
+- 视图与复用：chat/ai 页面逻辑仍在视图内，缺少 useThreadList/useMessageInput/useWebSocket 等组合式抽象，chat-panel/chat-input 仍在 views 目录。
+
+## P0（立即处理：配置与一致性）
+
+- 环境配置：新增 .env.development/.env.production 暴露 VITE_APP_API_BASE、VITE_APP_WS_BASE，request/websocket 读取 env，移除硬编码。
+- WebSocket 认证：避免 token 拼接 URL，改子协议/头/临时签名；增加断线重连与心跳占位，集中化 WS 初始化。
+- 未读逻辑收敛：重构 core/unreadMessage.js 为“获取元信息 → 构造记录 → 单点持久化”三步，覆盖 AI 类型；活跃线程未读数归零。
+- 路由卫生：移除 /test，统一路径 kebab-case，添加登录鉴权守卫与标题设置。
+
+## P1（结构与复用）
+
+- Composables：
+  - useThreadList：加载/选择线程，合并未读。
+  - useMessageInput：校验 activeThread，提供发送接口并返回 ref。
+  - useWebSocket：连接/心跳/重连/发送队列与状态暴露。
+- 组件拆分：迁移 chat-panel/chat-input 至 components/chat；拆分 views/ai/index.vue 为容器 + Sidebar/Header/MessageList/Input。
+- API 层：统一响应拦截与错误提示，移除模块级 token 缓存，保持单一 token 来源。
+
+## P2（质量与规范）
+
+- 错误处理：request 响应拦截实现业务失败提示、401 登出/刷新；WS onerror/onclose 做降级提示与重连节流。
+- 命名与常量：新增 constants（线程/消息类型、路由名称、魔法数），替换散落字符串。
+- 测试与钩子：引入 Vitest 覆盖 store 核心方法与纯函数；配置 lint-staged + husky 预提交检查。
+
+## P3（性能与文档）
+
+- 性能：消息列表虚拟滚动；Element Plus 图标按需导入；代码分割与资源预加载。
+- 文档：补 README（运行/配置），API 与组件用法，重构决策记录。
+
+## 重点文件对照
+
+- Stores：[src/stores/message.js](src/stores/message.js)，[src/stores/thread.js](src/stores/thread.js)，[src/stores/unreadMessages.js](src/stores/unreadMessages.js)
+- Core：聊天编排 [src/core/chatWorkflow.js](src/core/chatWorkflow.js)，消息入站 [src/core/onMessage.js](src/core/onMessage.js)，未读待收敛 [src/core/unreadMessage.js](src/core/unreadMessage.js)
+- 网络层：HTTP [src/utils/request.js](src/utils/request.js)，WS [src/utils/websocket.js](src/utils/websocket.js)
+- 路由：配置与命名 [src/router/index.js](src/router/index.js)
+│   ├── initApp.js              # 应用初始化

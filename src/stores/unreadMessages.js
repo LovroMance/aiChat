@@ -5,9 +5,31 @@ import { UNREAD_MESSAGES_STORE, getAllData } from '@/utils/indexedDB'
 export const useUnreadMessagesStore = defineStore('unreadMessages', () => {
   const unreadMessagesMap = ref(new Map())
   const unreadMsgId = ref(0) // 避免重复添加未读消息数
+  const version = ref(0) // Map 原位变更的响应触发
+
+  const setMap = (map) => {
+    unreadMessagesMap.value = map
+    version.value++
+  }
+
+  const upsert = (threadId, record) => {
+    if (!threadId || !record) return
+    const next = new Map(unreadMessagesMap.value)
+    next.set(threadId, record)
+    setMap(next)
+  }
+
+  const remove = (threadId) => {
+    if (!threadId) return
+    if (!unreadMessagesMap.value.has(threadId)) return
+    const next = new Map(unreadMessagesMap.value)
+    next.delete(threadId)
+    setMap(next)
+  }
 
   const sortedUnreadMessagesMap = computed(() => {
     // 1. 将 Map 转换为数组
+    version.value // 依赖版本，保证 Map 变更触发
     const chatArray = Array.from(unreadMessagesMap.value.values())
     // 2. 对数组进行排序
     chatArray.sort((a, b) => {
@@ -20,7 +42,7 @@ export const useUnreadMessagesStore = defineStore('unreadMessages', () => {
 
   // 更新未读消息
   const updateUnreadMessage = (threadId, messageData) => {
-    unreadMessagesMap.value.set(threadId, messageData)
+    upsert(threadId, messageData)
   }
 
   const getUnreadRecord = (threadId) => unreadMessagesMap.value.get(threadId) || null
@@ -28,18 +50,25 @@ export const useUnreadMessagesStore = defineStore('unreadMessages', () => {
   const markThreadAsRead = (threadId) => {
     const exist = getUnreadRecord(threadId)
     if (!exist) return null
-    return { ...exist, unreadCount: 0 }
+    const next = { ...exist, unreadCount: 0 }
+    upsert(threadId, next)
+    return next
+  }
+
+  const clearThread = (threadId) => {
+    remove(threadId)
   }
 
   // 从 IndexedDB 加载
   const loadUnreadMessagesFromDB = async () => {
     try {
       const unreadMessages = await getAllData(UNREAD_MESSAGES_STORE)
-      unreadMessagesMap.value.clear()
+      const next = new Map()
       unreadMessages.forEach((message) => {
-        unreadMessagesMap.value.set(message.thread_id, message)
+        next.set(message.thread_id, message)
       })
-      console.log('加载本地数据unreadMessages完成', unreadMessagesMap.value)
+      setMap(next)
+      console.log('加载本地数据unreadMessages完成', next)
     } catch (error) {
       console.error('从 IndexedDB 加载未读消息失败:', error)
       throw error
@@ -49,10 +78,12 @@ export const useUnreadMessagesStore = defineStore('unreadMessages', () => {
   return {
     unreadMessagesMap,
     unreadMsgId,
+    version,
     sortedUnreadMessagesMap,
     loadUnreadMessagesFromDB,
     updateUnreadMessage,
     getUnreadRecord,
     markThreadAsRead,
+    clearThread,
   }
 })

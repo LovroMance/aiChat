@@ -3,7 +3,7 @@ import { useUserStore } from '@/stores/index'
 import { USER_LOGIN_INFO, getStorage } from './localstorage'
 const token = getStorage(USER_LOGIN_INFO)?.token
 
-const baseURL = 'http://localhost:10086'
+const baseURL = import.meta.env?.VITE_APP_API_BASE
 
 const instance = axios.create({
   // baseURL,
