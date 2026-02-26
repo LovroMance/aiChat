@@ -8,12 +8,16 @@ export const receiveMessage = async (data) => {
   const threadStore = useThreadStore()
 
   try {
-    await addData(MESSAGES_STORE, data)
-    const isActive = threadStore.activeThread?.thread_id === data.thread_id
-    if (isActive) {
-      messageStore.addOnline(data.thread_id, data)
+    const normalized = {
+      msg_id: data?.msg_id ?? data?.message_id ?? Date.now(),
+      ...data,
     }
-    await putRecord(data)
+    await addData(MESSAGES_STORE, normalized)
+    const isActive = threadStore.activeThread?.thread_id === normalized.thread_id
+    if (isActive) {
+      messageStore.addOnline(normalized.thread_id, normalized)
+    }
+    await putRecord(normalized)
   } catch (error) {
     console.error('处理收到的消息失败:', error)
   }
