@@ -28,6 +28,7 @@ const {
   selectedChatId,
   scrollbarRef,
   innerRef,
+  handleScrollbarScroll,
   handleSend,
   handleFileUpload,
 } = useAiChatViewModel()
@@ -112,7 +113,7 @@ const handleCreateAiChatSubmit = async (formData) => {
 
       <!-- Messages -->
       <div class="messages-container">
-        <el-scrollbar ref="scrollbarRef">
+        <el-scrollbar ref="scrollbarRef" @scroll="handleScrollbarScroll">
           <div ref="innerRef" class="messages-inner">
             <div
               v-for="msg in messages"
@@ -120,13 +121,16 @@ const handleCreateAiChatSubmit = async (formData) => {
               class="message-wrapper"
               :class="{ 'is-user': msg.role === 'user' }"
             >
-              <div class="avatar">
-                <div v-if="msg.role === 'ai'" class="ai-avatar">AI</div>
-                <div v-else class="user-avatar">Me</div>
-              </div>
               <div class="message-content">
                 <div class="bubble">
-                  {{ msg.content }}
+                  <div
+                    v-if="msg.role === 'assistant' && msg.reasoning_content"
+                    class="reasoning-block"
+                  >
+                    <div class="reasoning-title">思考过程</div>
+                    <div class="reasoning-text">{{ msg.reasoning_content }}</div>
+                  </div>
+                  <div class="answer-text">{{ msg.content }}</div>
                 </div>
                 <div class="time">{{ msg.time }}</div>
               </div>
@@ -445,41 +449,6 @@ const handleCreateAiChatSubmit = async (formData) => {
   flex-direction: row-reverse;
 }
 
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.ai-avatar {
-  background: linear-gradient(135deg, #0ea5e9, #2563eb);
-  color: white;
-  width: 100%;
-  height: 100%;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.user-avatar {
-  background: linear-gradient(135deg, #f59e0b, #ea580c);
-  color: white;
-  width: 100%;
-  height: 100%;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .message-content {
   margin: 0 16px;
   max-width: 75%;
@@ -493,6 +462,30 @@ const handleCreateAiChatSubmit = async (formData) => {
   white-space: pre-wrap;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   position: relative;
+}
+
+.reasoning-block {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background-color: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.reasoning-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.answer-text {
+  white-space: pre-wrap;
 }
 
 .message-wrapper:not(.is-user) .bubble {

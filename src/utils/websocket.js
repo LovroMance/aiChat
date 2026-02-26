@@ -1,6 +1,7 @@
 import { baseURL } from '@/utils/request'
 import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
 import { receiveMessage } from '@/core/onMessage'
+import { receiveAiMessage } from '@/core/onAiMessage'
 
 export const chatPath = '/ws/chat' // 用户聊天（私聊/群聊）
 
@@ -48,9 +49,16 @@ const bindEvents = async () => {
       // 尝试解析 JSON
       try {
         const data = JSON.parse(event.data) // 把JSON字符串转换为对象
+        if (data && Object.prototype.hasOwnProperty.call(data, 'model')) return
         console.log('收到消息:', data)
         // 处理收到消息逻辑
-        receiveMessage(data)
+        if (isAiMessage(data)) {
+          console.log('AI消息处理')
+          receiveAiMessage(data)
+        } else {
+          console.log('普通消息处理')
+          receiveMessage(data)
+        }
       } catch {
         // 如果不是 JSON 格式，直接输出原始消息
         console.log('收到消息:', event.data)
@@ -71,6 +79,24 @@ const bindEvents = async () => {
     console.error('WebSocket连接错误:', error)
     isConnected = false
   }
+}
+
+const isAiMessage = (data) => {
+  //TODO： 这里到时候统一ai的返回有一个类型判断是ai的回复， 然后统一一下这里的判断条件
+  if (!data) return false
+  // 流式：{ message, request_id, thread_id }
+  if (data.message && data.request_id && data.thread_id) return true
+  // 完成：{ is_complete, message_id, thread_id }
+  if (data.is_complete === true && data.thread_id) return true
+  // 完成思考字段：complete_reason
+  if (
+    data.complete_reason !== undefined &&
+    data.complete_reason !== null &&
+    data.complete_reason !== ''
+  ) {
+    return true
+  }
+  return false
 }
 
 export const sendMessage = (message) => {

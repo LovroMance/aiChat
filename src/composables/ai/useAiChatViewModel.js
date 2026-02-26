@@ -1,4 +1,4 @@
-import { ref, nextTick, onMounted, computed } from 'vue'
+import { ref, nextTick, onMounted, computed, watch } from 'vue'
 import { useAiStore } from '@/stores/ai'
 import { useAiMessagesStore } from '@/stores/aiMessages'
 import { sendMessage } from '@/utils/websocket'
@@ -21,9 +21,12 @@ export const useAiChatViewModel = () => {
   const isSearching = ref(false)
   const isDeepThinking = ref(false)
   const isCreateDialogOpen = ref(false)
+  const isAutoScrollEnabled = ref(true)
 
   onMounted(() => {
     aiStore.loadAiThreads()
+    isAutoScrollEnabled.value = true
+    scrollToBottom()
   })
 
   const toggleSearch = () => {
@@ -44,6 +47,7 @@ export const useAiChatViewModel = () => {
   const handleSelectChat = async (chatId) => {
     aiMessagesStore.setCurrentThreadId(chatId)
     await aiMessagesStore.loadThreadMessages(chatId)
+    isAutoScrollEnabled.value = true
     scrollToBottom()
   }
 
@@ -57,6 +61,29 @@ export const useAiChatViewModel = () => {
     }
   }
 
+  const handleScrollbarScroll = ({ scrollTop }) => {
+    const wrap = scrollbarRef.value?.wrapRef
+    const inner = innerRef.value
+    if (!wrap || !inner) return
+    const distanceToBottom = inner.clientHeight - (scrollTop + wrap.clientHeight)
+    isAutoScrollEnabled.value = distanceToBottom <= 8
+  }
+
+  watch(
+    messages,
+    () => {
+      const list = messages.value || []
+      const last = list[list.length - 1]
+      if (last?.status === 'done') {
+        scrollToBottom()
+        return
+      }
+      if (!isAutoScrollEnabled.value) return
+      scrollToBottom()
+    },
+    { deep: true },
+  )
+
   const handleSend = () => {
     if (!inputMessage.value.trim()) return
     if (!aiMessagesStore.currentThreadId) return
@@ -64,13 +91,20 @@ export const useAiChatViewModel = () => {
     const content = inputMessage.value
     const threadId = aiMessagesStore.currentThreadId
 
+    const now = Date.now()
     aiMessagesStore.addThreadMessage(threadId, {
-      msg_id: Date.now(),
+      message_id: now,
       thread_id: threadId,
-      id: Date.now(),
       role: 'user',
       content,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      time_ts: now,
+      time: new Date().toLocaleTimeString([], {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
     })
 
     inputMessage.value = ''
@@ -104,6 +138,7 @@ export const useAiChatViewModel = () => {
     selectedChatId,
     scrollbarRef,
     innerRef,
+    handleScrollbarScroll,
     handleSend,
     handleFileUpload,
   }

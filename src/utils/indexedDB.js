@@ -1,6 +1,6 @@
 // 数据库配置
 const DB_NAME = 'aiChatDB'
-const DB_VERSION = 2
+const DB_VERSION = 4
 let db = null
 
 // 存储对象名称常量
@@ -83,13 +83,14 @@ export const initDB = () => {
         aiThreadStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
       }
 
-      // 创建AI消息存储
-      if (!database.objectStoreNames.contains(AI_MESSAGES_STORE)) {
-        const aiMessageStore = database.createObjectStore(AI_MESSAGES_STORE, {
-          keyPath: 'msg_id',
-        })
-        aiMessageStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
+      // 创建AI消息存储（主键为 message_id）
+      if (database.objectStoreNames.contains(AI_MESSAGES_STORE)) {
+        database.deleteObjectStore(AI_MESSAGES_STORE)
       }
+      const aiMessageStore = database.createObjectStore(AI_MESSAGES_STORE, {
+        keyPath: 'message_id',
+      })
+      aiMessageStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
     }
   })
 }
