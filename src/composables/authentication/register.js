@@ -28,7 +28,7 @@ export default function useRegisterService() {
   }
 
   // 提交注册表单 -- 校验 -> 提交
-  const handleRegister = () => {
+  const handleRegister = async () => {
     const accountRegex = /^[a-zA-Z0-9]{8,15}$/
     if (!accountRegex.test(registerForm.value.account)) {
       showWarningTip('账号不符合要求，请输入8-15位字母或数字')
@@ -51,7 +51,12 @@ export default function useRegisterService() {
       showWarningTip('两次输入的密码不一致')
       return
     }
-    userRegister()
+    try {
+      await userRegister()
+    } catch (error) {
+      // 错误提示由响应拦截器统一处理
+      console.error('注册失败:', error)
+    }
   }
 
   const goLogin = () => {

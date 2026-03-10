@@ -2,7 +2,7 @@ import { reactive } from 'vue'
 import { createAiChat } from '@/api/ai'
 import { addData, AI_THREADS_STORE } from '@/utils/indexedDB'
 import { useAiStore } from '@/stores/ai'
-import { showSuccessTip, showErrorTip } from '@/utils/messageTips'
+import { showSuccessTip } from '@/utils/messageTips'
 
 export function useAiChat() {
   const aiStore = useAiStore()
@@ -26,25 +26,18 @@ export function useAiChat() {
 
   // 创建智能体对话
   const handleCreateAiChat = async (formData) => {
-    try {
-      const { data } = await createAiChat(formData)
-      const threadId = data?.thread_id
-      if (threadId) {
-        const threadPayload = {
-          thread_id: threadId,
-          name: formData?.name || '未命名对话',
-        }
-        await addData(AI_THREADS_STORE, threadPayload)
-        aiStore.upsertAiThread(threadPayload)
+    const { data } = await createAiChat(formData)
+    const threadId = data?.thread_id
+    if (threadId) {
+      const threadPayload = {
+        thread_id: threadId,
+        name: formData?.name || '未命名对话',
       }
-      console.log('创建群聊成功:', data)
-      showSuccessTip('群聊创建成功！')
-      return true
-    } catch (error) {
-      console.error('创建群聊失败:', error)
-      showErrorTip('创建群聊失败，请重试')
-      return false
+      await addData(AI_THREADS_STORE, threadPayload)
+      aiStore.upsertAiThread(threadPayload)
     }
+    console.log('创建群聊成功:', data)
+    showSuccessTip('群聊创建成功！')
   }
 
   return {

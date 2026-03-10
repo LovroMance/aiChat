@@ -34,9 +34,12 @@ const {
 } = useAiChatViewModel()
 
 const handleCreateAiChatSubmit = async (formData) => {
-  const ok = await handleCreateAiChat(formData)
-  if (ok) {
+  try {
+    await handleCreateAiChat(formData)
     isCreateDialogOpen.value = false
+  } catch (error) {
+    // 错误提示已由响应拦截器统一处理
+    console.error('创建 AI 对话失败:', error)
   }
 }
 </script>

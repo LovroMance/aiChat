@@ -1,7 +1,8 @@
-import { baseURL } from '@/utils/request'
 import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
 import { receiveMessage } from '@/core/onMessage'
 import { receiveAiMessage } from '@/core/onAiMessage'
+
+const wsBaseURL = import.meta.env?.VITE_APP_WS_BASE
 
 export const chatPath = '/ws/chat' // 用户聊天（私聊/群聊）
 
@@ -18,13 +19,18 @@ export const createWebSocket = (path) => {
     return
   }
 
+  if (!wsBaseURL) {
+    console.error('VITE_APP_WS_BASE 未配置，无法建立WebSocket连接')
+    return
+  }
+
   // 如果已经连接，先关闭现有连接
   if (ws && isConnected) {
     closeWebSocket()
   }
 
   // 构建WebSocket URL，包含token参数
-  const wsUrl = `${baseURL}${path}?token=${token}`
+  const wsUrl = `${wsBaseURL}${path}?token=${token}`
 
   try {
     ws = new WebSocket(wsUrl)

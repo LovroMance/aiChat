@@ -3,21 +3,13 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getUserInfo } from '@/api/user'
 import { USER_LOGIN_INFO, USER_INFO_DATA, setStorage, getStorage } from '@/utils/localstorage'
-import { showErrorTip } from '@/utils/messageTips'
 
 onMounted(async () => {
   try {
     const { data } = await getUserInfo(getStorage(USER_LOGIN_INFO).uid)
-    // 错误提示
-    if (data.code !== 200) {
-      showErrorTip(data.message)
-    }
-    // 成功逻辑
-    else {
-      setStorage(USER_INFO_DATA, data.data)
-    }
+    setStorage(USER_INFO_DATA, data.data)
   } catch (error) {
-    showErrorTip(error.message)
+    console.error('获取用户信息失败:', error)
   }
 })
 

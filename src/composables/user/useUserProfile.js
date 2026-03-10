@@ -63,7 +63,9 @@ export function useUserProfile() {
       ElMessage.success('个人资料已更新')
     } catch (error) {
       console.error('保存失败:', error)
-      ElMessage.error('保存失败，请重试')
+      if (!error?.__handledByInterceptor) {
+        ElMessage.error('保存失败，请重试')
+      }
     } finally {
       isEditing.value = false
       selectedFile.value = null
