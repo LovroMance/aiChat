@@ -4,7 +4,7 @@ import { useThreadStore, useUnreadMessagesStore } from '@/stores'
 import { initChatPanel, loadThreadChat } from '@/core/chatWorkflow'
 import { groupCreate } from '@/api/chat'
 import { putCreateGroupMessageRecord } from '@/core/unreadMessage'
-import { showSuccessTip, showErrorTip } from '@/utils/messageTips'
+import { showSuccessTip } from '@/utils/messageTips'
 
 /**
  * 聊天功能的组合式函数
@@ -61,9 +61,6 @@ export function useChat() {
       if (chatPanelRef && typeof chatPanelRef.scrollToBottom === 'function') {
         chatPanelRef.scrollToBottom()
       }
-    } catch (error) {
-      console.error('加载聊天失败:', error)
-      showErrorTip('加载聊天失败，请重试')
     } finally {
       if (chatPanelRef && typeof chatPanelRef.setLoading === 'function') {
         chatPanelRef.setLoading(false)
@@ -78,25 +75,18 @@ export function useChat() {
    * @returns {Promise<boolean>} 是否创建成功
    */
   const createGroup = async (groupForm) => {
-    try {
-      const { data } = await groupCreate(groupForm)
-      console.log('创建群聊成功:', data)
+    const { data } = await groupCreate(groupForm)
+    console.log('创建群聊成功:', data)
 
-      const newGroupForm = {
-        ...groupForm,
-        thread_id: data.thread_id,
-      }
-
-      // 更新未读消息记录
-      await putCreateGroupMessageRecord(newGroupForm)
-
-      showSuccessTip('群聊创建成功！')
-      return true
-    } catch (error) {
-      console.error('创建群聊失败:', error)
-      showErrorTip('创建群聊失败，请重试')
-      return false
+    const newGroupForm = {
+      ...groupForm,
+      thread_id: data.thread_id,
     }
+
+    // 更新未读消息记录
+    await putCreateGroupMessageRecord(newGroupForm)
+
+    showSuccessTip('群聊创建成功！')
   }
 
   /**

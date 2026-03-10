@@ -35,16 +35,24 @@ const handleCloseDialog = () => {
 
 // ✅ 处理群聊创建
 const handleGroupCreated = async (groupForm) => {
-  const success = await handleCreateGroup(groupForm)
-  if (success) {
+  try {
+    await handleCreateGroup(groupForm)
     isPopup.value = false
+  } catch (error) {
+    // 错误提示已由响应拦截器统一处理
+    console.error('创建群聊失败:', error)
   }
 }
 
 // ✅ 处理线程选择
 const handleSelectChat = async (chat) => {
-  await selectThread(chat)
-  scrollToBottom()
+  try {
+    await selectThread(chat)
+    scrollToBottom()
+  } catch (error) {
+    // 错误提示已由响应拦截器统一处理
+    console.error('切换会话失败:', error)
+  }
 }
 </script>
 

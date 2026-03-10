@@ -101,7 +101,9 @@ const handleSubmit = async () => {
     }
   } catch (error) {
     console.error('表单验证或文件上传失败:', error)
-    showErrorTip('操作失败，请重试')
+    if (!error?.__handledByInterceptor) {
+      showErrorTip('操作失败，请重试')
+    }
   } finally {
     loading.value = false
   }
