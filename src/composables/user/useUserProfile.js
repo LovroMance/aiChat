@@ -17,7 +17,6 @@ export function useUserProfile() {
 
   const editForm = ref({
     email: userInfo.value.email || '',
-    signature: userInfo.value.signature || '',
     phone: userInfo.value.phone || '',
     location: userInfo.value.location || '',
   })
@@ -25,7 +24,6 @@ export function useUserProfile() {
   const syncFormFromUser = () => {
     editForm.value = {
       email: userInfo.value.email || '',
-      signature: userInfo.value.signature || '',
       phone: userInfo.value.phone || '',
       location: userInfo.value.location || '',
     }
@@ -46,7 +44,6 @@ export function useUserProfile() {
     // 乐观更新
     userInfo.value = {
       ...userInfo.value,
-      signature: editForm.value.signature,
       email: editForm.value.email,
       phone: editForm.value.phone,
       location: editForm.value.location,

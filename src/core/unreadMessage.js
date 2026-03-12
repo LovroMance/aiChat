@@ -43,43 +43,44 @@ export const putCreateGroupMessageRecord = async (groupForm) => {
 }
 
 // 适用于收到消息时 缺少threadInfo的场景
-export const putRecord = async (messageData) => {
+export const putRecord = async (receiveMessage) => {
   const unreadMessagesStore = useUnreadMessagesStore()
+  // 这里有必要，第一次是没有记录所以passObj是undefined，后续有记录了就是一个对象了。
+  // 下面的getThreadInfo接口调用就可以节约掉
+  let passObj = unreadMessagesStore.getUnreadRecord(receiveMessage.thread_id)
+  console.log('passObj', passObj)
 
-  const existingRecord = unreadMessagesStore.getUnreadRecord(messageData.thread_id)
-  console.log('passObj', existingRecord)
-
-  let passObj = existingRecord
-
+  console.log('thread-name', passObj?.thread_name)
   if (!passObj?.thread_name) {
-    const { data } = await getThreadInfo({ thread_id: messageData.thread_id })
+    const response = await getThreadInfo({ thread_id: receiveMessage.thread_id })
+    const threadInfo = response?.data?.data?.info
     passObj = {
       ...passObj,
-      thread_avatar: data.data.info.avatar,
-      thread_name: data.data.info.name,
-      type: data.data.info.type,
+      thread_avatar: threadInfo?.avatar,
+      thread_name: threadInfo?.name,
+      type: threadInfo?.type,
     }
   }
   const valueObj = {
     ...passObj,
-    thread_id: messageData.thread_id,
-    senderName: messageData.sender_name,
-    content: messageData.content,
-    lastTime: messageData.update_time,
+    thread_id: receiveMessage.thread_id,
+    senderName: receiveMessage.sender_name,
+    content: receiveMessage.content,
+    lastTime: receiveMessage.update_time,
     unreadCount: passObj.unreadCount ? passObj.unreadCount + 1 : 1,
   }
 
   console.log(valueObj)
   // 如果当前在选中聊天中，则不添加未读消息数
   const threadStore = useThreadStore()
-  if (threadStore.activeThread?.thread_id === messageData.thread_id) {
+  if (threadStore.activeThread?.thread_id === receiveMessage.thread_id) {
     valueObj.unreadCount = 0
   }
 
   // indexedDB更新
   await putData(UNREAD_MESSAGES_STORE, valueObj)
   // 仓库更新
-  unreadMessagesStore.updateUnreadMessage(messageData.thread_id, valueObj)
+  unreadMessagesStore.updateUnreadMessage(receiveMessage.thread_id, valueObj)
   console.log('更新未读消息成功:', unreadMessagesStore.unreadMessagesMap)
 }
 
@@ -89,7 +90,7 @@ export const putWholeRecord = async (data) => {
 
   const passObj = unreadMessagesStore.getUnreadRecord(data.thread_id)
   const passCount = passObj ? passObj.unreadCount : 0
-  // TODO: 这里没处理ai  ⭐⭐⭐
+
   var generalObj = {
     thread_id: data.thread_id,
     senderName: data.latest_message.sender_name,
@@ -130,4 +131,3 @@ export const selectedChatUpdate = async (thread_id) => {
   console.log('更新未读消息成功:', unreadMessagesStore.unreadMessagesMap)
   console.log('valueObj', valueObj)
 }
-  

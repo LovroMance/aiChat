@@ -1,12 +1,16 @@
 <script setup>
 import { ref } from 'vue'
 import { useUserSettings } from '@/composables/user/useUserSettings'
-import { useUserStore } from '@/stores'
-import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
+import { sendFriendRequest } from '@/api/relationship'
+import { ElMessage } from 'element-plus'
 
 const { settings, saveSettings, resetSettings } = useUserSettings()
-const userStore = useUserStore()
 const isSaving = ref(false)
+
+const testFriendRequest = ref({
+  acceptor_uid: '79f1a5c6-d430-4c3f-83e4-da7d40c7d2e5',
+  message: '你好，我想加你为好友',
+})
 
 const handleSave = async () => {
   isSaving.value = true
@@ -24,77 +28,24 @@ const handleReset = () => {
   resetSettings()
 }
 
-import { sendFriendRequest } from '@/api/relationship'
-const test = async () => {
-  console.log('=== compare start ===')
-  const request_data = {
-    acceptor_uid: '879b5c25-106b-49e1-8dd8-5ce0f5efd34d',
-    message: '你好，我想加你为好友！',
-  }
-  const storedToken = getStorage(USER_LOGIN_INFO)?.token
-  const authToken = userStore.token || storedToken || ''
-  console.log('[debug] token source:', userStore.token ? 'store' : storedToken ? 'storage' : 'none')
-  if (authToken) {
-    console.log('[debug] token preview:', `${authToken.slice(0, 12)}...`)
-  }
-
-  const timeoutRace = (promise, label, timeout = 8000) => {
-    return Promise.race([
-      promise,
-      new Promise((_, reject) => {
-        setTimeout(() => reject(new Error(`${label}-timeout-${timeout}ms`)), timeout)
-      }),
-    ])
-  }
-
-  const axiosJob = (async () => {
-    console.log('[axios] start')
-    try {
-      const result = await timeoutRace(sendFriendRequest(request_data), 'axios')
-      console.log('[axios] resolved', result)
-    } catch (error) {
-      console.log('[axios] rejected', error)
-    } finally {
-      console.log('[axios] finally')
+const handleTestSendFriendRequest = async () => {
+  try {
+    const { data } = await sendFriendRequest(testFriendRequest.value)
+    if (data?.code === 200) {
+      ElMessage.success(data?.message || '好友申请发送成功')
+      return
     }
-  })()
-
-  const fetchJob = (async () => {
-    console.log('[fetch] start')
-    try {
-      const controller = new AbortController()
-      const timer = setTimeout(() => controller.abort(), 8000)
-      const response = await fetch('/relation/send-friend-request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(authToken ? { Authorization: `JWT ${authToken}` } : {}),
-        },
-        body: JSON.stringify(request_data),
-        signal: controller.signal,
-      })
-      clearTimeout(timer)
-      const text = await response.text()
-      console.log('[fetch] resolved', {
-        ok: response.ok,
-        status: response.status,
-        body: text,
-      })
-    } catch (error) {
-      console.log('[fetch] rejected', error)
-    } finally {
-      console.log('[fetch] finally')
-    }
-  })()
-
-  await Promise.allSettled([axiosJob, fetchJob])
-  console.log('=== compare end ===')
+    ElMessage.warning(data?.message || '好友申请发送失败')
+  } catch (error) {
+    // 错误提示已由调用链统一处理
+    console.error('发送好友申请失败:', error)
+  }
 }
 </script>
 
 <template>
   <div class="settings-page">
-    <button @click="test">测试</button>
+    <button @click="handleTestSendFriendRequest">测试</button>
     <h2 class="page-title">个人设置</h2>
 
     <el-card class="settings-card" shadow="never">

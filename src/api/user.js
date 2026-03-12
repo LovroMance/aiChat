@@ -11,10 +11,16 @@ export const useUserRegister = (data) => {
 
 // 登录
 export const useUserLogin = (data) => {
-  return instance.post('/auth/login', {
-    account: data.account,
-    password: data.password,
-  })
+  return instance.post(
+    '/auth/login',
+    {
+      account: data.account,
+      password: data.password,
+    },
+    {
+      withCredentials: true, // 允许浏览器接收后端 Set-Cookie（refresh_token httpOnly Cookie）
+    },
+  )
 }
 
 // 获取用户信息
@@ -33,13 +39,7 @@ export const updateUserInfo = (data) => {
     username: data.username,
     avatar: data.avatar,
     email: data.email,
-    signature: data.signature,
-    create_time: data.create_time,
-    last_login_time: data.last_login_time,
-    status: data.status,
-    level: data.level,
-    posts: data.posts,
-    followers: data.followers,
-    following: data.following,
+    phone: data.phone,
+    location: data.location,
   })
 }

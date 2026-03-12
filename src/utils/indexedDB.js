@@ -52,7 +52,7 @@ export const initDB = () => {
       // 创建消息存储
       if (!database.objectStoreNames.contains(MESSAGES_STORE)) {
         const messageStore = database.createObjectStore(MESSAGES_STORE, {
-          keyPath: 'msg_id',
+          keyPath: 'message_id',
         })
         messageStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
       }

@@ -2,9 +2,10 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElLoading } from 'element-plus'
 import { showWarningTip } from '@/utils/messageTips'
-import { useUserLogin } from '@/api/user' // 调用登录API
-import { useUserStore } from '@/stores/index' // 获取用户仓库，存储用户信息
-import { USER_LOGIN_INFO, setStorage } from '@/utils/localstorage' // localstorage封装
+import { useUserLogin } from '@/api/user'
+import { useUserStore } from '@/stores/index'
+import { USER_LOGIN_INFO, setStorage } from '@/utils/localstorage'
+import { initializeAppData } from '@/core/initApp'
 
 export default function useLoginService() {
   const router = useRouter()
@@ -33,16 +34,16 @@ export default function useLoginService() {
         password: loginForm.value.password,
       })
       console.log('userLogin/api', data)
-      // 登陆成功就把用户的信息存到UserStore里
-      const userInfo = {
+      userStore.setLoginInfo({
         uid: data.data.uid,
-        token: data.data.token,
-      }
-      userStore.setLoginInfo(userInfo)
-      // 把用户token存到本地存储
-      setStorage(USER_LOGIN_INFO, userInfo)
+        accessToken: data.data.access_token,
+      })
+      // localStorage 只持久化 uid，用于路由守卫判断登录态
+      setStorage(USER_LOGIN_INFO, { uid: data.data.uid })
       loginForm.value.account = ''
       loginForm.value.password = ''
+      // token 已就绪，此时才初始化 WebSocket 及应用数据
+      await initializeAppData()
       router.push('/userHome')
     } catch (error) {
       // 错误提示交由响应拦截器统一处理，这里仅消费异常避免 Vue 事件未处理告警。

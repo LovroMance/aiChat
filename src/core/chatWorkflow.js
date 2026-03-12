@@ -18,9 +18,12 @@ export const initChatPanel = async () => {
   // 2. 获取最后一条本地聊天记录id
   const getLastMessageId = await getLastData(MESSAGES_STORE)
   const getUnreadMessageId = await getDataByKey(MESSAGES_STORE, -1)
-  const msgId = Math.max(getLastMessageId?.msg_id ?? 0, getUnreadMessageId?.unreadMessageId ?? 0)
+  const msgId = Math.max(
+    getLastMessageId?.message_id ?? 0,
+    getUnreadMessageId?.unreadMessageId ?? 0,
+  )
   console.log('unreadMessageId', msgId)
-  // 3. 获取离线未读消息记录（根据msg_id获取聊天历史）
+  // 3. 获取离线未读消息记录（根据message_id获取聊天历史）
   const res = await getUnreadMessages({
     existing_id: msgId,
   })
@@ -36,7 +39,7 @@ export const initChatPanel = async () => {
   const unreadMessageId = Math.max(msgId, maxLatestMessageId)
   // 更新记录unreadMsgId
   putData(MESSAGES_STORE, {
-    msg_id: -1,
+    message_id: -1,
     unreadMessageId,
   })
 }
@@ -49,9 +52,9 @@ export const loadThreadChat = async (thread_id) => {
 
   // 根据threadId获取本地历史消息
   const localHistory = await getMessagesByThreadId(MESSAGES_STORE, thread_id)
-  // 获取最后一条本地消息的msg_id
+  // 获取最后一条本地消息的message_id
   const lastMessage = localHistory[localHistory.length - 1]
-  existing_id = lastMessage?.msg_id ?? 0
+  existing_id = lastMessage?.message_id ?? 0
   // 根据threadId获取离线消息
   const { data } = await getPartMessages({
     thread_id: thread_id,

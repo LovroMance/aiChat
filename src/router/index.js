@@ -81,9 +81,12 @@ const router = createRouter({
 router.beforeEach((to) => {
   const userStore = useUserStore(pinia)
   const stored = getStorage(USER_LOGIN_INFO)
-  const token = userStore.token || stored?.token
 
-  if (to.meta?.requiresAuth && !token) {
+  // accessToken 在内存中（页面刷新后为空），uid 在 localStorage 中持久化
+  // 两者任一存在即视为已登录；accessToken 过期时由请求拦截器静默刷新
+  const isLoggedIn = userStore.accessToken || stored?.uid
+
+  if (to.meta?.requiresAuth && !isLoggedIn) {
     return {
       path: '/login',
       query: { redirect: to.fullPath },

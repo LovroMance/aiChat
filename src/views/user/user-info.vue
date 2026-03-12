@@ -1,7 +1,7 @@
 <script setup>
 import UploadAvatar from '@/components/file/uploadAvatar.vue'
 import { useUserProfile } from '@/composables/user/useUserProfile'
-import { Message, Postcard, Timer, User } from '@element-plus/icons-vue'
+import { Message, User } from '@element-plus/icons-vue'
 
 const { userInfo, editForm, isEditing, handleEdit, handleFileSelected, handleSave, handleCancel } =
   useUserProfile()
@@ -27,29 +27,11 @@ const { userInfo, editForm, isEditing, handleEdit, handleFileSelected, handleSav
             </div>
           </div>
 
-          <button @click="console.log(userInfo);">eee</button>
+          <button @click="console.log(userInfo)">eee</button>
 
           <h2 class="user-name">{{ userInfo.username }}</h2>
           <div class="user-tags">
-            <span class="tag-level">Lv.{{ userInfo.level }}</span>
             <span class="tag-uid">UID: {{ userInfo.uid }}</span>
-          </div>
-
-          <div class="stats-row">
-            <div class="stat-item">
-              <span class="stat-val">{{ userInfo.posts || 0 }}</span>
-              <span class="stat-label">动态</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-              <span class="stat-val">{{ userInfo.followers || 0 }}</span>
-              <span class="stat-label">粉丝</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-              <span class="stat-val">{{ userInfo.following || 0 }}</span>
-              <span class="stat-label">关注</span>
-            </div>
           </div>
 
           <div class="action-area">
@@ -89,17 +71,6 @@ const { userInfo, editForm, isEditing, handleEdit, handleFileSelected, handleSav
             </div>
           </div>
 
-          <!-- 注册时间 (只读) -->
-          <div class="form-row">
-            <div class="row-label">
-              <el-icon><Timer /></el-icon>
-              <span>注册时间</span>
-            </div>
-            <div class="row-content readonly">
-              {{ userInfo.create_time }}
-            </div>
-          </div>
-
           <!-- 邮箱 -->
           <div class="form-row">
             <div class="row-label">
@@ -109,29 +80,6 @@ const { userInfo, editForm, isEditing, handleEdit, handleFileSelected, handleSav
             <div class="row-content">
               <el-input v-if="isEditing" v-model="editForm.email" placeholder="填写您的邮箱地址" />
               <span v-else class="text-display">{{ userInfo.email || '未设置' }}</span>
-            </div>
-          </div>
-
-          <!-- 个性签名 -->
-          <div class="form-row align-top">
-            <div class="row-label">
-              <el-icon><Postcard /></el-icon>
-              <span>个性签名</span>
-            </div>
-            <div class="row-content">
-              <el-input
-                v-if="isEditing"
-                v-model="editForm.signature"
-                type="textarea"
-                :rows="3"
-                resize="none"
-                placeholder="介绍一下自己..."
-                maxlength="100"
-                show-word-limit
-              />
-              <p v-else class="text-display signature">
-                {{ userInfo.signature || '这个人很懒，什么都没有留下...' }}
-              </p>
             </div>
           </div>
         </div>
@@ -218,56 +166,12 @@ const { userInfo, editForm, isEditing, handleEdit, handleFileSelected, handleSav
   margin-bottom: 24px;
 }
 
-.tag-level {
-  background: #fff7e6;
-  color: #fa8c16;
-  font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: 500;
-}
-
 .tag-uid {
   background: #f2f3f5;
   color: #86909c;
   font-size: 12px;
   padding: 2px 8px;
   border-radius: 4px;
-}
-
-.stats-row {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  justify-content: space-around;
-  padding: 16px 0;
-  border-top: 1px solid #f2f3f5;
-  border-bottom: 1px solid #f2f3f5;
-  margin-bottom: 24px;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.stat-val {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1d2129;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #86909c;
-}
-
-.stat-divider {
-  width: 1px;
-  height: 24px;
-  background: #e5e6eb;
 }
 
 .action-area {
@@ -331,10 +235,6 @@ const { userInfo, editForm, isEditing, handleEdit, handleFileSelected, handleSav
   min-height: 40px; /* 保证高度一致，防止抖动 */
 }
 
-.form-row.align-top {
-  align-items: flex-start;
-}
-
 .row-label {
   width: 120px;
   display: flex;
@@ -363,13 +263,6 @@ const { userInfo, editForm, isEditing, handleEdit, handleFileSelected, handleSav
   line-height: 1.5;
   border: 1px solid transparent; /* 占位边框 */
   width: 100%;
-}
-
-.text-display.signature {
-  white-space: pre-wrap;
-  background: #f7f8fa;
-  border-radius: 4px;
-  color: #4e5969;
 }
 
 /* 响应式 */

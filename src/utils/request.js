@@ -1,8 +1,7 @@
 import axios from 'axios'
 import { useUserStore } from '@/stores/index'
-import { USER_LOGIN_INFO, getStorage } from './localstorage'
+// import { USER_LOGIN_INFO, removeStorage } from './localstorage'
 import { showErrorTip } from './messageTips'
-const token = getStorage(USER_LOGIN_INFO)?.token
 
 const baseURL = import.meta.env?.VITE_APP_API_BASE
 
@@ -11,26 +10,38 @@ const instance = axios.create({
   timeout: 50000,
 })
 
-// 请求拦截器
+// ─── 请求拦截器 ────────────────────────────────────────────────
 instance.interceptors.request.use(
   (config) => {
-    // 在拦截器中获取 store，而不是在模块顶层
     const userStore = useUserStore()
-
-    if (userStore.token) {
-      config.headers.Authorization = 'JWT ' + userStore.token
-    } else if (token) {
-      config.headers.Authorization = 'JWT ' + token
+    if (!config._skipAuthHeader && userStore.accessToken) {
+      config.headers.Authorization = userStore.accessToken
     }
     return config
   },
   (err) => Promise.reject(err),
 )
 
-// 响应拦截器
+// ─── 静默刷新队列（并发 401 时只发一次 refresh 请求）────────────
+// let isRefreshing = false
+// let pendingQueue = []
+
+// const processQueue = (error, token = null) => {
+//   pendingQueue.forEach((p) => (error ? p.reject(error) : p.resolve(token)))
+//   pendingQueue = []
+// }
+
+// // 退出登录并跳转（清 store + localStorage uid）
+// const forceLogout = () => {
+//   const userStore = useUserStore()
+//   userStore.clearLoginInfo()
+//   removeStorage(USER_LOGIN_INFO)
+//   window.location.href = '/login'
+// }
+
+// ─── 响应拦截器 ────────────────────────────────────────────────
 instance.interceptors.response.use(
   (res) => {
-    // TODO： 有一些 HTTP 状态码 200 但后端业务码非成功 的情况，需要根据后端接口规范进行适配
     const responseData = res?.data
     if (
       responseData &&
@@ -44,13 +55,54 @@ instance.interceptors.response.use(
       showErrorTip(message)
       return Promise.reject(businessError)
     }
-
     return res
   },
-  (err) => {
-    // 拦截器统一处理网络层和 HTTP 层错误提示
-    let message = '请求失败，请稍后重试'
+  async (err) => {
+    // const originalRequest = err.config
 
+    // // 401 → 尝试用 refresh_token（httpOnly Cookie）换新 access_token
+    // if (
+    //   err?.response?.status === 401 &&
+    //   !originalRequest.__retried &&
+    //   originalRequest.url !== '/auth/refresh'
+    // ) {
+    //   if (isRefreshing) {
+    //     // 已有刷新进行中，排队等待新 token
+    //     return new Promise((resolve, reject) => {
+    //       pendingQueue.push({ resolve, reject })
+    //     }).then((token) => {
+    //       originalRequest.headers.Authorization = token
+    //       return instance(originalRequest)
+    //     })
+    //   }
+
+    //   originalRequest.__retried = true
+    //   isRefreshing = true
+
+    //   try {
+    //     // 通过 api/auth 的统一接口触发刷新；动态导入可避免 request<->auth 静态循环依赖
+    //     const { useRefreshToken } = await import('@/api/auth')
+    //     const { data } = await useRefreshToken()
+    //     const newToken = data.data.access_token
+    //     useUserStore().setAccessToken(newToken)
+    //     processQueue(null, newToken)
+    //     originalRequest.headers.Authorization = newToken
+    //     // 页面刷新后 token 从这里恢复，顺带补全 WebSocket 连接
+    //     import('@/utils/websocket').then(({ ensureWebSocketConnected, chatPath }) => {
+    //       ensureWebSocketConnected(chatPath)
+    //     })
+    //     return instance(originalRequest)
+    //   } catch (refreshErr) {
+    //     processQueue(refreshErr, null)
+    //     forceLogout()
+    //     return Promise.reject(refreshErr)
+    //   } finally {
+    //     isRefreshing = false
+    //   }
+    // }
+
+    // 其余错误：统一提示
+    let message = '请求失败，请稍后重试'
     if (err?.code === 'ECONNABORTED') {
       message = '请求超时，请稍后重试'
     } else if (!err?.response) {
@@ -58,7 +110,6 @@ instance.interceptors.response.use(
     } else {
       const status = err.response.status
       const backendMessage = err.response?.data?.message
-
       if (backendMessage) {
         message = backendMessage
       } else if (status === 401) {
