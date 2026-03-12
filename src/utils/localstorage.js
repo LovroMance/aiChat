@@ -1,7 +1,7 @@
-export const USER_LOGIN_INFO = 'user-login-info' // 用户登录信息
+export const USER_LOGIN_INFO = 'user-login-info' // 用户登录信息（仅存 uid，token 不持久化）
 export const USER_INFO_DATA = 'user-info-data' // 用户详细信息
 
-// localstorage 接口
+// 存储本地存储数据
 export const setStorage = (key, value) => {
   if (typeof value === 'object') {
     value = JSON.stringify(value)

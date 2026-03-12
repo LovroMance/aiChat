@@ -1,6 +1,7 @@
-import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
+import { useUserStore } from '@/stores/index'
 import { receiveMessage } from '@/core/onMessage'
 import { receiveAiMessage } from '@/core/onAiMessage'
+import { classifyWsMessage } from '@/core/messageClassifier'
 
 const wsBaseURL = import.meta.env?.VITE_APP_WS_BASE
 
@@ -10,9 +11,9 @@ let ws = null // websocket实例
 let isConnected = false
 
 export const createWebSocket = (path) => {
-  // 动态获取token，确保获取最新的token
-  const userInfo = getStorage(USER_LOGIN_INFO)
-  const token = userInfo.token
+  // 从 Pinia store 动态获取 access_token（内存中的最新值）
+  const userStore = useUserStore()
+  const token = userStore.accessToken
 
   if (!token) {
     console.error('Token不存在，无法建立WebSocket连接')
@@ -57,14 +58,22 @@ const bindEvents = async () => {
         const data = JSON.parse(event.data) // 把JSON字符串转换为对象
         if (data && Object.prototype.hasOwnProperty.call(data, 'model')) return
         console.log('收到消息:', data)
-        // 处理收到消息逻辑
-        if (isAiMessage(data)) {
+        const category = classifyWsMessage(data)
+        if (category === 'notice') {
+          console.log('通知消息，暂不处理')
+          return
+        }
+        if (category === 'ai') {
           console.log('AI消息处理')
           receiveAiMessage(data)
-        } else {
+          return
+        }
+        if (category === 'chat') {
           console.log('普通消息处理')
           receiveMessage(data)
+          return
         }
+        console.warn('未识别的消息类型:', data)
       } catch {
         // 如果不是 JSON 格式，直接输出原始消息
         console.log('收到消息:', event.data)
@@ -85,24 +94,6 @@ const bindEvents = async () => {
     console.error('WebSocket连接错误:', error)
     isConnected = false
   }
-}
-
-const isAiMessage = (data) => {
-  //TODO： 这里到时候统一ai的返回有一个类型判断是ai的回复， 然后统一一下这里的判断条件
-  if (!data) return false
-  // 流式：{ message, request_id, thread_id }
-  if (data.message && data.request_id && data.thread_id) return true
-  // 完成：{ is_complete, message_id, thread_id }
-  if (data.is_complete === true && data.thread_id) return true
-  // 完成思考字段：complete_reason
-  if (
-    data.complete_reason !== undefined &&
-    data.complete_reason !== null &&
-    data.complete_reason !== ''
-  ) {
-    return true
-  }
-  return false
 }
 
 export const sendMessage = (message) => {

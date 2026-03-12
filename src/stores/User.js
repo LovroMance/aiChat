@@ -4,26 +4,21 @@ import { ref } from 'vue'
 export const useUserStore = defineStore('user', () => {
   const account = ref('') // 账号
   const uid = ref('') // 用户ID
-  const token = ref('') // 令牌
-
+  const accessToken = ref('') // 访问令牌（仅存内存，不持久化）
   const username = ref('') // 用户名
   const password = ref('') // 密码
-
   const avatar = ref('') // 头像
-  const signature = ref('') // 个性签名
   const email = ref('') // 邮箱
-  const createTime = ref('') // 创建时间
-  const lastLoginTime = ref('') // 最后登录时间
-  const status = ref('') // 状态
-  const level = ref('') // 等级
-  const posts = ref('') // 帖子数量
-  const followers = ref('') // 粉丝数量
-  const following = ref('') // 关注数量
 
   // 设置登录信息
   const setLoginInfo = (newInfo) => {
     uid.value = newInfo.uid
-    token.value = newInfo.token
+    accessToken.value = newInfo.accessToken
+  }
+
+  // 单独更新 access token（用于静默刷新场景）
+  const setAccessToken = (newToken) => {
+    accessToken.value = newToken
   }
 
   // 编辑更新个人资料
@@ -31,15 +26,7 @@ export const useUserStore = defineStore('user', () => {
     account.value = newInfo.account
     username.value = newInfo.username
     avatar.value = newInfo.avatar
-    signature.value = newInfo.signature
     email.value = newInfo.email
-    createTime.value = newInfo.create_time
-    lastLoginTime.value = newInfo.last_login_time
-    status.value = newInfo.status
-    level.value = newInfo.level
-    posts.value = newInfo.posts
-    followers.value = newInfo.followers
-    following.value = newInfo.following
   }
 
   // 获取用户信息
@@ -48,41 +35,26 @@ export const useUserStore = defineStore('user', () => {
       account: account.value,
       username: username.value,
       avatar: avatar.value,
-      signature: signature.value,
       email: email.value,
-      createTime: createTime.value,
-      lastLoginTime: lastLoginTime.value,
-      status: status.value,
-      level: level.value,
-      posts: posts.value,
-      followers: followers.value,
-      following: following.value,
     }
   }
 
   // 清除登录信息
   const clearLoginInfo = () => {
     uid.value = ''
-    token.value = ''
+    accessToken.value = ''
   }
 
   return {
     account,
     username,
     password,
-    token,
+    accessToken,
     uid,
     avatar,
-    signature,
     email,
-    createTime,
-    lastLoginTime,
-    status,
-    level,
-    posts,
-    followers,
-    following,
     setLoginInfo,
+    setAccessToken,
     setUserInfo,
     getUserInfo,
     clearLoginInfo,
