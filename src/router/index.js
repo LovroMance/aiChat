@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores'
 import pinia from '@/stores'
 import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
+import { closeWebSocket } from '@/utils/websocket'
 
 const routes = [
   {
@@ -55,7 +56,7 @@ const routes = [
         meta: { title: '聊天', requiresAuth: true },
         alias: ['/userChat'],
       },
-      { 
+      {
         path: 'user-info',
         name: 'userInfo',
         component: () => import('@/views/user/user-info.vue'),
@@ -87,11 +88,17 @@ router.beforeEach((to) => {
   const isLoggedIn = userStore.accessToken || stored?.uid
 
   if (to.meta?.requiresAuth && !isLoggedIn) {
+    closeWebSocket()
     return {
       path: '/login',
       query: { redirect: to.fullPath },
     }
   }
+
+  if (to.path === '/login' && !isLoggedIn) {
+    closeWebSocket()
+  }
+
   return true
 })
 

@@ -25,10 +25,13 @@ export const createWebSocket = (path) => {
     return
   }
 
-  // 如果已经连接，先关闭现有连接
-  if (ws && isConnected) {
-    closeWebSocket()
+  // 防止重复建连：连接中或已连接时直接复用当前连接
+  if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
+    return
   }
+
+  // 存在旧实例但状态不可用时，先清理再重建
+  if (ws) closeWebSocket()
 
   // 构建WebSocket URL，包含token参数
   const wsUrl = `${wsBaseURL}${path}?token=${token}`
@@ -87,6 +90,7 @@ const bindEvents = async () => {
   ws.onclose = (event) => {
     console.log('WebSocket连接断开:', event.code)
     isConnected = false
+    ws = null
   }
 
   // 设置连接错误钩子

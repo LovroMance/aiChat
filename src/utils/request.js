@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { useUserStore } from '@/stores/index'
-// import { USER_LOGIN_INFO, removeStorage } from './localstorage'
+import { USER_LOGIN_INFO, removeStorage } from './localstorage'
 import { showErrorTip } from './messageTips'
 
 const baseURL = import.meta.env?.VITE_APP_API_BASE
@@ -9,6 +9,85 @@ const instance = axios.create({
   baseURL,
   timeout: 50000,
 })
+
+const REFRESH_ENDPOINT = '/auth/refresh'
+
+// ─── Auth 编排层：单飞刷新与请求排队 ─────────────────────────────
+let isRefreshing = false
+let pendingQueue = []
+let isLoggingOut = false
+
+const flushPendingQueue = (error, token = null) => {
+  pendingQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error)
+    } else {
+      resolve(token)
+    }
+  })
+  pendingQueue = []
+}
+
+const enqueuePendingRequest = () => {
+  return new Promise((resolve, reject) => {
+    pendingQueue.push({ resolve, reject })
+  })
+}
+
+const retryRequestWithToken = (originalRequest, token) => {
+  originalRequest.headers = originalRequest.headers || {}
+  originalRequest.headers.Authorization = token
+  return instance(originalRequest)
+}
+
+const shouldTryRefresh = (error) => {
+  const status = error?.response?.status
+  const originalRequest = error?.config
+
+  if (status !== 401 || !originalRequest) {
+    return false
+  }
+
+  if (originalRequest.__retried) {
+    return false
+  }
+
+  if (originalRequest.url === REFRESH_ENDPOINT) {
+    return false
+  }
+
+  return true
+}
+
+const requestNewAccessToken = async () => {
+  const { useRefreshToken } = await import('@/api/auth')
+  const { data } = await useRefreshToken()
+  const newToken = data?.data?.access_token
+
+  if (!newToken) {
+    const tokenError = new Error('刷新登录状态失败，请重新登录')
+    tokenError.__handledByInterceptor = true
+    throw tokenError
+  }
+
+  useUserStore().setAccessToken(newToken)
+  return newToken
+}
+
+const forceLogout = () => {
+  if (isLoggingOut) {
+    return
+  }
+
+  isLoggingOut = true
+
+  const userStore = useUserStore()
+  userStore.clearLoginInfo()
+  removeStorage(USER_LOGIN_INFO)
+
+  showErrorTip('身份认证已过期，请重新登录')
+  window.location.href = '/login'
+}
 
 // ─── 请求拦截器 ────────────────────────────────────────────────
 instance.interceptors.request.use(
@@ -22,23 +101,6 @@ instance.interceptors.request.use(
   (err) => Promise.reject(err),
 )
 
-// ─── 静默刷新队列（并发 401 时只发一次 refresh 请求）────────────
-// let isRefreshing = false
-// let pendingQueue = []
-
-// const processQueue = (error, token = null) => {
-//   pendingQueue.forEach((p) => (error ? p.reject(error) : p.resolve(token)))
-//   pendingQueue = []
-// }
-
-// // 退出登录并跳转（清 store + localStorage uid）
-// const forceLogout = () => {
-//   const userStore = useUserStore()
-//   userStore.clearLoginInfo()
-//   removeStorage(USER_LOGIN_INFO)
-//   window.location.href = '/login'
-// }
-
 // ─── 响应拦截器 ────────────────────────────────────────────────
 instance.interceptors.response.use(
   (res) => {
@@ -49,6 +111,12 @@ instance.interceptors.response.use(
       typeof responseData.code === 'number' &&
       responseData.code !== 200
     ) {
+      if (res?.config?._skipErrorTip) {
+        const businessError = new Error(responseData.message || '请求失败，请稍后重试')
+        businessError.__handledByInterceptor = true
+        return Promise.reject(businessError)
+      }
+
       const message = responseData.message || '请求失败，请稍后重试'
       const businessError = new Error(message)
       businessError.__handledByInterceptor = true
@@ -58,48 +126,36 @@ instance.interceptors.response.use(
     return res
   },
   async (err) => {
-    // const originalRequest = err.config
+    const originalRequest = err?.config
 
-    // // 401 → 尝试用 refresh_token（httpOnly Cookie）换新 access_token
-    // if (
-    //   err?.response?.status === 401 &&
-    //   !originalRequest.__retried &&
-    //   originalRequest.url !== '/auth/refresh'
-    // ) {
-    //   if (isRefreshing) {
-    //     // 已有刷新进行中，排队等待新 token
-    //     return new Promise((resolve, reject) => {
-    //       pendingQueue.push({ resolve, reject })
-    //     }).then((token) => {
-    //       originalRequest.headers.Authorization = token
-    //       return instance(originalRequest)
-    //     })
-    //   }
+    // 401 -> 单飞 refresh + 队列重放
+    if (shouldTryRefresh(err)) {
+      if (isRefreshing) {
+        return enqueuePendingRequest().then((token) =>
+          retryRequestWithToken(originalRequest, token),
+        )
+      }
 
-    //   originalRequest.__retried = true
-    //   isRefreshing = true
+      originalRequest.__retried = true
+      isRefreshing = true
 
-    //   try {
-    //     // 通过 api/auth 的统一接口触发刷新；动态导入可避免 request<->auth 静态循环依赖
-    //     const { useRefreshToken } = await import('@/api/auth')
-    //     const { data } = await useRefreshToken()
-    //     const newToken = data.data.access_token
-    //     useUserStore().setAccessToken(newToken)
-    //     processQueue(null, newToken)
-    //     originalRequest.headers.Authorization = newToken
-    //     // 页面刷新后 token 从这里恢复，顺带补全 WebSocket 连接
-    //     import('@/utils/websocket').then(({ ensureWebSocketConnected, chatPath }) => {
-    //       ensureWebSocketConnected(chatPath)
-    //     })
-    //     return instance(originalRequest)
-    //   } catch (refreshErr) {
-    //     processQueue(refreshErr, null)
-    //     forceLogout()
-    //     return Promise.reject(refreshErr)
-    //   } finally {
-    //     isRefreshing = false
-    //   }
-    // }
+      try {
+        const newToken = await requestNewAccessToken()
+        flushPendingQueue(null, newToken)
+        return retryRequestWithToken(originalRequest, newToken)
+      } catch (refreshErr) {
+        refreshErr.__handledByInterceptor = true
+        flushPendingQueue(refreshErr, null)
+        forceLogout()
+        return Promise.reject(refreshErr)
+      } finally {
+        isRefreshing = false
+      }
+    }
+
+    if (err?.__handledByInterceptor) {
+      return Promise.reject(err)
+    }
 
     // 其余错误：统一提示
     let message = '请求失败，请稍后重试'
@@ -113,6 +169,7 @@ instance.interceptors.response.use(
       if (backendMessage) {
         message = backendMessage
       } else if (status === 401) {
+        // 401 在 refresh 失败时已走 forceLogout 提示，其他 401 维持兜底提示。
         message = '身份认证已过期，请重新登录'
       } else if (status === 403) {
         message = '暂无权限执行该操作'
@@ -122,7 +179,9 @@ instance.interceptors.response.use(
     }
 
     err.__handledByInterceptor = true
-    showErrorTip(message)
+    if (!err?.config?._skipErrorTip) {
+      showErrorTip(message)
+    }
     return Promise.reject(err)
   },
 )

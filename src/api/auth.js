@@ -9,6 +9,7 @@ export const useRefreshToken = () => {
     {
       withCredentials: true,
       _skipAuthHeader: true,
+      _skipErrorTip: true,
     },
   )
 }
