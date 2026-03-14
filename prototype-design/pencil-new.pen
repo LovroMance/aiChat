@@ -172,7 +172,8 @@
                       "fill": "#71717A",
                       "content": "请输入您的账号和密码",
                       "fontFamily": "Inter",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -237,7 +238,8 @@
                               "fill": "#A1A1AA",
                               "content": "手机号 / 邮箱",
                               "fontFamily": "Inter",
-                              "fontSize": 14
+                              "fontSize": 14,
+                              "fontWeight": "normal"
                             }
                           ]
                         }
@@ -297,7 +299,8 @@
                               "fill": "#A1A1AA",
                               "content": "请输入密码",
                               "fontFamily": "Inter",
-                              "fontSize": 14
+                              "fontSize": 14,
+                              "fontWeight": "normal"
                             }
                           ]
                         }
@@ -348,7 +351,8 @@
                               "fill": "#71717A",
                               "content": "记住我",
                               "fontFamily": "Inter",
-                              "fontSize": 13
+                              "fontSize": 13,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -427,7 +431,8 @@
                           "fill": "#EF4444",
                           "content": "账号或密码错误，请重新输入",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -447,7 +452,392 @@
                       "fill": "#D4D4D8",
                       "content": "© 2025 AiChat  ·  All rights reserved",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "tTcHo",
+      "x": 0,
+      "y": 960,
+      "name": "User Profile Card Page",
+      "clip": true,
+      "width": 1606,
+      "height": 412,
+      "fill": {
+        "type": "gradient",
+        "gradientType": "linear",
+        "enabled": true,
+        "rotation": 135,
+        "size": {
+          "height": 1
+        },
+        "colors": [
+          {
+            "color": "#F8FAFC",
+            "position": 0
+          },
+          {
+            "color": "#EEF4FF",
+            "position": 1
+          }
+        ]
+      },
+      "padding": [
+        52,
+        72
+      ],
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "CfXGt",
+          "name": "User Info Section",
+          "gap": 24,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "lF1Q6",
+              "name": "Avatar",
+              "metadata": {
+                "type": "unsplash",
+                "username": "maria_maldonado",
+                "link": "https://unsplash.com/@maria_maldonado",
+                "author": "Maria Maldonado"
+              },
+              "clip": true,
+              "width": 124,
+              "height": 124,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "https://images.unsplash.com/photo-1681148331577-50ce68c7763c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3NzMzODgzOTR8&ixlib=rb-4.1.0&q=80&w=1080",
+                "mode": "fill"
+              },
+              "cornerRadius": 62,
+              "stroke": {
+                "align": "inside",
+                "thickness": 3,
+                "fill": "#FFFFFF"
+              },
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#1E3A5F26",
+                "offset": {
+                  "x": 0,
+                  "y": 10
+                },
+                "blur": 24,
+                "spread": -4
+              }
+            },
+            {
+              "type": "frame",
+              "id": "1poDT",
+              "name": "Text Info",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "fCRsS",
+                  "name": "User Name",
+                  "fill": "#0F172A",
+                  "content": "林知言",
+                  "fontFamily": "Inter",
+                  "fontSize": 38,
+                  "fontWeight": "700",
+                  "letterSpacing": -0.8
+                },
+                {
+                  "type": "text",
+                  "id": "O5br1",
+                  "name": "User Account",
+                  "fill": "#475569",
+                  "content": "账号：LovroMance",
+                  "fontFamily": "Inter",
+                  "fontSize": 20,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "C3bZU",
+                  "name": "Signature Row",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "wBAWo",
+                      "name": "Signature Text",
+                      "fill": "#475569",
+                      "content": "个性签名：长期主义，持续迭代。",
+                      "fontFamily": "Inter",
+                      "fontSize": 21,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ptPoC",
+          "name": "Button States",
+          "layout": "vertical",
+          "gap": 10,
+          "alignItems": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "ZTj1w",
+              "name": "Default State",
+              "layout": "vertical",
+              "gap": 4,
+              "alignItems": "end",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "92IUj",
+                  "name": "defaultLabel",
+                  "fill": "#64748B",
+                  "content": "默认",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "KTo9s",
+                  "name": "Add Friend Button",
+                  "width": 214,
+                  "height": 60,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 90,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#3B82F6",
+                        "position": 0
+                      },
+                      {
+                        "color": "#1D4ED8",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "cornerRadius": 13,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#2563EB"
+                  },
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#1D4ED833",
+                    "offset": {
+                      "x": 0,
+                      "y": 6
+                    },
+                    "blur": 16,
+                    "spread": -6
+                  },
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "UFZ6G",
+                      "name": "ctaText",
+                      "fill": "#FFFFFF",
+                      "content": "添加好友",
+                      "fontFamily": "Inter",
+                      "fontSize": 22,
+                      "fontWeight": "650"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "HEUuq",
+              "name": "Hover State",
+              "layout": "vertical",
+              "gap": 4,
+              "alignItems": "end",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "9GIM5",
+                  "name": "hoverLabel",
+                  "fill": "#64748B",
+                  "content": "悬浮",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "vYkoE",
+                  "name": "hoverBtn",
+                  "width": 214,
+                  "height": 60,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 90,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#60A5FA",
+                        "position": 0
+                      },
+                      {
+                        "color": "#2563EB",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "cornerRadius": 13,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1.5,
+                    "fill": "#93C5FD"
+                  },
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#2563EB4D",
+                    "offset": {
+                      "x": 0,
+                      "y": 10
+                    },
+                    "blur": 24,
+                    "spread": -6
+                  },
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "y3ckG",
+                      "name": "ctaText",
+                      "fill": "#FFFFFF",
+                      "content": "添加好友",
+                      "fontFamily": "Inter",
+                      "fontSize": 22,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "eyeLV",
+              "name": "Pressed State",
+              "layout": "vertical",
+              "gap": 4,
+              "alignItems": "end",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "1Unxy",
+                  "name": "pressedLabel",
+                  "fill": "#64748B",
+                  "content": "按下",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "7616Z",
+                  "name": "pressedBtn",
+                  "opacity": 0.98,
+                  "width": 214,
+                  "height": 58,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 90,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#2563EB",
+                        "position": 0
+                      },
+                      {
+                        "color": "#1E40AF",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#1E3A8A"
+                  },
+                  "effect": [
+                    {
+                      "type": "shadow",
+                      "shadowType": "outer",
+                      "color": "#0F172A33",
+                      "offset": {
+                        "x": 0,
+                        "y": 2
+                      },
+                      "blur": 6
+                    },
+                    {
+                      "type": "shadow",
+                      "shadowType": "outer",
+                      "color": "#0F172A1A",
+                      "offset": {
+                        "x": 0,
+                        "y": 2
+                      },
+                      "blur": 6,
+                      "spread": -4
+                    }
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "vYnIc",
+                      "name": "ctaText",
+                      "fill": "#FFFFFF",
+                      "content": "添加好友",
+                      "fontFamily": "Inter",
+                      "fontSize": 22,
+                      "fontWeight": "600"
                     }
                   ]
                 }

@@ -6,7 +6,7 @@ import { USER_LOGIN_INFO, USER_INFO_DATA, setStorage, getStorage } from '@/utils
 
 onMounted(async () => {
   try {
-    const { data } = await getUserInfo(getStorage(USER_LOGIN_INFO).uid)
+    const { data } = await getUserInfo({ uid: getStorage(USER_LOGIN_INFO).uid })
     setStorage(USER_INFO_DATA, data.data)
   } catch (error) {
     console.error('获取用户信息失败:', error)

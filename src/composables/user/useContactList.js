@@ -88,14 +88,6 @@ export function useContactList() {
 
   const activeLabel = computed(() => tabs.find((t) => t.key === activeTab.value)?.label || '全部')
 
-  const handleSearch = () => {
-    if (!query.value.trim()) {
-      ElMessage({ type: 'warning', message: '请输入关键词' })
-      return
-    }
-    // 这里可接入后端：搜索用户 / 群聊 / AI
-    ElMessage({ type: 'info', message: `搜索 / 添加逻辑：${query.value}` })
-  }
 
   const openChat = (c) => {
     ElMessage({ type: 'success', message: `打开会话：${c.name}` })
@@ -117,7 +109,6 @@ export function useContactList() {
     activeLabel,
 
     // actions
-    handleSearch,
     openChat,
     typeBadgeText,
     typeIcon,

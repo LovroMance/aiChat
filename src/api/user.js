@@ -26,9 +26,7 @@ export const useUserLogin = (data) => {
 // 获取用户信息
 export const getUserInfo = (data) => {
   return instance.get('/user/get-user', {
-    params: {
-      uid: data,
-    },
+    params: data
   })
 }
 

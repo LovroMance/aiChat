@@ -1,6 +1,7 @@
 <script setup>
-import { Plus, Search } from '@element-plus/icons-vue'
+import { Plus, Search, UserFilled } from '@element-plus/icons-vue'
 import { useContactList } from '@/composables/user/useContactList'
+import { useAddUserProfileCard } from '@/composables/user/addUserProfileCard'
 
 const {
   contacts,
@@ -9,11 +10,12 @@ const {
   tabs,
   filteredContacts,
   activeLabel,
-  handleSearch,
   openChat,
   typeBadgeText,
   typeIcon,
 } = useContactList()
+
+const { profileCards, searchUserProfile } = useAddUserProfileCard()
 </script>
 
 <template>
@@ -28,7 +30,7 @@ const {
             v-model="query"
             placeholder="输入用户名、群名称、关键字"
             clearable
-            @keyup.enter="handleSearch"
+            @keyup.enter="searchUserProfile({ account: query })"
             class="search-input"
           >
             <template #prefix>
@@ -38,7 +40,7 @@ const {
           <el-button
             type="primary"
             :disabled="!query.trim()"
-            @click="handleSearch"
+            @click="searchUserProfile({ account: query })"
             class="search-btn"
           >
             <el-icon><Plus /></el-icon>
@@ -59,8 +61,36 @@ const {
       </div>
     </section>
 
+    <!-- User Profile Card -->
+    <section v-if="query.trim() && profileCards.length" class="profile-section">
+      <div class="profile-grid">
+        <article
+          v-for="(card, idx) in profileCards || []"
+          :key="card?.account || card?.name || idx"
+          class="profile-card"
+        >
+          <div class="profile-shell">
+            <div class="profile-info">
+              <el-avatar :size="124" :src="card.avatar" class="profile-avatar" />
+              <div class="profile-text">
+                <h3 class="profile-name">{{ card.username }}</h3>
+                <p class="profile-account">账号：{{ card.account }}</p>
+                <p class="profile-signature">个性签名：{{ card.signature }}</p>
+              </div>
+            </div>
+
+            <div class="profile-states">
+              <div class="state-preview">
+                <button type="button" class="state-button">{{ card.ctaText || '添加好友' }}</button>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <!-- 联系人列表 -->
-    <section class="list-section">
+    <section v-else class="list-section">
       <div class="list-header">
         <h3>{{ activeLabel }}（{{ filteredContacts.length }}）</h3>
       </div>
@@ -257,6 +287,130 @@ const {
   border-radius: 16px;
   padding: 12px 0 4px;
   box-shadow: 0 4px 14px -8px rgba(64, 158, 255, 0.18);
+}
+
+/* tTcHo: User Profile Card */
+.profile-section {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 100%);
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 12px 28px -18px rgba(30, 58, 95, 0.35);
+  overflow: auto;
+}
+
+.profile-grid {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-card {
+  min-height: 200px;
+  background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 100%);
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  border-radius: 16px;
+  padding: 24px 28px;
+  display: flex;
+}
+
+.profile-shell {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-width: 0;
+}
+
+.profile-avatar {
+  border: 3px solid #fff;
+  box-shadow: 0 10px 24px -10px rgba(30, 58, 95, 0.45);
+  flex-shrink: 0;
+}
+
+.profile-text {
+  min-width: 0;
+}
+
+.profile-name {
+  margin: 0;
+  color: #0f172a;
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.profile-account {
+  margin: 8px 0;
+  color: #475569;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.profile-signature {
+  margin: 0;
+  color: #475569;
+  font-size: 21px;
+  font-weight: 600;
+}
+
+.profile-states {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.state-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.state-button {
+  width: 214px;
+  height: 60px;
+  border-radius: 13px;
+  border: 1px solid #2563eb;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 650;
+  cursor: pointer;
+  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+  box-shadow: 0 6px 16px -6px rgba(29, 78, 216, 0.35);
+  transition: all 0.2s ease;
+}
+
+.state-button:hover {
+  border: 1.5px solid #93c5fd;
+  font-weight: 700;
+  background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
+  box-shadow: 0 10px 24px -10px rgba(37, 99, 235, 0.45);
+}
+
+.state-button:active {
+  height: 60px;
+  border-width: 1px;
+  border-color: #1e3a8a;
+  border-radius: 13px;
+  font-weight: 600;
+  opacity: 0.98;
+  background: linear-gradient(180deg, #2563eb 0%, #1e40af 100%);
+  box-shadow: 0 3px 10px -2px rgba(15, 23, 42, 0.25);
+  transform: scale(0.995);
 }
 
 .list-header {
@@ -463,6 +617,30 @@ const {
   .search-btn {
     width: 100%;
   }
+  .profile-section {
+    padding: 24px;
+  }
+  .profile-grid {
+    gap: 12px;
+  }
+  .profile-card {
+    min-height: 0;
+    padding: 20px;
+  }
+  .profile-shell {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .profile-states {
+    width: 100%;
+    align-items: stretch;
+  }
+  .state-preview {
+    align-items: stretch;
+  }
+  .state-button {
+    width: 100%;
+  }
 }
 
 @media (max-width: 560px) {
@@ -471,6 +649,20 @@ const {
   }
   .add-inner {
     padding: 22px 20px 16px;
+  }
+  .profile-info {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .profile-name {
+    font-size: 30px;
+  }
+  .profile-account {
+    font-size: 16px;
+  }
+  .profile-signature {
+    font-size: 17px;
   }
   .tabs {
     gap: 6px;
