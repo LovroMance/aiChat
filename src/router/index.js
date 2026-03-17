@@ -57,6 +57,13 @@ const routes = [
         alias: ['/userChat'],
       },
       {
+        path: 'notification-center',
+        name: 'notificationCenter',
+        component: () => import('@/views/user/notification-center.vue'),
+        meta: { title: '通知中心', requiresAuth: true },
+        alias: ['/notificationCenter'],
+      },
+      {
         path: 'user-info',
         name: 'userInfo',
         component: () => import('@/views/user/user-info.vue'),

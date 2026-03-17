@@ -1,7 +1,17 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Menu, List, ChatDotRound, User, Setting, Expand, Fold, Cpu } from '@element-plus/icons-vue'
+import {
+  Menu,
+  List,
+  ChatDotRound,
+  User,
+  Setting,
+  Expand,
+  Fold,
+  Cpu,
+  Bell,
+} from '@element-plus/icons-vue'
 
 const isCollapse = ref(false)
 const route = useRoute()
@@ -11,6 +21,7 @@ const menuList = [
   { index: '/userHome', icon: Menu, title: '首页' },
   { index: '/FriendGroupList', icon: List, title: '通讯录' },
   { index: '/userChat', icon: ChatDotRound, title: '聊天室' },
+  { index: '/notificationCenter', icon: Bell, title: '通知中心' },
   { index: '/aiChat', icon: Cpu, title: 'AI 助手' },
   { index: '/userInfo', icon: User, title: '个人中心' },
   { index: '/userSetting', icon: Setting, title: '设置' },

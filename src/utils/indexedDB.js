@@ -1,6 +1,6 @@
 // 数据库配置
 const DB_NAME = 'aiChatDB'
-const DB_VERSION = 4
+const DB_VERSION = 5
 let db = null
 
 // 存储对象名称常量
@@ -9,6 +9,7 @@ export const UNREAD_MESSAGES_STORE = 'unreadMessages'
 export const THREADS_STORE = 'threads'
 export const AI_THREADS_STORE = 'aiThreads'
 export const AI_MESSAGES_STORE = 'aiMessages'
+export const NOTIFICATIONS_STORE = 'notifications'
 
 /**
  * 确保数据库已打开
@@ -91,6 +92,14 @@ export const initDB = () => {
         keyPath: 'message_id',
       })
       aiMessageStore.createIndex('thread_id', 'thread_id', { unique: false }) // 添加 thread_id 索引
+
+      // 创建通知存储
+      if (!database.objectStoreNames.contains(NOTIFICATIONS_STORE)) {
+        const notificationStore = database.createObjectStore(NOTIFICATIONS_STORE, {
+          keyPath: 'notice_id', // 通知 ID
+        })
+        notificationStore.createIndex('created_time', 'created_time', { unique: false })
+      }
     }
   })
 }
@@ -338,6 +347,41 @@ export const getRecentMessagesByThreadId = async (storeName, threadId, limit = 5
     return allMessages.slice(-limit)
   } catch (error) {
     console.error(`获取会话 ${threadId} 的最新消息失败:`, error)
+    throw error
+  }
+}
+
+/**
+ * 根据主键删除数据
+ * @param {string} storeName - 存储对象名称
+ * @param {string|number} key - 主键
+ * @returns {Promise}
+ */
+export const deleteData = async (storeName, key) => {
+  try {
+    await ensureDBOpen()
+
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = db.transaction([storeName], 'readwrite')
+        const store = transaction.objectStore(storeName)
+        const request = store.delete(key)
+
+        request.onsuccess = () => {
+          resolve()
+        }
+
+        request.onerror = () => {
+          console.error('删除数据失败')
+          reject(new Error('删除数据失败'))
+        }
+      } catch (error) {
+        console.error('删除数据操作失败:', error)
+        reject(error)
+      }
+    })
+  } catch (error) {
+    console.error('数据库打开失败:', error)
     throw error
   }
 }

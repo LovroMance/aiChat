@@ -7,6 +7,7 @@ export * from './user'
 export * from './message'
 export * from './unreadMessages'
 export * from './thread'
+export * from './notification'
 
 // AI聊天部分
 export * from './ai'

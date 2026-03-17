@@ -1,4 +1,4 @@
-<!-- <script setup>
+<script setup>
 import { onMounted, onUnmounted } from 'vue'
 import { closeWebSocket } from '@/utils/websocket'
 
@@ -16,7 +16,7 @@ onUnmounted(() => {
   window.removeEventListener('pagehide', cleanupSocket)
   cleanupSocket()
 })
-</script> -->
+</script>
 
 <template>
   <div>

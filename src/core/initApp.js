@@ -1,6 +1,7 @@
 import { loadUnreadMessagesData } from '@/core/unreadMessage'
 import { showWarningTip } from '@/utils/messageTips'
 import { chatPath, createWebSocket } from '@/utils/websocket.js'
+import { useNotificationStore } from '@/stores'
 
 /**
  * 应用启动时的数据初始化函数
@@ -14,6 +15,10 @@ export const initializeAppData = async () => {
     // TODO: 这里加一个加载状态
     // 加载未读消息数据
     await loadUnreadMessagesData()
+
+    // 加载通知数据
+    const notificationStore = useNotificationStore()
+    await notificationStore.initNotifications()
 
     const endTime = performance.now() // 记录结束时间
     const duration = (endTime - startTime).toFixed(2) // 计算耗时（毫秒）
