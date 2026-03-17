@@ -13,7 +13,7 @@ const emit = defineEmits(['action'])
 const toneClassMap = {
   blue: 'tone-blue',
   green: 'tone-green',
-  cyan: 'tone-cyan',
+  red: 'tone-red', // 用红色代替 cyan，用来表示拒绝等状态
 }
 
 const buttonClassMap = {
@@ -48,15 +48,33 @@ const handleAction = (actionKey) => {
           <div class="state-block">
             <span class="card-time">{{ formatTime(notification.created_time) }}</span>
             <span
-              v-if="notification.status"
-              :class="['status-pill', getToneClass(notification.tone)]"
+              v-if="notification.status !== undefined"
+              :class="[
+                'status-pill',
+                notification.status === 1
+                  ? 'tone-green'
+                  : notification.status === 2
+                    ? 'tone-red'
+                    : 'tone-blue',
+              ]"
             >
               <span class="status-dot"></span>
-              {{ notification.status }}
+              {{
+                notification.status === 1
+                  ? '已接受'
+                  : notification.status === 2
+                    ? '已拒绝'
+                    : '待处理'
+              }}
             </span>
           </div>
         </div>
-        <p class="sub-meta">{{ notification.username }}</p>
+        <p class="sub-meta">
+          {{ notification.username }}
+          <span v-if="notification.sender_uid" class="uid-tag"
+            >UID: {{ notification.sender_uid }}</span
+          >
+        </p>
       </div>
     </div>
 
@@ -64,7 +82,7 @@ const handleAction = (actionKey) => {
       <p class="message-text">{{ notification.message }}</p>
     </div>
 
-    <div v-if="notification.actions?.length" class="action-row">
+    <div v-if="notification.status === 0 && notification.actions?.length" class="action-row">
       <button
         v-for="action in notification.actions"
         :key="action.key"
@@ -110,9 +128,9 @@ const handleAction = (actionKey) => {
   background: #f0fdf4;
 }
 
-.notification-card.tone-cyan {
-  border-color: #bae6fd;
-  background: #f0f9ff;
+.notification-card.tone-red {
+  border-color: #fecaca;
+  background: #fef2f2;
 }
 
 .identity-block,
@@ -154,6 +172,18 @@ const handleAction = (actionKey) => {
   font-size: 12px;
   font-weight: 500;
   color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.uid-tag {
+  font-size: 11px;
+  color: #94a3b8;
+  background-color: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
 }
 
 .card-time {
@@ -188,9 +218,9 @@ const handleAction = (actionKey) => {
   color: #15803d;
 }
 
-.status-pill.tone-cyan {
-  background: #eff6ff;
-  color: #0369a1;
+.status-pill.tone-red {
+  background: #fef2f2;
+  color: #b91c1c;
 }
 
 .status-dot {
@@ -221,6 +251,7 @@ const handleAction = (actionKey) => {
 
 .action-row {
   gap: 10px;
+  justify-content: flex-end; /* 将按钮靠右对齐 */
 }
 
 .action-btn {
@@ -255,9 +286,9 @@ const handleAction = (actionKey) => {
   box-shadow: 0 6px 14px -8px rgba(22, 163, 74, 0.45);
 }
 
-.btn-primary.tone-cyan {
-  background: #0284c7;
-  box-shadow: 0 6px 14px -8px rgba(2, 132, 199, 0.45);
+.btn-primary.tone-red {
+  background: #dc2626;
+  box-shadow: 0 6px 14px -8px rgba(220, 38, 38, 0.45);
 }
 
 .btn-secondary {
@@ -276,8 +307,7 @@ const handleAction = (actionKey) => {
   flex-shrink: 0;
 }
 
-.system-avatar.tone-blue,
-.system-avatar.tone-cyan {
+.system-avatar.tone-blue {
   background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
   color: #2563eb;
 }
@@ -285,6 +315,11 @@ const handleAction = (actionKey) => {
 .system-avatar.tone-green {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
   color: #16a34a;
+}
+
+.system-avatar.tone-red {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #dc2626;
 }
 
 @media (max-width: 900px) {

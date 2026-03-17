@@ -38,6 +38,24 @@ export const useNotificationStore = defineStore('notification', () => {
     }
   }
 
+  // 更新通知状态
+  const updateNotificationStatus = async (noticeId, status) => {
+    try {
+      const noticeIndex = notifications.value.findIndex((n) => n.notice_id === noticeId)
+      if (noticeIndex !== -1) {
+        // 第一步：更新内存中数据的状态
+        notifications.value[noticeIndex].status = status
+        // 第二步：将更新后的对象写入 IndexedDB
+        await putData(
+          NOTIFICATIONS_STORE,
+          JSON.parse(JSON.stringify(notifications.value[noticeIndex])),
+        )
+      }
+    } catch (error) {
+      console.error('更新通知状态失败:', error)
+    }
+  }
+
   // 未读通知数量（可选）
   const unreadCount = computed(() => notifications.value.length)
 
@@ -46,6 +64,7 @@ export const useNotificationStore = defineStore('notification', () => {
     initNotifications,
     addNotification,
     removeNotification,
+    updateNotificationStatus,
     unreadCount,
   }
 })

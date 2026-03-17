@@ -20,6 +20,27 @@ export const loadUnreadMessagesData = async () => {
   }
 }
 
+// 同意好友申请时的记录
+export const putAcceptFriendMessageRecord = async (thread_id, userInfo) => {
+  const unreadMessagesStore = useUnreadMessagesStore()
+  const valueObj = {
+    thread_id: thread_id,
+    thread_avatar: userInfo.avatar,
+    thread_name: userInfo.username,
+    senderName: userInfo.username,
+    type: 'private', // 标识为私聊
+    content: '我通过了你的好友验证请求，现在我们可以开始聊天了', // 默认生成的系统提示/消息
+    lastTime: Math.floor(Date.now() / 1000),
+    unreadCount: 0,
+  }
+  console.log('添加同意好友会话 valueObj', valueObj)
+  // indexedDB更新
+  await putData(UNREAD_MESSAGES_STORE, valueObj)
+  // 仓库更新
+  unreadMessagesStore.updateUnreadMessage(thread_id, valueObj)
+  console.log('更新未读消息成功:', unreadMessagesStore.unreadMessagesMap)
+}
+
 // 创建群聊时的记录
 export const putCreateGroupMessageRecord = async (groupForm) => {
   // 在函数内部获取 store
