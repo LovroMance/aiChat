@@ -1,7 +1,6 @@
 import { useUserStore } from '@/stores/index'
-import { receiveMessage } from '@/core/onMessage'
-import { receiveAiMessage } from '@/core/onAiMessage'
-import { classifyWsMessage } from '@/core/messageClassifier'
+import { classifyWsMessage } from '@/core/websocketDispatch/messageClassifier'
+import { dispatchWsMessage } from '@/core/websocketDispatch/messageDispatcher'
 
 const wsBaseURL = import.meta.env?.VITE_APP_WS_BASE
 
@@ -11,7 +10,6 @@ let ws = null // websocket实例
 let isConnected = false
 
 export const createWebSocket = (path) => {
-  // 从 Pinia store 动态获取 access_token（内存中的最新值）
   const userStore = useUserStore()
   const token = userStore.accessToken
 
@@ -59,24 +57,9 @@ const bindEvents = async () => {
       // 尝试解析 JSON
       try {
         const data = JSON.parse(event.data) // 把JSON字符串转换为对象
-        if (data && Object.prototype.hasOwnProperty.call(data, 'model')) return
         console.log('收到消息:', data)
-        const category = classifyWsMessage(data)
-        if (category === 'notice') {
-          console.log('通知消息，暂不处理')
-          return
-        }
-        if (category === 'ai') {
-          console.log('AI消息处理')
-          receiveAiMessage(data)
-          return
-        }
-        if (category === 'chat') {
-          console.log('普通消息处理')
-          receiveMessage(data)
-          return
-        }
-        console.warn('未识别的消息类型:', data)
+        const category = classifyWsMessage(data)  // 消息分类
+        dispatchWsMessage(category, data)  // 根据分类结果分发处理
       } catch {
         // 如果不是 JSON 格式，直接输出原始消息
         console.log('收到消息:', event.data)

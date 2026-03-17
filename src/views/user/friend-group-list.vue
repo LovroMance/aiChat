@@ -15,7 +15,7 @@ const {
   typeIcon,
 } = useContactList()
 
-const { profileCards, searchUserProfile } = useAddUserProfileCard()
+const { profileCards, searchUserProfile, sendFriendRequest } = useAddUserProfileCard()
 </script>
 
 <template>
@@ -71,17 +71,32 @@ const { profileCards, searchUserProfile } = useAddUserProfileCard()
         >
           <div class="profile-shell">
             <div class="profile-info">
-              <el-avatar :size="124" :src="card.avatar" class="profile-avatar" />
+              <el-avatar :size="64" :src="card.avatar" class="profile-avatar" />
               <div class="profile-text">
                 <h3 class="profile-name">{{ card.username }}</h3>
                 <p class="profile-account">账号：{{ card.account }}</p>
-                <p class="profile-signature">个性签名：{{ card.signature }}</p>
+                <p class="profile-signature">
+                  个性签名：{{ card.signature || '这个人很懒，什么都没有留下' }}
+                </p>
               </div>
             </div>
 
             <div class="profile-states">
-              <div class="state-preview">
-                <button type="button" class="state-button">{{ card.ctaText || '添加好友' }}</button>
+              <div class="request-panel">
+                <div class="greeting-input-area">
+                  <textarea
+                    class="greeting-text"
+                    v-model="card.message"
+                    placeholder="你好，很高兴认识你~"
+                  ></textarea>
+                </div>
+                <button
+                  type="button"
+                  class="state-button"
+                  @click="sendFriendRequest({ acceptor_uid: card.uid, message: card.message })"
+                >
+                  添加好友
+                </button>
               </div>
             </div>
           </div>
@@ -143,6 +158,7 @@ const { profileCards, searchUserProfile } = useAddUserProfileCard()
 /* 顶部添加联系人区域 */
 .add-contact {
   display: flex;
+  flex-shrink: 0;
 }
 
 .add-inner {
@@ -299,7 +315,9 @@ const { profileCards, searchUserProfile } = useAddUserProfileCard()
   border-radius: 18px;
   padding: 20px;
   box-shadow: 0 12px 28px -18px rgba(30, 58, 95, 0.35);
-  overflow: auto;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }
 
 .profile-grid {
@@ -310,12 +328,18 @@ const { profileCards, searchUserProfile } = useAddUserProfileCard()
 }
 
 .profile-card {
-  min-height: 200px;
-  background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 100%);
-  border: 1px solid rgba(37, 99, 235, 0.12);
-  border-radius: 16px;
-  padding: 24px 28px;
+  background: #ffffff;
+  border: 1px solid rgba(70, 130, 180, 0.15);
+  border-radius: 14px;
+  padding: 20px 24px;
   display: flex;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.profile-card:hover {
+  border-color: rgba(64, 158, 255, 0.4);
+  box-shadow: 0 8px 20px -8px rgba(64, 158, 255, 0.15);
 }
 
 .profile-shell {
@@ -324,93 +348,125 @@ const { profileCards, searchUserProfile } = useAddUserProfileCard()
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 24px;
+  gap: 32px;
 }
 
 .profile-info {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
   min-width: 0;
+  flex: 1;
 }
 
 .profile-avatar {
-  border: 3px solid #fff;
-  box-shadow: 0 10px 24px -10px rgba(30, 58, 95, 0.45);
+  border: 2px solid #fff;
+  box-shadow: 0 4px 10px -4px rgba(30, 58, 95, 0.2);
   flex-shrink: 0;
 }
 
 .profile-text {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .profile-name {
   margin: 0;
-  color: #0f172a;
-  font-size: 38px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
+  color: #1e293b;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
 }
 
 .profile-account {
-  margin: 8px 0;
-  color: #475569;
-  font-size: 20px;
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
   font-weight: 500;
 }
 
 .profile-signature {
-  margin: 0;
-  color: #475569;
-  font-size: 21px;
-  font-weight: 600;
+  margin: 4px 0 0;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .profile-states {
+  width: 280px;
+  flex-shrink: 0;
+}
+
+.request-panel {
+  width: 100%;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  align-items: flex-end;
 }
 
-.state-preview {
+.greeting-input-area {
+  height: 48px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 12px;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
+  align-items: center;
+  transition: border-color 0.2s;
+}
+
+.greeting-input-area:focus-within {
+  border-color: #60a5fa;
+}
+
+.greeting-text {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  font-family: inherit;
+}
+
+.greeting-text::placeholder {
+  color: #94a3b8;
 }
 
 .state-button {
-  width: 214px;
-  height: 60px;
-  border-radius: 13px;
-  border: 1px solid #2563eb;
+  width: 100%;
+  height: 38px;
+  border-radius: 8px;
+  border: none;
   color: #fff;
-  font-size: 22px;
-  font-weight: 650;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
-  box-shadow: 0 6px 16px -6px rgba(29, 78, 216, 0.35);
+  background: #3b82f6;
   transition: all 0.2s ease;
 }
 
 .state-button:hover {
-  border: 1.5px solid #93c5fd;
-  font-weight: 700;
-  background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
-  box-shadow: 0 10px 24px -10px rgba(37, 99, 235, 0.45);
+  background: #2563eb;
+  transform: translateY(-1px);
 }
 
 .state-button:active {
-  height: 60px;
-  border-width: 1px;
-  border-color: #1e3a8a;
-  border-radius: 13px;
-  font-weight: 600;
-  opacity: 0.98;
-  background: linear-gradient(180deg, #2563eb 0%, #1e40af 100%);
-  box-shadow: 0 3px 10px -2px rgba(15, 23, 42, 0.25);
-  transform: scale(0.995);
+  background: #1d4ed8;
+  transform: scale(0.99);
 }
 
 .list-header {
@@ -633,10 +689,7 @@ const { profileCards, searchUserProfile } = useAddUserProfileCard()
   }
   .profile-states {
     width: 100%;
-    align-items: stretch;
-  }
-  .state-preview {
-    align-items: stretch;
+    max-width: none;
   }
   .state-button {
     width: 100%;
