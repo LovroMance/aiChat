@@ -11,10 +11,11 @@ export const onFriendRequestNoticed = (payload) => {
     tone: 'blue',
     title: '收到好友申请',
     created_time: payload.created_time,
-    status: '未处理',
+    status: 0,
     username: payload.sender_name,
     avatar: payload.sender_avatar,
     message: payload.message ?? '对方请求添加您为好友',
+    sender_uid: payload.sender_uid,
     actions: [
       { key: 'accept', label: '接受申请', variant: 'primary' },
       { key: 'reject', label: '拒绝申请', variant: 'secondary' },
