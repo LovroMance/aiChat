@@ -3,7 +3,7 @@ import { onMounted, onUnmounted } from 'vue'
 import { closeWebSocket } from '@/utils/websocket'
 
 const cleanupSocket = () => {
-  closeWebSocket()
+  closeWebSocket({ manual: true, reset: true })
 }
 
 onMounted(() => {

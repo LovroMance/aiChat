@@ -1,7 +1,10 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { CirclePlus, MoreFilled } from '@element-plus/icons-vue'
+import { storeToRefs } from 'pinia'
 import { useChat } from '@/composables/chat/useChat'
+import { useWebSocketStore } from '@/stores'
+import { closeWebSocket, reconnectWebSocket } from '@/utils/websocket'
 import { formatTimeHour } from '@/utils/format'
 import chatPanel from '@/components/chat/chat-panel.vue'
 import chatInput from '@/components/chat/chat-input.vue'
@@ -20,6 +23,31 @@ const {
 // 只保留 UI 相关的状态
 const isPopup = ref(false)
 const chatPanelRef = ref(null)
+const webSocketStore = useWebSocketStore()
+const { status, reconnectAttempts, lastError } = storeToRefs(webSocketStore)
+
+const connectionTagType = computed(() => {
+  if (status.value === 'connected') return 'success'
+  if (status.value === 'connecting' || status.value === 'reconnecting') return 'warning'
+  return 'danger'
+})
+
+const connectionLabel = computed(() => {
+  if (status.value === 'connected') return '连接正常'
+  if (status.value === 'connecting') return '连接中'
+  if (status.value === 'reconnecting') {
+    return `重连中 (${reconnectAttempts.value})`
+  }
+  return '连接已断开'
+})
+
+const canManualReconnect = computed(() => {
+  return ['disconnected', 'idle'].includes(status.value)
+})
+
+const canManualDisconnect = computed(() => {
+  return ['connected', 'connecting', 'reconnecting'].includes(status.value)
+})
 
 // ✅ 应用启动时初始化
 onMounted(async () => {
@@ -53,6 +81,14 @@ const handleSelectChat = async (chat) => {
     // 错误提示已由响应拦截器统一处理
     console.error('切换会话失败:', error)
   }
+}
+
+const handleReconnect = () => {
+  reconnectWebSocket()
+}
+
+const handleDisconnect = () => {
+  closeWebSocket({ manual: true })
 }
 </script>
 
@@ -107,10 +143,21 @@ const handleSelectChat = async (chat) => {
       <!-- 顶部导航 -->
       <el-header class="chat-header-bar">
         <div class="header-content">
-          <span class="current-chat-name">{{ activeThread?.thread_name }}</span>
-          <el-button link>
-            <el-icon :size="20"><MoreFilled /></el-icon>
-          </el-button>
+          <div class="header-left">
+            <span class="current-chat-name">{{ activeThread?.thread_name || '未选择会话' }}</span>
+            <el-tag size="small" :type="connectionTagType" effect="plain" round>
+              {{ connectionLabel }}
+            </el-tag>
+            <span v-if="lastError" class="connection-tip">{{ lastError }}</span>
+          </div>
+
+          <div class="header-actions">
+            <el-button v-if="canManualDisconnect" link @click="handleDisconnect">断开</el-button>
+            <el-button v-if="canManualReconnect" link @click="handleReconnect">重连</el-button>
+            <el-button link>
+              <el-icon :size="20"><MoreFilled /></el-icon>
+            </el-button>
+          </div>
         </div>
       </el-header>
 
@@ -281,12 +328,37 @@ const handleSelectChat = async (chat) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
 }
 
 .current-chat-name {
   font-size: 16px;
   font-weight: 600;
   color: #1e293b;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.connection-tip {
+  font-size: 12px;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .chat-content-area {

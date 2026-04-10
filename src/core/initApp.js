@@ -26,7 +26,11 @@ export const initializeAppData = async () => {
     console.log(`数据加载完成，耗时: ${duration} 毫秒`)
 
     try {
-      createWebSocket(chatPath)
+      const connected = createWebSocket(chatPath)
+      if (!connected) {
+        showWarningTip('WebSocket连接初始化失败，请检查登录状态或网络配置')
+        return false
+      }
       console.log('WebSocket连接初始化完成')
     } catch (error) {
       console.error('WebSocket初始化失败:', error)
