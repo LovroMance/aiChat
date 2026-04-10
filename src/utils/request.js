@@ -3,7 +3,7 @@ import { useUserStore } from '@/stores/index'
 import { USER_LOGIN_INFO, removeStorage } from './localstorage'
 import { showErrorTip } from './messageTips'
 
-const baseURL = import.meta.env?.VITE_APP_API_BASE
+const baseURL = import.meta.env?.VITE_APP_API_BASE || ''
 
 const instance = axios.create({
   baseURL,
