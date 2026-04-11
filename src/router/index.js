@@ -4,6 +4,31 @@ import pinia from '@/stores'
 import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
 import { closeWebSocket } from '@/utils/websocket'
 
+const restoreAccessToken = async (userStore, stored) => {
+  if (userStore.accessToken || !stored?.uid) {
+    return Boolean(userStore.accessToken || stored?.uid)
+  }
+
+  try {
+    const { useRefreshToken } = await import('@/api/auth')
+    const { data } = await useRefreshToken()
+    const nextToken = data?.data?.access_token
+
+    if (!nextToken) {
+      return false
+    }
+
+    userStore.setLoginInfo({
+      uid: stored.uid,
+      accessToken: nextToken,
+    })
+    return true
+  } catch (error) {
+    console.error('恢复登录态失败:', error)
+    return false
+  }
+}
+
 const routes = [
   {
     path: '/',
@@ -86,14 +111,13 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const userStore = useUserStore(pinia)
   const stored = getStorage(USER_LOGIN_INFO)
+  const isLoggedIn = await restoreAccessToken(userStore, stored)
 
   // accessToken 在内存中（页面刷新后为空），uid 在 localStorage 中持久化
   // 两者任一存在即视为已登录；accessToken 过期时由请求拦截器静默刷新
-  const isLoggedIn = userStore.accessToken || stored?.uid
-
   if (to.meta?.requiresAuth && !isLoggedIn) {
     closeWebSocket()
     return {
