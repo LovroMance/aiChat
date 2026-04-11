@@ -1,7 +1,8 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { CirclePlus, MoreFilled } from '@element-plus/icons-vue'
 import { storeToRefs } from 'pinia'
+import { flushPendingChatMessages } from '@/core/chatSend'
 import { useChat } from '@/composables/chat/useChat'
 import { useWebSocketStore } from '@/stores'
 import { closeWebSocket, reconnectWebSocket } from '@/utils/websocket'
@@ -54,6 +55,12 @@ onMounted(async () => {
   await initChat()
   setChatPanelRef(chatPanelRef.value)
   scrollToBottom()
+})
+
+watch(status, async (nextStatus) => {
+  if (nextStatus === 'connected') {
+    await flushPendingChatMessages()
+  }
 })
 
 // ✅ 处理弹窗关闭

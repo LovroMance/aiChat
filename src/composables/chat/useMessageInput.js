@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { showWarningTip } from '@/utils/messageTips'
-import { sendMessage } from '@/utils/websocket'
-import { useThreadStore, useWebSocketStore } from '@/stores'
+import { submitChatMessage } from '@/core/chatSend'
+import { useThreadStore } from '@/stores'
 
 /**
  * 聊天输入框逻辑封装
@@ -11,7 +11,6 @@ import { useThreadStore, useWebSocketStore } from '@/stores'
 export function useMessageInput(emit) {
   const input = ref('')
   const threadStore = useThreadStore()
-  const webSocketStore = useWebSocketStore()
 
   const send = async () => {
     if (!input.value.trim()) {
@@ -24,28 +23,17 @@ export function useMessageInput(emit) {
       return
     }
 
-    if (!webSocketStore.isConnected) {
-      const message =
-        webSocketStore.status === 'reconnecting'
-          ? '连接正在恢复中，请稍后重试'
-          : webSocketStore.lastError || '连接未建立，暂时无法发送消息'
-      showWarningTip(message)
-      return
-    }
+    const content = input.value.trim()
+    const result = await submitChatMessage({
+      threadId: threadStore.activeThread.thread_id,
+      content,
+    })
 
-    const messageObj = {
-      content: input.value.trim(),
-      attachment: null,
-      thread_id: threadStore.activeThread.thread_id,
-    }
+    input.value = ''
+    emit?.('messageSent')
 
-    const result = await sendMessage(messageObj)
-    if (result) {
-      input.value = ''
-      emit?.('messageSent')
-    } else {
-      showWarningTip(webSocketStore.lastError || '消息发送失败，请稍后重试')
-      console.error('消息发送失败')
+    if (result.queued) {
+      showWarningTip('当前连接不可用，消息已加入待发送队列')
     }
   }
 

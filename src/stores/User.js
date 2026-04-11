@@ -41,8 +41,12 @@ export const useUserStore = defineStore('user', () => {
 
   // 清除登录信息
   const clearLoginInfo = () => {
+    account.value = ''
+    username.value = ''
     uid.value = ''
     accessToken.value = ''
+    avatar.value = ''
+    email.value = ''
   }
 
   return {

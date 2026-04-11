@@ -1,7 +1,6 @@
 <script setup>
-import { formatTime } from '@/utils/format';
+import { formatTime } from '@/utils/format'
 
-// 变更：规范 props 名称与类型，增加 userUid（当前用户 id）
 const props = defineProps({
   messages: {
     type: Array,
@@ -12,6 +11,23 @@ const props = defineProps({
     required: true,
   },
 })
+
+const emit = defineEmits(['retry'])
+
+const statusTextMap = {
+  queued: '待发送',
+  sending: '发送中',
+  failed: '发送失败',
+  sent: '已发送',
+}
+
+const getStatusText = (msg) => {
+  return statusTextMap[msg?.delivery_status] || ''
+}
+
+const isRetryable = (msg) => {
+  return msg?.delivery_status === 'failed' && msg?.client_message_id
+}
 </script>
 
 <template>
@@ -30,6 +46,20 @@ const props = defineProps({
           }}</span>
         </div>
         <div class="content">{{ msg.content }}</div>
+        <div
+          v-if="msg.sender_uid === props.userUid && msg.delivery_status"
+          :class="['message-status', msg.delivery_status]"
+        >
+          <span>{{ getStatusText(msg) }}</span>
+          <button
+            v-if="isRetryable(msg)"
+            type="button"
+            class="retry-btn"
+            @click="emit('retry', msg.client_message_id)"
+          >
+            重试
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -126,5 +156,33 @@ const props = defineProps({
 
 .chat-message.self .content {
   color: #236d5e;
+}
+
+.message-status {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #7f8c8d;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.message-status.failed {
+  color: #d35454;
+}
+
+.message-status.sending,
+.message-status.queued {
+  color: #8d6e63;
+}
+
+.retry-btn {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
 }
 </style>
