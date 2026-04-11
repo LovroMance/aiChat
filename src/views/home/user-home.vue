@@ -3,11 +3,15 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getUserInfo } from '@/api/user'
 import { USER_LOGIN_INFO, USER_INFO_DATA, setStorage, getStorage } from '@/utils/localstorage'
+import { useUserStore } from '@/stores'
+
+const userStore = useUserStore()
 
 onMounted(async () => {
   try {
     const { data } = await getUserInfo({ uid: getStorage(USER_LOGIN_INFO).uid })
     setStorage(USER_INFO_DATA, data.data)
+    userStore.setUserInfo(data.data)
   } catch (error) {
     console.error('获取用户信息失败:', error)
   }

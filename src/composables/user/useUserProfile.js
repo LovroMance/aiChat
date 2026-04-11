@@ -3,6 +3,7 @@ import { useFileUpload } from '@/api/chat'
 import { baseURL } from '@/utils/request'
 import { updateUserInfo } from '@/api/user'
 import { USER_INFO_DATA, getStorage, setStorage } from '@/utils/localstorage'
+import { useUserStore } from '@/stores'
 import { ElMessage } from 'element-plus'
 
 /**
@@ -10,6 +11,7 @@ import { ElMessage } from 'element-plus'
  * 负责：编辑模式切换、头像上传、资料保存/回滚
  */
 export function useUserProfile() {
+  const userStore = useUserStore()
   const userInfo = ref(getStorage(USER_INFO_DATA) || {})
   const selectedFile = ref(null)
   const isEditing = ref(false)
@@ -56,6 +58,7 @@ export function useUserProfile() {
       }
 
       setStorage(USER_INFO_DATA, userInfo.value)
+      userStore.setUserInfo(userInfo.value)
       await updateUserInfo(userInfo.value)
       ElMessage.success('个人资料已更新')
     } catch (error) {

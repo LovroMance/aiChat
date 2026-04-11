@@ -10,8 +10,9 @@ export const receiveMessage = async (data) => {
   try {
     await addData(MESSAGES_STORE, data.data)
     await putRecord(data.data)  // 处理未读
+    const reconciled = messageStore.reconcileServerMessage(data.data)
     const isActive = threadStore.activeThread?.thread_id === data.data.thread_id
-    if (isActive) {
+    if (isActive && !reconciled) {
       messageStore.addOnline(data.data.thread_id, data.data)
     }
   } catch (error) {

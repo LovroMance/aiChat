@@ -1,5 +1,6 @@
 <script setup>
 import { useChatPanel } from '@/composables/chat/useChatPanel'
+import { retryPendingChatMessage } from '@/core/chatSend'
 import { useMessageStore } from '@/stores'
 import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
 import chatRecord from '@/components/chat/chat-record.vue'
@@ -16,6 +17,10 @@ defineExpose({
   scrollToTop,
   setLoading,
 })
+
+const handleRetry = async (clientMessageId) => {
+  await retryPendingChatMessage(clientMessageId)
+}
 </script>
 
 <template>
@@ -26,9 +31,9 @@ defineExpose({
     </div>
     <div v-else class="chat-panel-content">
       <!-- 过去的聊天记录 -->
-      <chat-record :messages="messageStore.beforeMessages" :userUid="userUid" />
+      <chat-record :messages="messageStore.beforeMessages" :userUid="userUid" @retry="handleRetry" />
       <!-- 离线的聊天记录 -->
-      <chat-record :messages="messageStore.offlineMessages" :userUid="userUid" />
+      <chat-record :messages="messageStore.offlineMessages" :userUid="userUid" @retry="handleRetry" />
       <!-- 聊天历史提示 -->
       <div
         v-if="messageStore.beforeMessages.length || messageStore.offlineMessages.length"
@@ -37,7 +42,7 @@ defineExpose({
         <span>———— 以上为历史聊天记录 ————</span>
       </div>
       <!-- 当前的聊天记录 -->
-      <chat-record :messages="messageStore.onlineMessages" :userUid="userUid" />
+      <chat-record :messages="messageStore.onlineMessages" :userUid="userUid" @retry="handleRetry" />
     </div>
   </el-scrollbar>
 </template>

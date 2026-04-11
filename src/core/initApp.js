@@ -1,7 +1,8 @@
 import { loadUnreadMessagesData } from '@/core/unreadMessage'
+import { USER_INFO_DATA, getStorage } from '@/utils/localstorage'
 import { showWarningTip } from '@/utils/messageTips'
 import { chatPath, createWebSocket } from '@/utils/websocket.js'
-import { useNotificationStore } from '@/stores'
+import { useNotificationStore, useUserStore } from '@/stores'
 
 /**
  * 应用启动时的数据初始化函数
@@ -12,6 +13,11 @@ export const initializeAppData = async () => {
 
   try {
     console.log('开始初始化应用数据...')
+    const userStore = useUserStore()
+    const storedUserInfo = getStorage(USER_INFO_DATA)
+    if (storedUserInfo) {
+      userStore.setUserInfo(storedUserInfo)
+    }
     // TODO: 这里加一个加载状态
     // 加载未读消息数据
     await loadUnreadMessagesData()
