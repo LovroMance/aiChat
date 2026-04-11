@@ -41,12 +41,12 @@ export default defineConfig(({ mode }) => {
     server: apiTarget
       ? {
           proxy: {
-            '/auth': createHttpProxy(),
-            '/user': createHttpProxy(),
-            '/thread': createHttpProxy(),
-            '/relation': createHttpProxy(),
-            '/debug': createHttpProxy(),
-            '/file': createHttpProxy(),
+            '^/auth(/|$)': createHttpProxy(),
+            '^/user(/|$)': createHttpProxy(),
+            '^/thread(/|$)': createHttpProxy(),
+            '^/relation(/|$)': createHttpProxy(),
+            '^/debug(/|$)': createHttpProxy(),
+            '^/file(/|$)': createHttpProxy(),
             '/ws': {
               target: wsTarget,
               changeOrigin: true,
