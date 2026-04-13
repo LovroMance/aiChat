@@ -1,6 +1,6 @@
 import { ref, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useThreadStore, useUnreadMessagesStore } from '@/stores'
+import { useThreadStore, useUnreadMessagesStore, useMessageStore } from '@/stores'
 import { initChatPanel, loadThreadChat } from '@/core/chatWorkflow'
 import { groupCreate } from '@/api/chat'
 import { putCreateGroupMessageRecord } from '@/core/unreadMessage'
@@ -18,6 +18,7 @@ import { showSuccessTip } from '@/utils/messageTips'
 export function useChat() {
   const threadStore = useThreadStore()
   const unreadMessagesStore = useUnreadMessagesStore()
+  const messageStore = useMessageStore()
   const { activeThread } = storeToRefs(threadStore)
   const { sortedUnreadMessagesMap } = storeToRefs(unreadMessagesStore)
 
@@ -48,7 +49,9 @@ export function useChat() {
     // 更简单的切换逻辑：使用组件的 loading 与滚动方法，避免直接操作 DOM
     loading.value = true
     try {
-      if (chatPanelRef && typeof chatPanelRef.setLoading === 'function') {
+      const shouldShowLoading = !messageStore.hasThreadInitialized(chat.thread_id)
+
+      if (shouldShowLoading && chatPanelRef && typeof chatPanelRef.setLoading === 'function') {
         chatPanelRef.setLoading(true)
       }
 

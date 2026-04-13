@@ -51,7 +51,12 @@ const syncOfflineMessages = async (threadId, existingId) => {
   const messageStore = useMessageStore()
   let cursor = existingId
 
+  if (messageStore.getHistoryStatus(threadId).syncingOffline || messageStore.hasOfflineSynced(threadId)) {
+    return
+  }
+
   messageStore.setOfflineSyncing(threadId, true)
+  messageStore.setOfflineSynced(threadId, false)
 
   try {
     while (true) {
@@ -70,13 +75,31 @@ const syncOfflineMessages = async (threadId, existingId) => {
       messageStore.appendOffline(threadId, nextBatch)
       cursor = getLatestMessageId(nextBatch)
     }
+
+    messageStore.setOfflineSynced(threadId, true)
   } finally {
     messageStore.setOfflineSyncing(threadId, false)
   }
 }
 
-export const loadThreadChat = async (threadId) => {
+export const loadThreadChat = async (threadId, options = {}) => {
   const messageStore = useMessageStore()
+  const { forceReload = false } = options
+
+  if (!forceReload && messageStore.hasThreadInitialized(threadId)) {
+    if (!messageStore.hasOfflineSynced(threadId)) {
+      syncOfflineMessages(
+        threadId,
+        getLatestMessageId(messageStore.getThreadMessages(threadId).offline) ||
+          getLatestMessageId(messageStore.getThreadMessages(threadId).localHistory),
+      ).catch((error) => {
+        console.error('同步离线消息失败:', error)
+      })
+    }
+    await selectedChatUpdate(threadId)
+    return
+  }
+
   // Step 1：切换会话时先重置当前 thread 的消息状态。
   messageStore.resetThread(threadId)
   // Step 2：首屏加载期间使用独立 loading，避免和离线同步提示混用。

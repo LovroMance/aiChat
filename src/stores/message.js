@@ -11,8 +11,10 @@ const createBucket = () => ({
   offline: [],
   online: [],
   visibleLocalCount: LOCAL_HISTORY_PAGE_SIZE,
+  initialized: false,
   loadingInitial: false,
   syncingOffline: false,
+  offlineSynced: false,
 })
 
 const normalizeMessageId = (message) => {
@@ -84,6 +86,7 @@ export const useMessageStore = defineStore('message', () => {
     // 首屏先接管本地历史，再只展示最近一段，后续上滑时继续展开更早本地消息。
     bucket.localHistory = dedupeMessages(Array.isArray(list) ? list : [])
     bucket.visibleLocalCount = LOCAL_HISTORY_PAGE_SIZE
+    bucket.initialized = true
     version.value++
   }
 
@@ -242,13 +245,30 @@ export const useMessageStore = defineStore('message', () => {
     version.value++
   }
 
+  const setOfflineSynced = (threadId, value) => {
+    const bucket = ensureBucket(threadId)
+    if (!bucket) return
+    bucket.offlineSynced = Boolean(value)
+    version.value++
+  }
+
+  const hasThreadInitialized = (threadId) => {
+    return Boolean(messagesByThread.value.get(threadId)?.initialized)
+  }
+
+  const hasOfflineSynced = (threadId) => {
+    return Boolean(messagesByThread.value.get(threadId)?.offlineSynced)
+  }
+
   const getHistoryStatus = (threadId) => {
     const bucket = getThreadMessages(threadId)
     // 面板只消费这个聚合状态，不直接推断分页细节。
     return {
       hiddenLocalCount: getHiddenLocalCount(threadId),
+      initialized: bucket.initialized,
       loadingInitial: bucket.loadingInitial,
       syncingOffline: bucket.syncingOffline,
+      offlineSynced: bucket.offlineSynced,
       hasMoreHistory: getHiddenLocalCount(threadId) > 0,
     }
   }
@@ -300,6 +320,9 @@ export const useMessageStore = defineStore('message', () => {
     expandLocalHistory,
     setInitialLoading,
     setOfflineSyncing,
+    setOfflineSynced,
+    hasThreadInitialized,
+    hasOfflineSynced,
     getHistoryStatus,
     getHiddenLocalCount,
     LOCAL_HISTORY_PAGE_SIZE,
