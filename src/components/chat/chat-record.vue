@@ -1,5 +1,7 @@
 <script setup>
 import { formatTime } from '@/utils/format'
+import MessageRenderer from '@/components/message/MessageRenderer.vue'
+import { MESSAGE_SCENES } from '@/core/message/messageTypes'
 
 const props = defineProps({
   messages: {
@@ -9,6 +11,10 @@ const props = defineProps({
   userUid: {
     type: [String],
     required: true,
+  },
+  scene: {
+    type: String,
+    default: MESSAGE_SCENES.CHAT,
   },
 })
 
@@ -45,7 +51,9 @@ const isRetryable = (msg) => {
             formatTime(msg.create_time)
           }}</span>
         </div>
-        <div class="content">{{ msg.content }}</div>
+        <div class="content">
+          <MessageRenderer :message="msg" :scene="props.scene" />
+        </div>
         <div
           v-if="msg.sender_uid === props.userUid && msg.delivery_status"
           :class="['message-status', msg.delivery_status]"

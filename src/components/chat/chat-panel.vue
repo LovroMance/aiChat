@@ -5,6 +5,7 @@ import { useMessageStore } from '@/stores'
 import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
 import chatRecord from '@/components/chat/chat-record.vue'
 import LoadingView from '@/components/feedback/LoadingView.vue'
+import { MESSAGE_SCENES } from '@/core/message/messageTypes'
 
 const messageStore = useMessageStore()
 const userUid = getStorage(USER_LOGIN_INFO).uid
@@ -38,9 +39,19 @@ const handleRetry = async (clientMessageId) => {
         <span>上滑加载更早消息（剩余 {{ messageStore.historyStatus.hiddenLocalCount }} 条）</span>
       </div>
       <!-- 过去的聊天记录 -->
-      <chat-record :messages="messageStore.beforeMessages" :userUid="userUid" @retry="handleRetry" />
+      <chat-record
+        :messages="messageStore.beforeMessages"
+        :userUid="userUid"
+        :scene="MESSAGE_SCENES.CHAT"
+        @retry="handleRetry"
+      />
       <!-- 离线的聊天记录 -->
-      <chat-record :messages="messageStore.offlineMessages" :userUid="userUid" @retry="handleRetry" />
+      <chat-record
+        :messages="messageStore.offlineMessages"
+        :userUid="userUid"
+        :scene="MESSAGE_SCENES.CHAT"
+        @retry="handleRetry"
+      />
       <div v-if="messageStore.historyStatus.syncingOffline" class="offline-sync-tip">
         <span>正在同步离线消息...</span>
       </div>
@@ -52,7 +63,12 @@ const handleRetry = async (clientMessageId) => {
         <span>———— 以上为历史聊天记录 ————</span>
       </div>
       <!-- 当前在线消息始终放在底部区域，保证发送和实时收消息的阅读顺序稳定。 -->
-      <chat-record :messages="messageStore.onlineMessages" :userUid="userUid" @retry="handleRetry" />
+      <chat-record
+        :messages="messageStore.onlineMessages"
+        :userUid="userUid"
+        :scene="MESSAGE_SCENES.CHAT"
+        @retry="handleRetry"
+      />
     </div>
   </el-scrollbar>
 </template>

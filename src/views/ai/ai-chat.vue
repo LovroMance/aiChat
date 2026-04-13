@@ -10,6 +10,8 @@ import {
   MoreFilled,
 } from '@element-plus/icons-vue'
 import createGroup from '@/components/chat/group-create.vue'
+import MessageRenderer from '@/components/message/MessageRenderer.vue'
+import { MESSAGE_SCENES } from '@/core/message/messageTypes'
 import { useAiChat } from '@/composables/ai/useAiChat'
 import { useAiChatViewModel } from '@/composables/ai/useAiChatViewModel'
 
@@ -120,20 +122,13 @@ const handleCreateAiChatSubmit = async (formData) => {
           <div ref="innerRef" class="messages-inner">
             <div
               v-for="msg in messages"
-              :key="msg.id"
+              :key="msg.id || msg.message_id"
               class="message-wrapper"
               :class="{ 'is-user': msg.role === 'user' }"
             >
               <div class="message-content">
                 <div class="bubble">
-                  <div
-                    v-if="msg.role === 'assistant' && msg.reasoning_content"
-                    class="reasoning-block"
-                  >
-                    <div class="reasoning-title">思考过程</div>
-                    <div class="reasoning-text">{{ msg.reasoning_content }}</div>
-                  </div>
-                  <div class="answer-text">{{ msg.content }}</div>
+                  <MessageRenderer :message="msg" :scene="MESSAGE_SCENES.AI" />
                 </div>
                 <div class="time">{{ msg.time }}</div>
               </div>
@@ -465,30 +460,6 @@ const handleCreateAiChatSubmit = async (formData) => {
   white-space: pre-wrap;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   position: relative;
-}
-
-.reasoning-block {
-  margin-bottom: 12px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background-color: #f8fafc;
-  border: 1px dashed #cbd5e1;
-  color: #64748b;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.reasoning-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: #94a3b8;
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.answer-text {
-  white-space: pre-wrap;
 }
 
 .message-wrapper:not(.is-user) .bubble {

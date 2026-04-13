@@ -1,4 +1,6 @@
 import { useMessageStore, useUserStore, useWebSocketStore } from '@/stores'
+import { buildOutgoingMessage } from '@/core/message/messageBus'
+import { MESSAGE_SCENES, MESSAGE_TYPES } from '@/core/message/messageTypes'
 import { sendMessage } from '@/utils/websocket'
 
 const createClientMessageId = () =>
@@ -22,6 +24,18 @@ const buildLocalMessage = ({ clientMessageId, threadId, content, userStore }) =>
 }
 
 const buildTransportPayload = ({ threadId, content }) => {
+  return buildOutgoingMessage({
+    scene: MESSAGE_SCENES.CHAT,
+    type: MESSAGE_TYPES.TEXT,
+    payload: {
+      content,
+      attachment: null,
+      thread_id: threadId,
+    },
+  })
+}
+
+const buildFallbackTransportPayload = ({ threadId, content }) => {
   return {
     content,
     attachment: null,
@@ -89,7 +103,9 @@ export const submitChatMessage = async ({ threadId, content }) => {
   const queueItem = {
     client_message_id: clientMessageId,
     thread_id: threadId,
-    payload: buildTransportPayload({ threadId, content }),
+    payload:
+      buildTransportPayload({ threadId, content }) ||
+      buildFallbackTransportPayload({ threadId, content }),
   }
 
   messageStore.addLocalMessage(threadId, localMessage)
