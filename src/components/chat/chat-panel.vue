@@ -30,10 +30,20 @@ const handleRetry = async (clientMessageId) => {
       <LoadingView />
     </div>
     <div v-else class="chat-panel-content">
+      <!-- 顶部分页提示：本地还有未展开历史时提示上滑。 -->
+      <div
+        v-if="messageStore.historyStatus.hiddenLocalCount > 0"
+        class="history-loading-tip"
+      >
+        <span>上滑加载更早消息</span>
+      </div>
       <!-- 过去的聊天记录 -->
       <chat-record :messages="messageStore.beforeMessages" :userUid="userUid" @retry="handleRetry" />
       <!-- 离线的聊天记录 -->
       <chat-record :messages="messageStore.offlineMessages" :userUid="userUid" @retry="handleRetry" />
+      <div v-if="messageStore.historyStatus.syncingOffline" class="offline-sync-tip">
+        <span>正在同步离线消息...</span>
+      </div>
       <!-- 聊天历史提示 -->
       <div
         v-if="messageStore.beforeMessages.length || messageStore.offlineMessages.length"
@@ -41,7 +51,7 @@ const handleRetry = async (clientMessageId) => {
       >
         <span>———— 以上为历史聊天记录 ————</span>
       </div>
-      <!-- 当前的聊天记录 -->
+      <!-- 当前在线消息始终放在底部区域，保证发送和实时收消息的阅读顺序稳定。 -->
       <chat-record :messages="messageStore.onlineMessages" :userUid="userUid" @retry="handleRetry" />
     </div>
   </el-scrollbar>
@@ -79,5 +89,22 @@ const handleRetry = async (clientMessageId) => {
   background-color: rgba(0, 0, 0, 0.03);
   padding: 4px 12px;
   border-radius: 12px;
+}
+
+.history-loading-tip,
+.offline-sync-tip {
+  text-align: center;
+  margin: 0 0 18px;
+}
+
+.history-loading-tip span,
+.offline-sync-tip span {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #64748b;
+  background-color: #eef2ff;
 }
 </style>
