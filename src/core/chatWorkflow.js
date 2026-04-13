@@ -85,18 +85,19 @@ export const loadThreadChat = async (threadId) => {
   try {
     // Step 3：优先读取本地历史，让首屏可以立即展示最近一段消息。
     const localHistory = normalizeMessages(await getMessagesByThreadId(MESSAGES_STORE, threadId))
-    const existingId = getLatestMessageId(localHistory)
-
     messageStore.setHistory(threadId, localHistory)
-
-    // Step 4：再基于本地最后一条消息循环补齐离线新增消息，直到接口返回空。
-    await syncOfflineMessages(threadId, existingId)
-
-    // Step 5：会话打开后把该线程未读状态置为已读。
-    await selectedChatUpdate(threadId)
   } finally {
     messageStore.setInitialLoading(threadId, false)
   }
+
+  // Step 4：首屏渲染完成后，再后台循环补齐离线新增消息，避免用户一直等待。
+  syncOfflineMessages(threadId, getLatestMessageId(messageStore.getThreadMessages(threadId).localHistory))
+    .catch((error) => {
+      console.error('同步离线消息失败:', error)
+    })
+
+  // Step 5：会话打开后把该线程未读状态置为已读。
+  await selectedChatUpdate(threadId)
 }
 
 export const loadOlderThreadMessages = async (threadId) => {
