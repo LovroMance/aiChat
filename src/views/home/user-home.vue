@@ -22,6 +22,14 @@ const router = useRouter()
 // 菜单项配置
 const menuItems = ref([
   {
+    id: 'contacts',
+    title: '通讯录',
+    description: '查看好友、群组和联系人',
+    icon: 'List',
+    route: '/FriendGroupList',
+    color: '#409EFF',
+  },
+  {
     id: 'chatroom',
     title: '聊天室',
     description: '进入聊天室开始对话',
@@ -30,10 +38,26 @@ const menuItems = ref([
     color: '#67C23A',
   },
   {
+    id: 'notification-center',
+    title: '通知中心',
+    description: '查看系统通知和消息提醒',
+    icon: 'Bell',
+    route: '/notificationCenter',
+    color: '#F56C6C',
+  },
+  {
+    id: 'ai-chat',
+    title: 'AI 助手',
+    description: '与 AI 助手进行智能对话',
+    icon: 'Cpu',
+    route: '/aiChat',
+    color: '#8E7EF1',
+  },
+  {
     id: 'profile',
-    title: '个人资料',
+    title: '个人中心',
     description: '查看和编辑个人信息',
-    icon: 'UserFilled',
+    icon: 'User',
     route: '/userInfo',
     color: '#E6A23C',
   },
@@ -43,7 +67,7 @@ const menuItems = ref([
     description: '应用设置和偏好',
     icon: 'Setting',
     route: '/userSetting',
-    color: '#F56C6C',
+    color: '#909399',
   },
 ])
 
