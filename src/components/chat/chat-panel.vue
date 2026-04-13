@@ -35,7 +35,7 @@ const handleRetry = async (clientMessageId) => {
         v-if="messageStore.historyStatus.hiddenLocalCount > 0"
         class="history-loading-tip"
       >
-        <span>上滑加载更早消息</span>
+        <span>上滑加载更早消息（剩余 {{ messageStore.historyStatus.hiddenLocalCount }} 条）</span>
       </div>
       <!-- 过去的聊天记录 -->
       <chat-record :messages="messageStore.beforeMessages" :userUid="userUid" @retry="handleRetry" />
