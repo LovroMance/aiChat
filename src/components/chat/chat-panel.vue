@@ -1,17 +1,24 @@
 <script setup>
 import { useChatPanel } from '@/composables/chat/useChatPanel'
+import { useChatVirtualMessages } from '@/composables/chat/useChatVirtualMessages'
+import { useVirtualChatList } from '@/composables/chat/useVirtualChatList'
 import { retryPendingChatMessage } from '@/core/chatSend'
 import { useMessageStore } from '@/stores'
 import { USER_LOGIN_INFO, getStorage } from '@/utils/localstorage'
-import chatRecord from '@/components/chat/chat-record.vue'
+import chatMessageItem from '@/components/chat/chat-message-item.vue'
 import LoadingView from '@/components/feedback/LoadingView.vue'
 import { MESSAGE_SCENES } from '@/core/message/messageTypes'
 
 const messageStore = useMessageStore()
 const userUid = getStorage(USER_LOGIN_INFO).uid
+const { renderMessages, onlineMessageCount } = useChatVirtualMessages(messageStore)
+const virtualList = useVirtualChatList({
+  messages: renderMessages,
+})
+const { visibleMessages, topSpacerHeight, bottomSpacerHeight } = virtualList
 
 const { scrollbarRef, isLoading, scrollToBottom, scrollToTop, setLoading } =
-  useChatPanel(messageStore)
+  useChatPanel(messageStore, virtualList, onlineMessageCount)
 
 defineExpose({
   scrollToBottom,
@@ -21,6 +28,10 @@ defineExpose({
 
 const handleRetry = async (clientMessageId) => {
   await retryPendingChatMessage(clientMessageId)
+}
+
+const handleMeasure = (payload) => {
+  virtualList.measureItem(payload)
 }
 </script>
 
@@ -38,37 +49,24 @@ const handleRetry = async (clientMessageId) => {
       >
         <span>上滑加载更早消息（剩余 {{ messageStore.historyStatus.hiddenLocalCount }} 条）</span>
       </div>
-      <!-- 过去的聊天记录 -->
-      <chat-record
-        :messages="messageStore.beforeMessages"
-        :userUid="userUid"
-        :scene="MESSAGE_SCENES.CHAT"
-        @retry="handleRetry"
-      />
-      <!-- 离线的聊天记录 -->
-      <chat-record
-        :messages="messageStore.offlineMessages"
-        :userUid="userUid"
-        :scene="MESSAGE_SCENES.CHAT"
-        @retry="handleRetry"
-      />
+      <div class="virtual-spacer" :style="{ height: `${topSpacerHeight}px` }"></div>
+      <template v-for="item in visibleMessages" :key="item.item_id || item.message_id">
+        <div v-if="item.item_type === 'history-divider'" class="history-tip">
+          <span>———— 以上为历史聊天记录 ————</span>
+        </div>
+        <chat-message-item
+          v-else
+          :message="item"
+          :userUid="userUid"
+          :scene="MESSAGE_SCENES.CHAT"
+          @retry="handleRetry"
+          @measure="handleMeasure"
+        />
+      </template>
+      <div class="virtual-spacer" :style="{ height: `${bottomSpacerHeight}px` }"></div>
       <div v-if="messageStore.historyStatus.syncingOffline" class="offline-sync-tip">
         <span>正在同步离线消息...</span>
       </div>
-      <!-- 聊天历史提示 -->
-      <div
-        v-if="messageStore.beforeMessages.length || messageStore.offlineMessages.length"
-        class="history-tip"
-      >
-        <span>———— 以上为历史聊天记录 ————</span>
-      </div>
-      <!-- 当前在线消息始终放在底部区域，保证发送和实时收消息的阅读顺序稳定。 -->
-      <chat-record
-        :messages="messageStore.onlineMessages"
-        :userUid="userUid"
-        :scene="MESSAGE_SCENES.CHAT"
-        @retry="handleRetry"
-      />
     </div>
   </el-scrollbar>
 </template>
@@ -122,5 +120,9 @@ const handleRetry = async (clientMessageId) => {
   font-size: 12px;
   color: #64748b;
   background-color: #eef2ff;
+}
+
+.virtual-spacer {
+  width: 100%;
 }
 </style>
