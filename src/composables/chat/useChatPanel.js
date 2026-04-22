@@ -4,9 +4,11 @@ import { loadOlderThreadMessages } from '@/core/chatWorkflow'
 
 const TOP_LOAD_THRESHOLD = 40
 
-export function useChatPanel(messageStore) {
+export function useChatPanel(messageStore, virtualList, onlineMessageCount) {
   const scrollbarRef = ref(null)
   const isLoading = ref(false)
+  const isLoadingMoreHistory = ref(false)
+  const shouldStickBottom = ref(true)
   const threadStore = useThreadStore()
   let removeScrollListener = null
 
@@ -17,6 +19,10 @@ export function useChatPanel(messageStore) {
       const wrap = getWrap()
       if (wrap) {
         wrap.scrollTop = wrap.scrollHeight
+        virtualList?.updateViewport({
+          nextScrollTop: wrap.scrollTop,
+          nextViewportHeight: wrap.clientHeight,
+        })
       }
     })
   }
@@ -40,9 +46,7 @@ export function useChatPanel(messageStore) {
       return null
     }
 
-    // 触顶加载前先记录滚动高度与当前位置，插入顶部消息后再把视口校正回来。
-    const previousScrollHeight = wrap.scrollHeight
-    const previousScrollTop = wrap.scrollTop
+    virtualList?.captureAnchor()
     const result = await loader()
 
     if (!result || result.count <= 0) {
@@ -50,22 +54,36 @@ export function useChatPanel(messageStore) {
     }
 
     await nextTick()
-    const nextScrollHeight = wrap.scrollHeight
-    wrap.scrollTop = nextScrollHeight - previousScrollHeight + previousScrollTop
+    virtualList?.restoreAnchor(wrap)
     return result
   }
 
   const loadMoreHistory = async () => {
     const threadId = threadStore.activeThread?.thread_id
-    if (!threadId) return null
+    if (!threadId || isLoadingMoreHistory.value) return null
 
-    // 面板层只负责“触发加载 + 保持锚点”，具体分页策略下沉到 chatWorkflow。
-    return keepViewportAnchor(() => loadOlderThreadMessages(threadId))
+    isLoadingMoreHistory.value = true
+    try {
+      // 面板层只负责“触发加载 + 保持锚点”，具体分页策略下沉到 chatWorkflow。
+      return await keepViewportAnchor(() => loadOlderThreadMessages(threadId))
+    } finally {
+      isLoadingMoreHistory.value = false
+    }
   }
 
   const handleScroll = async () => {
     const wrap = getWrap()
-    if (!wrap || wrap.scrollTop > TOP_LOAD_THRESHOLD) return
+    if (!wrap) return
+
+    shouldStickBottom.value =
+      wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight <= 120
+
+    virtualList?.updateViewport({
+      nextScrollTop: wrap.scrollTop,
+      nextViewportHeight: wrap.clientHeight,
+    })
+
+    if (wrap.scrollTop > TOP_LOAD_THRESHOLD) return
 
     // 接近顶部时触发翻页，同时复用 store 里的分页状态做兜底判断。
     const status = messageStore.historyStatus
@@ -79,6 +97,11 @@ export function useChatPanel(messageStore) {
   const bindScrollListener = () => {
     const wrap = getWrap()
     if (!wrap) return
+
+    virtualList?.updateViewport({
+      nextScrollTop: wrap.scrollTop,
+      nextViewportHeight: wrap.clientHeight,
+    })
 
     const listener = () => {
       handleScroll()
@@ -110,25 +133,29 @@ export function useChatPanel(messageStore) {
   watch(
     () => threadStore.activeThreadId,
     () => {
+      shouldStickBottom.value = true
       // 切换会话后默认回到底部，保持聊天阅读习惯。
       nextTick(() => {
         const wrap = getWrap()
         if (wrap) {
           wrap.scrollTop = wrap.scrollHeight
+          virtualList?.updateViewport({
+            nextScrollTop: wrap.scrollTop,
+            nextViewportHeight: wrap.clientHeight,
+          })
         }
       })
     },
   )
 
   watch(
-    () => messageStore.onlineMessages.length,
+    () => onlineMessageCount?.value,
     () => {
       const wrap = getWrap()
       if (!wrap) return
 
       // 用户本来就停留在底部附近时，收到新消息才自动贴底，避免打断向上翻历史。
-      const distanceToBottom = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight
-      if (distanceToBottom <= 120) {
+      if (shouldStickBottom.value) {
         scrollToBottom()
       }
     },
